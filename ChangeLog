@@ -1,0 +1,134 @@
+2005-05-31  Lukasz Karwacki
+	* Changes in architecture - added new threads
+	* Fixed some bugs
+
+2004-05-25  Lukasz Karwacki
+        * Fixed bug with digest when getting server authorization info.
+
+2004-05-10  Lukasz Karwacki
+	* removed packet stats from jabberd bace_accept
+	* added packet stats to jsm
+	* added offline message counter
+	* added sys_epoll
+
+2004-01-06  Lukasz Karwacki
+	* fixed possible deadlock in dialback module
+
+2004-01-05  Lukas Karwacki
+	* added mod_privacy - Communication Blocking
+	
+2003-11-25  Lukas Karwacki	
+	* Added mod_status_offline
+	* Changed mod_version
+
+2003-11-18  Lukas Karwacki
+        * fixed js_trust bug.
+	* fixed MIO bug.
+	* fixed dialback end connection bug.
+
+2003-07-30  Tomasz Torcz 
+	* Fixed language mistakes in documentation and config files.
+
+2003-07-17  Lukas Karwacki
+	* fixed problem with remote admins.
+
+2003-07-01  Lukas Karwacki
+	* deliver. fixed possible hangs on heartbeat semaphor
+	* try to deliver messages in right order in JSM
+
+2003-06-12  Lukas Karwacki
+	* WPJ can forward HTTP connections to specified host
+	* changed MTQ. Loop with Sleep replaced with pthread_cond_wait.
+	Now FreeBSD and other systems that doesn't support usleep with low
+	values will work better.
+
+2003-06-10  Lukas Karwacki
+	* WPJ can accept SSL and normal connections on the same port.
+
+2003-06-02  Lukas Karwacki
+	* release wpjabber 1.1.0. Changes beetwen 1.0.x 1.1.x
+	- fixed dns and dialback. Now s2s works perfectly.
+	- fixed deliver. Removed memory leak when registering/unregistering
+	instance. Removed possibility of loosing registered instances in deliver
+	list when working with s2s.
+	- xdb_file removes empty files after xdb_set(..,NULL) with NULL data.
+	- JSM architecture changed. Added postout event to handle session 
+	outgoing packets. Changed offline packets processing. Added roster cache.
+	Fixed mod_announce. Added mod_disco and mod_stats.
+
+2003-05-29  Lukas Karwacki
+	* fixed dns bug, that could crash s2s server
+
+2003-05-28  Lukas Karwacki
+	* JSM can work under windows now
+
+2003-05-20  Lukas Karwacki
+	* added session event POSTOUT. Event is called when packet is sended 
+	out from session
+	* added roster caching for user instead of user trusted list. 
+	This changes will help implementing Communication Blocking jabber:iq:privacy
+
+2003-05-16  Lukas Karwacki
+	* added memory usage stats in mod_stats
+
+2003-05-12  Lukas Karwacki
+	* added mod_stats. Module with simple server stats.
+
+2003-05-09  Lukas Karwacki
+	* added mod_disco
+	* added suport for LOG and XDB packets in php module
+
+2003-04-25  Lukas Karwacki
+	* made time functions thread safe 
+
+2003-04-23  Lukas Karwacki
+	* added new module: WPPHP
+
+2003-04-22  Lukas Karwacki
+
+	* WPJ changes:
+	- fixed memory leak in io_cleanup
+	- added flag to disable message storage
+	
+	* Thanks to Paul Clegg <clegg@sig.com> changes in:
+	- mod_log - Added two attributes to the <route> tags that are sent to the <archive> service(s).
+	- conference - Added a check for NULL departure notice.
+
+2003-04-17  Lukas Karwacki
+
+	* WPJ changes: 
+	- fixed pings in SSL,
+	- added option to config own algorithms,
+	- changed and simplified configuration file, more info in log files,
+	- WPJ now can return unsended messages.
+
+2003-04-09  Lukas Karwacki <lukasm@wp-sa.pl>
+
+	* deadlock fixed in dialback module
+
+	
+2003-03-17  Lukas Karwacki <lukasm@wp-sa.pl>
+
+        * JSM architecture changes:
+	- Now all JSM xdb queries are processed in MTQ threads,not I/O thread. 
+	  You can safly use external xdb components.
+	
+2003-03-13  Lukas Karwacki
+
+	* fixed presences problem
+
+2003-02-28  Lukas Karwacki
+    
+	* SSL support added in WPJ
+
+2003-02-27  Lukas Karwacki
+
+	* some architecture changes in JSM. 
+	- some xdb packets will not be processed in I/O thread. 
+
+2003-01-20  Lukas Karwacki
+
+	* added thread safe dialback module
+	
+	* added thread safe dnsrv module
+

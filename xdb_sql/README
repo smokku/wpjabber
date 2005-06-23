@@ -1,0 +1,187 @@
+$Id: README,v 1.5 2003/07/23 08:28:32 bobeal Exp $
+
+xdb_sql 
+
+Release 1.3
+
+This an xdb implementation for Jabber 1.4 and later using an SQL database.
+It is heavily based on xdb_mysql (by the Jabber Team) from Jabber 1.0.
+
+xdb_sql is standalone, to keep MySQL/Postgresql/... details outside Jabber.
+
+
+This code was developped by IDEALX (http://www.IDEALX.org), for
+LibertySurf Télécom (http://www.libertysurftelecom.fr).
+
+This program is Open Source software and is subject to specific
+conditions of distribution and modification (see the COPYING file).
+
+
+1/ Installation :
+-----------------
+
+"Standard" installs of mysql, postgres or odbc should be found
+automatically.
+
+Use xdb_sql.xml as config file for xdb_sql (it contains explanations
+on how to use it from jabber.xml).  The database can be created with
+the help of sample_database.sql for mysql or sample_database.pg.sql
+Currently, there is no sample file for odbc.
+
+***
+
+In xdb_mysql, SQL requests were not hardcoded, but instead given in a
+configuration file. Thus entire liberty is given for the tables layout.
+
+The sample SQL tables and related XML config are from xdb_mysql,
+with slight modifications for the new functionnalities.
+
+Supported namespaces:
+* jabber:iq:register
+* jabber:iq:auth
+* jabber:iq:auth:crypt
+* jabber:iq:auth:0k
+* jabber:iq:last
+* jabber:iq:roster
+* jabber:x:offline
+* jabber:iq:filter (support the "from" condition, without action (blacklist))
+* vcard-temp
+* muc:room:list
+* muc:room:config
+* muc:list:admin
+* muc:list:member
+* muc:data
+
+2/ General note on querydefs :
+------------------------------
+
+querydefs are given in the config file, and handle the SQL/XML mapping.
+Usually, an xdb_get translate to a SELECT, and an xdb_set
+translates to a DELETE or UPDATE, followed with an
+INSERT or UPDATE. But it depends on your particular
+database layout, and the concerned namespace.
+
+In the <text> node, you have the SQL query, with special
+words which will be substitued at query time (these are
+the $$foo$$ words).
+
+<bindvar> substitutes a query parameter.
+<bindcol> allows to retrieve an SQL result field (after a SELECT query)
+
+
+3/ Configuration and extensibility :
+------------------------------------
+
+There's the old, powerful but painful way, and the new,
+simple, generic way.
+
+a/ The old, powerful, painful way :
+
+xdb_mysql, then xdb_sql, used both a config file and C code
+to handle SQL/XML mapping.
+To add a new namespace, go to xdb_sql_config.c :
+* check if existing validators (validate_xxx)
+  can fit your queries (validate_simple_user is often useful)
+   * if yes :
+      * good !
+   * if not :
+      * add new validator function
+      * add validator declaration with others
+* insert query name and validator ptr into s_query_table array
+* create a new source file with the set/get functions
+* insert the source name in Makefile.am
+* insert functions declarations in xdb_sql.h
+* insert functions ptrs and namespace into static_modules
+* insert queries in the XML config file
+
+b/ The new, simple, generic way (dtd="2")
+
+In xdb_sql, a new query config format has been added,
+which allow to support moderatly complex processing on xml nodes 
+without adding C code (before, a small part of code was needed to
+fetch/store SQL params/results from/to XML nodes).
+These are the <querydef> with attribute dtd="2".
+
+On a xdb_set, it will try to execute N queries if N query datas
+are supplied. On a xdb_set, the N tuples will be stored
+in a given top node and optionnaly a per-tuple node.
+
+Example 1:
+xdb_set on a "test:iq:url" namespace to store an URL
+associated with an user:
+
+      <querydef name="url-set" dtd="2" type="set" namespace="test:iq:url">
+        <text>UPDATE users SET site = '$$domain$$', page = '$$file$$' WHERE username = '$$user$$'</text>
+        <user>$$user$$</user>
+        <bindvar tag="domain">$$domain$$</bindvar>
+        <bindvar tag="file">$$file$$</bindvar>
+	<purge>url-remove</purge>
+      </querydef>
+
+querydef:
+  name is mostly for humans and referencing;
+  dtd will allow correct handling of the configuration;
+  type is important for query dispatch, as is namespace;
+
+text: SQL query template;
+user: to substitute in text;
+bindvar: will retrieve the cdata of the given tag in the
+supplied xmlnode (this is used in an xdb_set), and substitute
+this value in the text;
+purge: name of a querydef executed prior to any set query.
+
+Example 2:
+xdb_get:
+
+      <querydef name="url-get" dtd="2" type="get" namespace="test:iq:url">
+        <text>SELECT site, page FROM users WHERE username = '$$u$$'</text>
+        <user>$$u$$</user>
+        <top-result>
+           <x xmlns='test:iq:url'/>
+        </top-result>
+        <bindcol tag="domain" offset="0"/>
+        <bindcol tag="file" offset="1"/>
+      </querydef>
+
+top-result: node created to contain query results
+bindcol: will store the value found in field 0 of each tuple
+as cdata for a node domain inserted in top-result.
+
+It is possible to specify a node created for each tuple,
+using tuple-node as child of the querydef.
+Example: <tuple-node><item/></tuple-node>
+
+Values will be inserted in the tuple-related node, and if
+none exists, they will be inserted in the top-result node
+(because the inner node is tried first).
+
+4/ Oracle support
+-----------------
+
+From Mike Shoyher's explanations :
+"There is a restriction - no one field can exceed 4000 characters. If
+one will need fields bigger than that (and I believe at least spool
+table shouldn't have such restrictions) then one needs to add support
+for LOB fields. I've implemented character fields only, LOB support
+shouldn't be a big deal, but I just didn't need it"
+
+5/ Migration from xdb_file :
+----------------------------
+
+see at http://jabber.media.mit.edu/~mankins/presence/#roster
+
+6/ Misc :
+---------
+
+On Solaris, xdb_sql does not work properly with the 1.4 and 1.4.1
+servers. requests defined in xdb_sql.xml are truncated. This bug is
+solved in the 1.4.2-test server. so upgrade your server if you are
+under Solaris !
+
+Problems on Solaris 8, gcc 3.0.3 from sunfreeware, and MySQL 3.23.54 :
+"Loading ./lib/xdb_sql.so failed: 'ld.so.1: ./jabberd: fatal:
+relocation error: file ./lib/xdb_sql.so: symbol floor: referenced
+symbol not found'". Adding -lm on the link command line resolves the
+problem (from Justin Georgeson).
+
+

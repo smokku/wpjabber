@@ -1,0 +1,89 @@
+<wpj>
+
+  <!-- WPJ name, must be unique for many wpj's.
+       The same name must be in wpjabber config 
+       in accept section. 
+       This name is not your jabber hostname !!!!  -->
+  <hostname>wpj</hostname>
+
+  <!-- when check pings, should be about (pingtime / 3) -->
+  <pingcheck>30</pingcheck>
+
+  <!-- how often send ping -->
+  <pingtime>120</pingtime>
+
+  <!-- time to recive pong, after this time connection will be closed -->
+  <pingclose>180</pingclose>
+
+<!-- message storage and recovery
+     it will enable sending unsended to user messages packets
+     to offline storage
+     -->
+<!-- <message_recovery/> -->
+
+  <!-- how often check sockets for timeouts  -->
+  <datacheck>1</datacheck>
+
+  <!-- Forward HTTP connections to specified URL -->
+  <httpforward>http://wpjabber.jabberstudio.org</httpforward>
+
+  <!-- how long keep users connections when server is down 
+    works only when refresh sessions in enabled -->
+  <reconnecttime>600</reconnecttime>
+  
+  <!-- flag that refresh sessions , reconnect users after server down -->
+  <auto_refresh_sessions/>
+
+  <!-- time for user to send auth info -->
+  <authtime>60</authtime>
+
+  
+  <pidfile>wpj.pid</pidfile>
+  
+  <logfile>log_</logfile>
+  
+  <statfile>stats_file</statfile>  
+  
+  <!-- give right IP to listen on.
+    change port to 5223 for SSL -->
+  <listen>
+    <lip>localhost</lip>
+    <port>5222</port>
+  </listen>
+
+  <connect>
+    <host>jabber.wp.pl</host>
+    <ip>localhost</ip>       
+    <port>5000</port>   <!-- 5001 for wpj_ssl -->       
+    <secret>SECRET</secret>
+  </connect>       
+ 
+  <karma>
+      <heartbeat>2</heartbeat>
+      <init>-100</init>
+      <max>15</max>
+      <inc>2</inc>
+      <dec>1</dec>
+      <penalty>-3</penalty>
+      <restore>8</restore>
+  </karma>
+
+<!-- You can configure own ciphers in SSL, for example: HIGH -->
+<!-- SSL 
+  <ssl>
+    <key ip="ip">path/file.pem</key>
+    <ciphers>ALL</ciphers>  
+  </ssl>
+-->
+
+<!-- points and time - number of connections(points) in time(time) in sec
+     count - number of connections from one ip -->
+  <rate points="2" time="1" count="500"/>
+
+  <max_clients>4999</max_clients>
+
+  <epoll_size>6000</epoll_size>
+
+  <epoll_maxevents>2000</epoll_maxevents>
+
+</wpj>

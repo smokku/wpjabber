@@ -1,0 +1,13 @@
+ - merge jabberd 1.4 CVS changes and updates
+ + move to external expat
+
+ - IDN support
+ - stringprep etc. profiles
+
+ + sql XDB
+   (PostgreSQL tested, rest unknown)
+ - ldap auth
+
+inbound streams (c2s, s2s, l2s):
+ - MAX_STANZA_SIZE - drop stream with relevant errormessage
+  (prevents possible OOM DOS)

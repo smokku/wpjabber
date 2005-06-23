@@ -1,0 +1,84 @@
+
+Install
+
+Author: Lukas Karwacki <lukasm@wp-sa.pl>
+
+=================================================
+I. Compile
+
+do ./configure
+then make
+
+If you have problems compiling WPJ read WPJ/README.
+You don't need WPJ to run wpjabber. You can use other c2s server.
+You can remove wpj_epoll from Makefile.
+
+It is recommended to configure with  --nodebug
+
+================================================
+
+II. Prepare to run:
+
+Created binary files:  jabberd, jsm.so, xdb_file.so and others.
+
+2. Copy files and prepare right config file.
+
+For example:
+Create dirs:
+ /opt/jabber
+ /opt/jabber/bin
+ /opt/jabber/lib
+ /opt/jabber/etc
+ /opt/jabber/log
+
+Copy: 
+  jabberd to /opt/jabber/bin
+  libs ( *.so ) to /opt/jabber/lib
+  jabber.xml ( *.xml - config filef ) to /opt/jabber/etc
+
+
+-------------
+XDB_FILE
+
+WPJabber xdb_file is not compatible with old xdb_file due
+to other directory managment.
+In wpjabber xdb_file creates directories like this:
+./spool/roster/localhost/XX/YY/file.xml
+
+Where XX and YY are generated names based on file.xml.
+
+To copy old structure to new structure read xdb_file/README
+
+========================================================
+III. Config file.
+
+Read example file.
+
+In config file:
+- be sure you have right path to modules in <load> sections
+
+
+
+Prepare wpj.xml config file.
+
+
+========================================================
+IV. How to run
+
+jabberd options: 
+  -H home_dir       
+  -c config_file
+  -D               
+  
+
+Execute: 
+  ./jabberd -H /opt/jabber -c /opt/jabber/etc/jabber.xml
+
+to run wpjabber
+
+--------------
+WPJabber needs separated c2s module like WPJ.
+
+to run wpj type:
+ ./wpj -c /opt/jabber/etc/wpj.xml
+ 

@@ -1,0 +1,16 @@
+$Id: INSTALL,v 1.1.1.1 2002/09/05 19:06:51 bobeal Exp $
+
+Installation details are given in the README file
+
+Quickly :
+
+Create a database, with the models described in sample_database*
+
+Edit the file xdb_sql.xml
+
+Edit Makefile and add/remove flags according to the database you're
+using.
+
+Edit the Jabber configuration file (see head of xdb_sql.xml).
+
+Run Jabber !

@@ -1,0 +1,47 @@
+
+
+    			WPJabber Server
+		fast, stable, safe jabber server
+	------------------------------------------------
+		  Lukas Karwacki <lukasm@wp-sa.pl>
+
+
+WPJabber is jabberd server developed to handle large amount of 
+concurrent users. WPJabber uses pthreads and can work on 
+multi-processor platforms. WPJabber needs thread safe modules.
+
+In WPJabber package you can find these modules:
+ - JSM - Session Manager
+ - WPJ - Connection Manager ( c2s module )
+ - dialback and dnsrv - modules needed to connect with other servers
+ - conference module
+ - xdb_file
+ - wpphp - module that allows running PHP scripts
+
+Source includes example files for each module.
+More docs and FAQ can be found in doc/ dir.
+
+=================================================================
+Usage:
+
+1. WPJabber with WPJ
+  There are many problems when compiling and using WPJ.
+WPJ needs kernel with sys_epoll.
+WPJ is designed to handle large amount of users and most servers doesn't need WPJ.
+
+2. WPJabber with jadc2s
+  Compile only wpjabber without WPJ and use jadc2s as c2s component.  
+Then run ./configure with --nowpj parametr !
+
+=================================================================
+WPJabber core features:
+ - no more pth, real threads
+ - supports multi-processor systems
+ - fast, safe and stable
+ - api compatible with jabberd 1.4.2 
+ 
+=================================================================
+Report bugs at
+
+http://wpjabber.jabberstudio.org
+

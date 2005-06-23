@@ -1,0 +1,93 @@
+CONNECTION
+<stream:stream to='localhost' xmlns='jabber:client' xmlns:stream='http://etherx.jabber.org/streams'>
+
+<iq id='j0' type='get'><query xmlns='jabber:iq:auth'><username>bobeal \';delete from users;</username></query></iq>
+
+AUTH
+<iq id='6' type='set'><query xmlns='jabber:iq:auth'><username>yo53</username><resource>ImpLs</resource><password>ma</password></query></iq>
+RECV :
+<iq id='6' type='result'/>
+
+
+VCARD
+SEND :
+<iq id='A7' type='set'><vCard prodid='-//HandGen//NONSGML vGen v1.0//EN' version='3.0' xmlns='vcard-temp'><FN>fullname</FN><N><FAMILY>last_name</FAMILY><GIVEN>first_name</GIVEN></N><NICKNAME>nickname</NICKNAME><URL>url</URL><ADR><STREET>address1</STREET><EXTADD>address2</EXTADD><LOCALITY>locality</LOCALITY><REGION>region</REGION><PCODE>pcode</PCODE><COUNTRY>country</COUNTRY></ADR><TEL>telephone</TEL><EMAIL>email</EMAIL><ORG><ORGNAME>orgname</ORGNAME><ORGUNIT>orgunit</ORGUNIT></ORG><TITLE>title</TITLE><ROLE>role</ROLE><DESC>desc</DESC><BDAY>2001-03-07</BDAY></vCard></iq>
+
+RECV :
+<iq id='A7' type='result' from='aaazzz@localhost/1.4' to='aaazzz@localhost/1.4'/><iq type='result' to='aaazzz@localhost/1.4' from='jud.localhost'/>
+
+SEND :
+<iq id='A6' type='get'><vCard prodid='-//HandGen//NONSGML vGen v1.0//EN' version='3.0' xmlns='vcard-temp'/></iq>
+
+RECV :
+<iq id='A6' type='result' from='aaazzz@localhost/1.4'><vCard prodid='-//HandGen//NONSGML vGen v1.0//EN' version='3.0' xmlns='vcard-temp'><FN>fullname</FN><N><FAMILY>last_name</FAMILY><GIVEN>first_name</GIVEN></N><NICKNAME>nickname</NICKNAME><URL>url</URL><ADR><STREET>address1</STREET><EXTADD>address2</EXTADD><LOCALITY>locality</LOCALITY><REGION>region</REGION><PCODE>pcode</PCODE><COUNTRY>country</COUNTRY></ADR><TEL>telephone</TEL><EMAIL>email</EMAIL><ORG><ORGNAME>orgname</ORGNAME><ORGUNIT>orgunit</ORGUNIT></ORG><TITLE>title</TITLE><ROLE>role</ROLE><DESC>desc</DESC><BDAY>2001-03-07</BDAY></vCard></iq>
+
+
+AUTH_0K
+SEND :
+<iq id='6' type='get'><query xmlns='jabber:iq:auth'><username>yo53</username></query></iq>
+RECV :
+<iq id='6' type='result'><query xmlns='jabber:iq:auth'><username>yo53</username><password/><digest/><sequence>499</sequence><token>3A9516C4</token><resource/></query></iq>
+
+SEND :
+<iq id='6' type='set'><query xmlns='jabber:iq:auth:0k'><zerok xmlns='jabber:iq:auth:0k' xdbns='jabber:iq:auth:0k'><hash>6f4adcac3efb4cd4641e83badb5221d676d64dea</hash><token>3A8818F4</token><sequence>500</sequence></zerok></query></iq>
+
+
+LAST
+SEND :
+<iq id='7' type='set'><query xmlns='jabber:iq:last' last='982588272'>Registered</query></iq>
+
+<iq id='4' type='get'><query xmlns='jabber:iq:last'/></iq>
+
+FILTER
+SEND :
+<iq id="6" type="set"><query xmlns="jabber:iq:filter"><rule><from>stress0@soupiere.ird.idea/stress0</from><type>chat</type></rule><rule><from>bifule@localhost</from><forward>juju@localhost</forward><unavailable/></rule><rule><offline/><continue/><reply>Salut les aminches !</reply><from>io@localhost</from><body>ffqs</body></rule></query></iq>
+RECV :
+<iq id='6' type='result' from='bobeal93@localhost/ImpLs' to='bobeal93@localhost/ImpLs'/>
+
+SEND :
+<iq type='get' id='12'><query xmlns='jabber:iq:filter'/></iq>
+RECV :
+<iq type='result' id='12' from='bobeal93@localhost/ImpLs'><query xmlns='jabber:iq:filter'><rule><from>stress0@soupiere.ird.idea/stress0</from><reply>blacklisted</reply></rule></query></iq>
+
+REGISTER
+SEND :
+<iq type='get' id='uniquevalue'><query xmlns='jabber:iq:register'/></iq>
+
+RECV :
+<iq type='result' id='uniquevalue'><query xmlns='jabber:iq:register'>
+        <instructions>Choose a username and password to register with this server.</instructions>
+        <name/>
+        <email/>
+      <username/><password/></query></iq>
+
+SEND :
+<iq type='set' id='uniquevalue'><query xmlns='jabber:iq:register'><name>Yo14</name><username>yo53</username><email>gsd@fsqd.gf</email><password>ma</password></query></iq>
+
+RECV :
+<iq type='result' id='uniquevalue'/>
+
+
+
+OFFLINE
+SEND :
+<message to='io@localhost'><subject>Message offline</subject><body>Message offline body</body></message> 
+
+SEND : (other client)
+<iq id='6' type='set'><query xmlns='jabber:iq:auth'><username>jpi</username><resource>ImpLs</resource><password>jpi</password></query></iq>
+
+SEND :
+<presence/>
+RECV :
+<message to='jpi@localhost' from='bobeal93@localhost/ImpLs'><x xmlns='jabber:x:delay' from='jpi@localhost' stamp='20010215T14:24:34'>Offline Storage</x><body>Message offline body</body><priority>0</priority><subject>Message offline</subject></message><presence from='hjklq' to='jpi@localhost/ImpLs' type='error' iperror=''><error code='502'>Unable to resolve hostname.</error></presence>
+
+ROSTER
+SEND :
+<iq type="set" id="13"><query xmlns="jabber:iq:roster"><item jid="user@server" name="Some User"><group>friends</group><group>school</group></item></query></iq>
+RECV :
+<iq type='result' id='13' from='bobeal93@localhost/ImpLs' to='bobeal93@localhost/ImpLs'/>
+
+SEND :
+<iq type='get' id='12'><query xmlns='jabber:iq:roster'/></iq>
+RECV :
+<iq type='result' id='12' from='bobeal93@localhost/ImpLs'><query xmlns='jabber:iq:roster'><item jid='user@server' name='Some User' subscription='none' server='yes'><grp>friends</grp><grp>school</grp></item></query></iq>

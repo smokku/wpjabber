@@ -1,0 +1,52 @@
+Announce
+AUTHORS
+Bugs
+ChangeLog
+COPYING
+database_documentation.txt
+INSTALL
+Makefile
+README
+TODO
+sample_database.oracle.sql : simple Oracle model
+sample_database.pg.sql : simple PostgreSQL model
+sample_database.sql    : simple Mysql model
+
+xdb_sql.xml            : configuration file for xdb_sql (MySQL and PostgreSQL)
+xdb_sql_oracle.xml     : configuration file for xdb_sql (Oracle)
+tests.txt              : xml nodes for unary tests
+
+
+                   :     SOURCE FILES
+
+Makefile           : obvious.
+
+xdb_sql.h          :
+xdb_sql.c          : main module.
+
+xdb_sql_backend.c  : Handles generic backend stuff.
+xdb_sql_backend.h  :
+
+xdb_sql_mysql.c    : Handles mysql backend.
+xdb_sql_mysql.h    :
+
+xdb_sql_pgsql.c    : Handles postgresql backend.
+xdb_sql_pgsql.h    :
+
+xdb_sql_config.c   : "Old way" implementation of each namespace (see README)
+
+xdb_sql_generic.c  : generic SQL database helpers
+
+xdb_sql_querydef.c : Manages queries from configuration file
+
+xdb_sql_auth.c     : One file per namespace.
+xdb_sql_auth0k.c   : 
+xdb_sql_filter.c   : 
+xdb_sql_vcard.c    : 
+xdb_sql_offline.c  :
+xdb_sql_register.c :
+xdb_sql_roster.c   :
+xdb_sql_last.c     :
+xdb_sql_roomconfig.c  :
+xdb_sql_roomoutcast.c :
+

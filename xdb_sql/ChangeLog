@@ -1,0 +1,59 @@
+lun avr 07 21:57:27 2003  Benoit Orihuela  <orihuela@free.fr>
+
+	* sample_database.sql, sample_database.pg.sql, xdb_sql.c,
+	xdb_sql_backend.c, xdb_sql_config.c, xdb_sql.h,
+	xdb_sql_oracle.xml, xdb_sql_roomconfig.c, xdb_sql_roomoutcast.c,
+	xdb_sql.xml : added MUC support, better backend initialization
+	handling, better shutdown handling (from Felipe Madero's patch) 
+
+dim jan 12 18:04:46 2003  bobeal  <orihuela@free.fr>
+
+	* xdb_sql_backend.c: added support for Oracle backend (from Mike
+	Shoyher's patch)
+
+	* sample_database.oracle.sql, xdb_sql_oracle.h, xdb_sql_oracle.c,
+	xdb_sql_oracle.xml : new files for Oracle backend (from Mike
+	Shoyher's patch) 
+
+	* Makefile: integrated Mike Shoyher's patch to make easier
+	choosing of backends
+
+	* xdb_sql_querydef.c : added optional "length" attribute to
+	bindvars.  Oracle doesn't like if one passes a value which is
+	longer than a column (postgres just truncates it but oracle raises
+	an error) so I've added truncation if there is a length attribute
+	specified. Also if an empty string was passed for a bindvar that
+	has a default value, it will be replaced with the default
+	value. (from Mike Shoyher's patch) 
+	
+dim oct 20 18:05:39 2002  bobeal  <orihuela@free.fr>
+
+	* sample_database.pg.sql: updated username fields to 64 chars,
+	expanded subscribe field to 255 in rosterusers table.
+
+	* sample_database.sql : updated jid fields to 64 chars in
+	rosterusers and rostergroups tables. also updated subscribe field
+	to 255 chars.
+	
+mar oct 15 12:00:00 2002  bobeal  <orihuela@free.fr>
+        * added possibility of setting roster bookmarks
+
+sam oct 12 12:00:00 2002  bobeal  <orihuela@free.fr>
+        * changed username to be 64 chars instead of 32
+	* xdb_sql_vcard : added a vcard xmlnode (prevents memory corruption
+	  and crash with the user profiles). patch by srlee.
+	
+# Changes since xdb_mysql 1.0-pre-1
+
+	Now targets Jabber 1.4.
+	auth, spool, roster are implemented.
+	filter and register are implemented.
+	last, offline, vCard and Yahoo are implemented.
+	Targets MySQL and PostgreSQL (better tested on PostgreSQL)
+	
+# Changes since original code in xdb_sql
+
+	Improved for compatibility with Jabber 1.1 and DB abstraction
+	See README for details.
+	
+

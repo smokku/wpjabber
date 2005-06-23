@@ -1,0 +1,34 @@
+$Id: AUTHORS,v 1.4 2003/04/07 20:10:55 bobeal Exp $
+
+
+This program is based on the xdb_mysql (Jabber 1.0 transport module)
+initially developed by the Jabber Team (Eric Bowersox
+<erbo@jabber.org> ?), under an undefined distribution policy.
+
+
+The code was improved for compatibility with Jabber 1.1 and DB
+abstraction, by IDEALX (http://www.IDEALX.org), for LibertySurf
+Télécom (http://www.libertysurftelecom.fr).
+
+Active members of the xdb_sql development project have been :
+ David Barth <david.barth@IDEALX.com>,
+ Rodolphe Dugé de Bernonville,
+ David Le Corfec, 
+ Julien Pinon.
+
+Current Maintainer :
+ Benoit Orihuela <orihuela@free.fr>
+
+Thanks to Aurelien Gateau (<aurelien@notrefamille.com>) for its patch
+to add ODBC support to xdb_sql.
+
+Thanks to Pier Philipsen (<pier.philipsen@lostboys.nl>) for sample
+database documentation and suggestions.
+
+Thanks to Felipe Madero (<fmadero@hal.famaf.unc.edu.ar>) for MUC
+support and other improvments.
+
+The program xdb_sql was made Open Source software (see COPYING and the
+source files headers) by LibertySurf Télécom, in order to make it
+available for public distribution and modification, and to contribute
+to the Jabber code base.

@@ -1,0 +1,27 @@
+$Id: TODO,v 1.2 2002/10/20 11:24:11 bobeal Exp $
+
+TODO-list :
+
+	* Maybe, change the way tables are joined. Currently, this is
+	  done with the username field. It would be a better idea to
+	  join them via an integer.
+
+	* Managing errors :
+	  There is a no way to make a difference between a critical
+	  error and a normal one.
+
+	  The different kind of errors from xdb_sql, roughly sorted
+	  from the most critical to the less are :
+	    Configuration error :
+	      a querydef is missing or invalid in the configuration file
+	      No connection to the database.
+	    Query errors :
+	      Connection to the database lost.
+	    User not specified :
+	      The xml query contains no username.
+	    User not unique :
+	      He should be.
+	    User not found :
+	      The querying user is not in the base.
+		
+

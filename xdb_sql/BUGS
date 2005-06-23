@@ -1,0 +1,16 @@
+
+* From Pier Philipsen (<pier.philipsen@lostboys.nl>) :
+  added 2001/10/10
+
+"The crash occured in the handle_query_v1() (see xdb_sql_config.c)
+function with the call to the validate function. This only caused a
+problem for the vcard-get and vcard-set queries. I "solved" the
+problem by skipping the call to the validate function :
+
+      if ((*(self->query_table[i].validate_func))(x)) {
+
+This way it doesn't check the configuration XML, but it works anyway.
+This probably will not help you very much, because I guess that this
+problem doesn't happen in your environment (mine is FreeBSD)."
+
+

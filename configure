@@ -1,0 +1,109 @@
+#!/bin/sh
+##
+# Jabberd Configuration File
+##
+
+PREFIX="."
+
+JABBERD_BIN='jabberd'
+WPJ_BIN=''
+
+# remove comment if you need own sys_epoll library
+#OWN_SYS_EPOLL='1'
+
+CONFIG_FILE='jabber.xml'
+
+DEFINES='-I. -I../jabberd -DWPJABBER'
+
+for x in $@; do
+    parname=`echo $x | sed "s/\([^=]*\).*$/\1/"`
+    parvalu=`echo $x | sed "s/[^=]*=\(.*\)$/\1/"`
+    
+    case x$parname in
+      x--prefix)
+	PREFIX=$parvalu;;
+      x--nodebug)
+	DEFINES="$DEFINES -DNODEBUG"
+	echo "*** no debug ...";;
+      x--forwp)
+	DEFINES="$DEFINES -DFORWP"
+	echo "*** compile for WP ...";;      
+      x--optimize)
+	DEFINES="$DEFINES -O2"
+	echo "*** compile wth optimizations ...";;      
+      x--arch686)
+	DEFINES="$DEFINES -march=i686"
+	echo "*** compile for 686 ...";;      
+      x--nowpj)
+	DEFINES="$DEFINES -DNOWPJ"
+	echo "*** compile without safe restart for WPJ ...";;      
+      x--help)
+        echo "Possible flags/switches:"
+        echo "  --prefix=[DIR] default=./"
+	echo "  --nodebug - compile without debug logs, up to 10% faster"
+	echo "  --optimize - compile with code optimization , not tested :("	
+	exit;;      
+    esac;
+done;
+
+if [ -n "$CC" ]; then
+    CC="$CC";
+else
+    CC="gcc";
+fi;
+
+CFLAGS="-g -Wall  $DEFINES"
+LIBS="$LIBS"
+
+if [ "$OWN_SYS_EPOLL" = "1"  ]; then
+  printf "Using onw sys epoll lib\n"
+  SYS_EPOLL_LIB='epoll_lib'
+  WPJ_CFLAGS="-g -Wall -I../jabberd/lib -DHAVE_SSL -I epoll-lib/include -DOWN_SYS_EPOLL $DEFINES"
+  WPJ_LIBS="$LIBS -Lepoll-lib/lib -lepoll"  
+else
+  printf "Using system sys epoll\n"
+  WPJ_CFLAGS="-g -Wall -I../jabberd/lib -DHAVE_SSL $DEFINES"
+  WPJ_LIBS="$LIBS"
+fi
+
+
+
+printf "Setting Build Parameters..."
+hosttype=`uname -s`
+case $hosttype in
+    Linux)
+        WPJ_BIN=wpj
+        WPJ_CFLAGS="$WPJ_CFLAGS"
+        WPJ_LIBS="$WPJ_LIBS -lpthread -lcrypto -lssl -lexpat"
+        CFLAGS="$CFLAGS -fPIC"
+        LIBS="$LIBS -ldl -lpthread -lresolv -lexpat";;
+    FreeBSD)
+	CFLAGS="$CFLAGS -I/usr/src/contrib/libstdc++ -D_THREAD_SAFE -DSUNOS"
+	LIBS="$LIBS -pthread -lcompat -lc_r -L/usr/local/lib -liconv -lexpat";;
+    OpenBSD)
+	CFLAGS="$CFLAGS -I/usr/src/contrib/libstdc++ -D_THREAD_SAFE -DSUNOS"
+	LIBS="$LIBS -pthread -lcompat -lc_r -L/usr/local/lib -liconv -lexpat";;
+    SunOS)
+        CFLAGS="$CFLAGS -DSUNOS -D_REENTRANT -fPIC"
+        LIBS="$LIBS -ldl -lsocket -lnsl -lpthread -lresolv -lexpat";;
+esac
+
+printf "     Done.\n"
+
+printf "Generating JIT Settings Script..."
+cat << EOF > platform-settings
+#!/bin/sh
+CC=$CC
+MCFLAGS=-shared
+COMMON_CFLAGS=$CFLAGS
+COMMON_LIBS=$LIBS
+PREFIX=$PREFIX
+CONFIG_FILE=$CONFIG_FILE
+OUT_FILE=$JABBERD_BIN
+WPJ_CFLAGS=$WPJ_CFLAGS
+WPJ_LIBS=$WPJ_LIBS
+WPJ_BIN=$WPJ_BIN
+WPJ_BUILD=$SYS_EPOLL_LIB $WPJ_BIN
+EOF
+chmod 0600 platform-settings
+printf "   Done.\n\n"

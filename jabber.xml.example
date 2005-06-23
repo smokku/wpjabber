@@ -1,0 +1,336 @@
+<jabber>
+
+  <!-- 
+       Logging
+        -->
+  <log id='elogger'>
+    <host/>
+    <logtype/>
+    <format>%d: [%t] (%h): %s</format>
+    <file>log-error</file>
+  </log>
+
+  <log id='rlogger'>
+    <host/>
+    <logtype>record</logtype>
+    <format>%d %h %s</format>
+    <file>log-record</file>
+  </log>
+
+  <!-- 
+     session, replace localhost with your jabber host name 
+     the same value put in <host> tag below 
+     -->
+ 
+  <service id="sessions">
+    <host><jabberd:cmdline flag="h">localhost</jabberd:cmdline></host>
+      <jsm xmlns="jabber:config:jsm">
+      
+      <!--
+           very important !!!
+           JSM can support only one virtual domain 
+	   you must give this tag to make jabber work 
+	   instead of localhost place 
+	   your server name, the same as above in host tag -->
+      <host><jabberd:cmdline flag="h">localhost</jabberd:cmdline></host>
+
+      <threads>
+         <!-- deliver threads -->
+         <deliver>5</deliver>
+         <!-- session threads -->
+         <session>10</session>
+         <!-- authreg threads -->
+         <authreg>6</authreg>
+      </threads>
+
+      <!-- 
+           stats file with number of users and sessions -->
+      <stats_file>stats_file</stats_file>
+      
+      <vCard>
+        <FN>Jabber Server with pthreads</FN>
+        <DESC>WPJabber JSM module. By Lukas Karwacki</DESC>
+        <URL>http://wpjabber.jabberstudio.org/</URL>
+      </vCard>
+      
+      <register>
+        <instructions>Choose a username and password to register with this server.</instructions>
+        <name/>
+        <email/>
+      </register>
+
+      <admin>
+        <read></read>
+        <write></write>
+			<reply>
+			  <subject>Admin message</subject>
+			  <body>Message delivered to admins.</body>	  
+			</reply>
+      </admin>
+            
+
+     <browse>
+<!--
+        <item category="service" type="jud" jid="search.localhost" name="Jabber Search Engine">
+    	    <ns>jabber:iq:search</ns>
+        </item>
+
+	<item category="service" type="icq" jid="icq.localhost" name="Link with ICQ">
+	    <ns>jabber:iq:gateway</ns>
+	    <ns>jabber:iq:register</ns>
+	    <ns>jabber:iq:search</ns>
+	</item>
+
+	<item category="conference" type="public" jid="conference.localhost" name="Public"/>
+	
+	<item category="conference" type="private" jid="private.localhost" name="Private"/>
+-->
+    </browse>
+
+    <!-- Check users and sessions every x sec-->
+    <usergc>60</usergc>
+
+    <!-- Limit number of contacts -->
+    <mod_roster>
+  	  <maxsize>250</maxsize>
+	  <message>You have to many contacts</message>
+	  <from><jabberd:cmdline flag="h">localhost</jabberd:cmdline></from>
+    </mod_roster>
+
+    <!-- Enable mod status offline -->
+    <mod_status_offline/>
+
+    <!-- Enable mod privacy -->
+    <mod_privacy/>
+
+    <!-- mod version -->
+    <mod_version>    
+<!--    <no_os_version/> -->
+    </mod_version>
+
+    <disco>
+      <identity category='services' type='jabber' name='WPJabber Server'/>
+       <feature var='jabber:iq:browse'/>
+       <feature var='jabber:iq:agents'/>
+       <feature var='jabber:iq:register'/>
+       <feature var='jabber:iq:time'/>
+       <feature var='jabber:iq:last'/>
+       <feature var='jabber:iq:version'/>
+       <feature var='http://jabber.org/protocol/stats'/> 
+       <feature var='jabber:iq:privacy'/>
+    </disco>
+
+<!--    If you want everybody to see server stats.
+	<stats>
+	   <allow_all/> 
+	</stats>
+ -->
+
+     <packet_stats>
+          <file>stats/packet</file>
+     	  <file domain='jabber.wp.pl'>stats/packet_jabber</file>
+	  <file domain='icq.jabber.wp.pl'>stats/packet_icq</file>
+          <interval>10</interval>
+     </packet_stats>
+
+
+    </jsm>
+
+    <load main="jsm">
+      <jsm>lib/jsm.so</jsm>      
+ <!-- <mod_packet_stats>lib/jsm.so</mod_packet_stats>   -->
+      <mod_privacy>lib/jsm.so</mod_privacy>
+<!--  <mod_echo>lib/jsm.so</mod_echo> -->
+      <mod_roster>lib/jsm.so</mod_roster>      
+      <mod_announce>lib/jsm.so</mod_announce>
+      <mod_offline>lib/jsm.so</mod_offline>
+<!--  <mod_status_offline>lib/jsm.so</mod_status_offline> -->
+      <mod_presence>lib/jsm.so</mod_presence>
+      <mod_auth_plain>lib/jsm.so</mod_auth_plain>
+      <mod_auth_digest>lib/jsm.so</mod_auth_digest>
+      <mod_register>lib/jsm.so</mod_register>
+      <mod_log>lib/jsm.so</mod_log>
+      <mod_last>lib/jsm.so</mod_last>      
+      <mod_xml>lib/jsm.so</mod_xml>      
+      <mod_agents>lib/jsm.so</mod_agents>
+      <mod_vcard>lib/jsm.so</mod_vcard>      
+      <mod_time>lib/jsm.so</mod_time>
+      <mod_version>lib/jsm.so</mod_version>
+      <mod_browse>lib/jsm.so</mod_browse>
+      <mod_disco>lib/jsm.so</mod_disco>
+      <mod_stats>lib/jsm.so</mod_stats>      
+<!--       
+      <mod_admin>lib/jsm.so</mod_admin>
+-->      
+
+   </load>
+
+  </service>
+ 
+  <xdb id="xdbother">
+    <host/>
+    <ns>jabber:iq:auth</ns>
+    <ns>jabber:iq:register</ns>
+    <ns>jabber:x:delay</ns>
+    <ns>jabber:iq:last</ns>
+    <load>
+      <xdb_file>lib/xdb_file.so</xdb_file>
+    </load>
+    <xdb_file xmlns="jabber:config:xdb_file">    
+        <spool><jabberd:cmdline flag='s'>./spool/other</jabberd:cmdline></spool>
+      <timeout>0</timeout>    	
+      <maxfiles>7963</maxfiles>	
+    </xdb_file>
+  </xdb>
+
+ <xdb id="xdbroster">
+    <host/>
+    <ns>jabber:iq:roster</ns>
+    <load>
+      <xdb_file>./lib/xdb_file.so</xdb_file>
+    </load>
+    <xdb_file xmlns="jabber:config:xdb_file">
+      <spool><jabberd:cmdline flag='s'>./spool/roster</jabberd:cmdline></spool>
+      <timeout>0</timeout>    
+      <maxfiles>7963</maxfiles>
+    </xdb_file>
+  </xdb>
+
+ <xdb id="xdboffline">
+    <host/>
+    <ns>jabber:x:offline</ns>
+    <load>
+      <xdb_file>./lib/xdb_file.so</xdb_file>
+    </load>
+    <xdb_file xmlns="jabber:config:xdb_file">
+      <spool><jabberd:cmdline flag='s'>./spool/offline</jabberd:cmdline></spool>
+      <timeout>0</timeout>    
+      <maxfiles>7963</maxfiles> 
+      <sizelimit>100000</sizelimit>           
+    </xdb_file>
+  </xdb>           
+
+ <xdb id="xdbprivate">
+    <host/>
+    <ns/>
+    <load>
+      <xdb_file>./lib/xdb_file.so</xdb_file>
+    </load>
+    <xdb_file xmlns="jabber:config:xdb_file">
+      <spool><jabberd:cmdline flag='s'>./spool/private</jabberd:cmdline></spool>
+      <timeout>0</timeout>    
+      <maxfiles>7963</maxfiles>      
+    </xdb_file>
+  </xdb>     
+
+  <!-- connection with external servers -->
+  <service id="dnsrv">
+    <host/>
+    <load>
+      <dnsrv>lib/dnsrv.so</dnsrv>
+    </load>
+    <dnsrv xmlns="jabber:config:dnsrv">
+    	<resend service="_jabber._tcp">s2s</resend>
+    	<resend>s2s</resend>
+    </dnsrv>
+  </service>
+
+  <service id="s2s">
+    <load>
+      <dialback>lib/dialback.so</dialback>
+    </load>
+    <dialback xmlns='jabber:config:dialback'>
+      <ip port="5269"/>
+      <idletimeout>1000</idletimeout>
+      <queuetimeout>30</queuetimeout>
+      <karma>
+        <init>50</init>
+        <max>50</max>
+        <inc>4</inc>
+        <dec>1</dec>
+        <penalty>-5</penalty>
+        <restore>50</restore>
+      </karma>
+    </dialback>
+  </service>
+
+
+  <!-- If you want to log your server load 
+  <wp>
+    <log file="load_wpj" number="0" time="60"/>
+    <log file="load_icq" number="1" time="60"/>
+  </wp>
+  -->
+
+  <io>  
+    <karma>
+      <heartbeat>2</heartbeat>
+      <init>-100</init>
+      <max>50</max>
+      <inc>4</inc>
+      <dec>1</dec>
+      <penalty>-3</penalty>
+      <restore>50</restore>
+    </karma>
+    <rate points="2000" time="1"/>
+  </io>
+  
+  <pidfile>jabber.pid</pidfile>
+
+<!-- link to client module -->
+ <service id="c2s">
+  <accept>
+   <log>0</log>
+   <ip>localhost</ip>
+   <port>5000</port>
+   <secret>secret</secret>
+   <timeout>30</timeout>
+  </accept>
+ </service>
+
+<!-- link to JUD -->
+ <service id="search.localhost">
+  <accept>
+   <ip>localhost</ip>
+   <port>5002</port>
+   <secret>secret</secret>
+   <timeout>30</timeout>
+  </accept>
+ </service>
+
+ <service id="icq.localhost">
+ <host>sms.icq.localhost</host>
+  <accept>
+   <log>1</log>
+   <ip>localhost</ip>
+   <port>5555</port>
+   <secret>secret</secret>
+   <timeout>30</timeout>
+  </accept>
+ </service>
+
+ <service id="conference.localhost">
+  <host>private.localhost</host>
+  <accept>
+   <ip>locahost</ip>
+   <port>5003</port>
+   <secret>secret</secret>
+   <timeout>30</timeout>
+  </accept>
+ </service>
+
+
+<!-- link to external jabber with dialback module 
+ <service id="s2s">
+   <host/>
+  <accept>
+   <ip>localhost</ip>
+   <port>5004</port>
+   <secret>secret</secret>
+   <timeout>30</timeout>
+  </accept>
+ </service>
+-->
+
+</jabber>
+

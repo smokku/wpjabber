@@ -1,0 +1,29 @@
+Here is the first public release of xdb_sql, labeled 1.0-pre-1
+It implements only basic functionalities (auth, roster, offline, register)
+
+We plan to improve it ! from TODO file :
+
+	  V 1.x 
+	
+	      All Jabber 1.4 fonctionnalities
+	
+	
+	  V 2.x 
+	      Non-blocking mode (PostgreSQL, perhaps MySQL)
+	      MIO based
+	      CancelRequest support
+	      Full generic query mapping
+	      Db reconnect support
+	      Stress test suite
+	      Better error handling
+	      Jabber:x:expire handling (internal, without server manually
+	      Expiring messages, perhaps with a stored trigger, what about
+	      MySQL ?)
+
+
+	  V 3.0 
+
+	      Posix Threads
+
+
+We hope the README file provides enough help on using it.

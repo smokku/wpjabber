@@ -1,0 +1,163 @@
+The most important table is the "users" table with the two columns: username and 
+password.
+
++----------------------------------------------------------------------------+
+|users: column|meaning                                                       |
+|-------------+--------------------------------------------------------------|
+|username     |the full jabber id, without resource, e.g. user@yourserver.com|
+|-------------+--------------------------------------------------------------|
+|password     |the user's password in plain text                             |
++----------------------------------------------------------------------------+
+
+There is a table "usershash" used in jabberd14 since version 1.4.3 if the user
+wants to store only hashed passwords. (Normally you should not do this, as you
+are descreasing the overall security with hashed passwords in general.)
+The table has two columns: username and the hashed password.
+
++---------------------------------------------------------------------------------+
+|usershash: column|meaning                                                        |
+|-----------------+---------------------------------------------------------------|
+|username         |the full jabberd id, without resource, e.g. user@yourserver.com|
+|-----------------+---------------------------------------------------------------|
+|password         |the user's hashed password                                     |
++---------------------------------------------------------------------------------+
+
+There is a corresponding table "users0k" ("0k" means zero knowledge)
+used for secure logins. It has the columns: username, hash, token,
+sequence. The only thing you have to know about this internal table is
+that each record in the users table has a corresponding record in the
+users0k table.
+
++------------------------+
+|users0k: column|meaning |
+|---------------+--------|
+|username       |as usual|
+|---------------+--------|
+|hash           |        |
+|---------------+--------|
+|token          |        |
+|---------------+--------|
+|sequence       |        |
++------------------------+
+
+The table "last" has three columns: username, seconds, state. It is
+intended to store the last time that a user was online. Read by
+mod_announce and set by mod_last. Normally it will only log when
+disconnecting (state="Disconnected"), the only exception is when the
+user registers: in that case it makes a log with the
+state="Registered".
+
++------------------------------------------+
+|last: column|meaning                      |
+|------------+-----------------------------|
+|username    |as usual                     |
+|------------+-----------------------------|
+|seconds     |last time the user was online|
+|------------+-----------------------------|
+|state       |"Registered", "Disconnected" |
++------------------------------------------+
+
+The table "userres" has two columns: username, resource. Obviously
+this contains all resources for a user. It seems that this table is
+only updated when a new account is made. If a user later logs in with
+a different resource, this is not added to the table. The use of this
+table is rather questionable.
+
++-------------------------------------------------------------------------------+
+|userres: column|meaning                                                        |
+|---------------+---------------------------------------------------------------|
+|username       |                                                               |
+|---------------+---------------------------------------------------------------|
+|resource       |a user can log in from multiple resources. Only one at the same|
+|               |time!                                                          |
++-------------------------------------------------------------------------------+
+
+ The table "rosterusers" has the columns
+
+
+The next table shows the value of three columns of the rosterusers
+table during a subscription dialog.
+
++---------------------------------------------------------+
+|event just finished    |subscription|ask      |subscribe |
+|-----------------------+------------+---------+----------|
+|external subscr request|None        |-        |Normal Sub|
+|-----------------------+------------+---------+----------|
+|our accepting          |From        |Subscribe|          |
+|-----------------------+------------+---------+----------|
+|external accepting     |Both        |-        |          |
++---------------------------------------------------------+
+
+The other way around the database behaves
+
++----------------------------------------------------+
+|event just finished|subscription|ask      |subscribe|
+|-------------------+------------+---------+---------|
+|our subcr request  |None        |Subscribe|         |
+|-------------------+------------+---------+---------|
+|external accepting |To          |-        |         |
+|-------------------+------------+---------+---------|
+|our accepting      |Both        |-        |         |
++----------------------------------------------------+
+
+
+
+The table rostergroups keeps track of the grouping of the buddies.
+
+
+The spool table. This one is accessed by the "mod_offline" module just
+after the user has logged on. It checks for any offline messages
+stored for a user. After sending the delayed messages it removes them
+from the spool table by doing an xdb_set in the jabber:iq:offline
+namespace with an empty content.
+
+
+The filters table
+
+
+The vcard table. It should be noted that the vcard protocol is not well
+documented. For instance: the winjab client has much more fields.
+
++-------------------------+
+|vcard:column|meaning     |
+|------------+------------|
+|usename     |            |
+|------------+------------|
+|full_name   |            |
+|------------+------------|
+|first_name  |            |
+|------------+------------|
+|last_name   |            |
+|------------+------------|
+|nick_name   |            |
+|------------+------------|
+|url         |            |
+|------------+------------|
+|address1    |            |
+|------------+------------|
+|address2    |            |
+|------------+------------|
+|localicty   |            |
+|------------+------------|
+|region      |            |
+|------------+------------|
+|pcode       |            |
+|------------+------------|
+|country     |            |
+|------------+------------|
+|telephone   |            |
+|------------+------------|
+|email       |            |
+|------------+------------|
+|orgname     |            |
+|------------+------------|
+|orgunit     |            |
+|------------+------------|
+|title       |            |
+|------------+------------|
+|role        |            |
+|------------+------------|
+|b_day       |day of birth|
+|------------+------------|
+|descr       |            |
++-------------------------+
