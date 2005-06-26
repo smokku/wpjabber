@@ -180,7 +180,7 @@ static int purge_offline(XdbSqlDatas *self,
 static int test_root_node(xmlnode root, const char *tag){
     log_debug("checking %s", xmlnode2str(root));
     if (j_strcmp(xmlnode_get_name(root), tag) != 0){
-	log_error(ZONE,"incorred node");
+	log_error(ZONE,"incorrect root node");
 	return 0;
 
     } /* end if */
