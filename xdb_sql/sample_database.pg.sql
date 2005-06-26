@@ -4,105 +4,109 @@
 
 /* User information table - authentication information and profile */
 CREATE TABLE users (
-  username VARCHAR(64) NOT NULL PRIMARY KEY,
-  password VARCHAR(16) NOT NULL
+  username VARCHAR(2048) NOT NULL PRIMARY KEY,
+  password VARCHAR(64) NOT NULL
 );
 CREATE INDEX I_users_login ON users (username, password);
 
 CREATE TABLE usershash (
-  username VARCHAR(64) NOT NULL PRIMARY KEY,
+  username VARCHAR(2048) NOT NULL PRIMARY KEY,
   authhash VARCHAR(34) NOT NULL
 );
 
 CREATE TABLE users0k (
-  username VARCHAR(64) NOT NULL PRIMARY KEY,
+  username VARCHAR(2048) NOT NULL PRIMARY KEY,
   hash     VARCHAR(41) NOT NULL,
   token    VARCHAR(10) NOT NULL,
-  sequence VARCHAR(3)  NOT NULL
+  sequence VARCHAR(8)  NOT NULL
 );
 
 CREATE TABLE last (
-  username VARCHAR(64) NOT NULL PRIMARY KEY,
+  username VARCHAR(2048) NOT NULL PRIMARY KEY,
   seconds  VARCHAR(32) NOT NULL,
-  state	   VARCHAR(32)
+  state	   VARCHAR(256)
 );
 
-/* User resource mappings */
-CREATE TABLE userres (
-  username VARCHAR(64) NOT NULL,
-  resource VARCHAR(32) NOT NULL
+/* User registration data */
+CREATE TABLE registered (
+  username   VARCHAR(2048) NOT NULL PRIMARY KEY,
+  login      VARCHAR(1024),
+  password   VARCHAR(64) NOT NULL,
+  full_name  VARCHAR(256),
+  email      VARCHAR(127),
+  stamp      VARCHAR(32),
+  type       VARCHAR(32)
 );
-CREATE UNIQUE INDEX PK_userres ON userres (username, resource);
 
 /* Roster listing */
 CREATE TABLE rosterusers (
-  username VARCHAR(64) NOT NULL,
-  jid VARCHAR(64) NOT NULL,
-  nick VARCHAR(255),
+  username VARCHAR(2048) NOT NULL,
+  jid VARCHAR(2048) NOT NULL,
+  nick VARCHAR(1024),
   subscription CHAR(1) NOT NULL,  /* 'N', 'T', 'F', or 'B' */
   ask CHAR(1) NOT NULL,           /* '-', 'S', or 'U' */
-  server CHAR(1) NOT NULL,         /* 'Y' or 'N' */
   subscribe VARCHAR(255),
-  type VARCHAR(64)
+  type VARCHAR(64),
+  extension TEXT
 );
 CREATE INDEX I_rosteru_username ON rosterusers (username);
 
 CREATE TABLE rostergroups
 (
-  username VARCHAR(64) NOT NULL,
-  jid VARCHAR(64) NOT NULL,
-  grp VARCHAR(64) NOT NULL
+  username VARCHAR(2048) NOT NULL,
+  jid VARCHAR(2048) NOT NULL,
+  grp VARCHAR(1024) NOT NULL
 );
 
 /* Spooled offline messages */
 CREATE TABLE spool (
-  username VARCHAR(64) NOT NULL,
-  receiver VARCHAR(255) NOT NULL,
-  sender VARCHAR(255) NOT NULL,                 
+  username VARCHAR(2048) NOT NULL,
+  receiver VARCHAR(2048) NOT NULL,
+  sender VARCHAR(2048) NOT NULL,                 
   id VARCHAR(255),
-  date TIMESTAMP,
-  priority INT,
+  date VARCHAR(32),
+  priority VARCHAR(8),
   type VARCHAR(32),
-  thread VARCHAR(255),
-  subject VARCHAR(255),
+  thread VARCHAR(1024),
+  subject VARCHAR(1024),
   message TEXT,
   extension TEXT
 );
 CREATE INDEX I_despool on spool (username, date);
 
 CREATE TABLE filters (
-  username     VARCHAR(64),
+  username     VARCHAR(2048),
   unavailable  VARCHAR(1),
-  sender       VARCHAR(255),
-  resource     VARCHAR(32),
-  subject      VARCHAR(255),
+  sender       VARCHAR(2048),
+  resource     VARCHAR(1024),
+  subject      VARCHAR(1024),
   body         TEXT,
   show_state   VARCHAR(8),
   type         VARCHAR(8),
   offline      VARCHAR(1),
-  forward      VARCHAR(32),
+  forward      VARCHAR(2048),
   reply        TEXT,
   continue     VARCHAR(1),
   settype      VARCHAR(8)
 );
 
 CREATE TABLE vcard (
-  username   VARCHAR(64) PRIMARY KEY,
-  full_name  VARCHAR(65),
-  first_name VARCHAR(32),
-  last_name  VARCHAR(32),
-  nick_name  VARCHAR(32),
-  url        VARCHAR(255),
-  address1   VARCHAR(255),
-  address2   VARCHAR(255),
-  locality   VARCHAR(32),
-  region     VARCHAR(32),
+  username   VARCHAR(2048) PRIMARY KEY,
+  full_name  VARCHAR(256),
+  first_name VARCHAR(64),
+  last_name  VARCHAR(64),
+  nick_name  VARCHAR(64),
+  url        VARCHAR(512),
+  address1   VARCHAR(256),
+  address2   VARCHAR(256),
+  locality   VARCHAR(64),
+  region     VARCHAR(64),
   pcode      VARCHAR(32),
-  country    VARCHAR(32),
+  country    VARCHAR(64),
   telephone  VARCHAR(32),
   email      VARCHAR(127),
-  orgname    VARCHAR(32),
-  orgunit    VARCHAR(32),
+  orgname    VARCHAR(64),
+  orgunit    VARCHAR(64),
   title      VARCHAR(32),
   role       VARCHAR(32),
   b_day      VARCHAR(32),
@@ -123,6 +127,12 @@ CREATE TABLE icq (
 );
 
 CREATE TABLE aim (
+  username   VARCHAR(128) PRIMARY KEY,
+  id         VARCHAR(100) NOT NULL,
+  pass       VARCHAR(32) NOT NULL
+);
+
+CREATE TABLE msn (
   username   VARCHAR(128) PRIMARY KEY,
   id         VARCHAR(100) NOT NULL,
   pass       VARCHAR(32) NOT NULL

@@ -57,21 +57,6 @@ state="Registered".
 |state       |"Registered", "Disconnected" |
 +------------------------------------------+
 
-The table "userres" has two columns: username, resource. Obviously
-this contains all resources for a user. It seems that this table is
-only updated when a new account is made. If a user later logs in with
-a different resource, this is not added to the table. The use of this
-table is rather questionable.
-
-+-------------------------------------------------------------------------------+
-|userres: column|meaning                                                        |
-|---------------+---------------------------------------------------------------|
-|username       |                                                               |
-|---------------+---------------------------------------------------------------|
-|resource       |a user can log in from multiple resources. Only one at the same|
-|               |time!                                                          |
-+-------------------------------------------------------------------------------+
-
  The table "rosterusers" has the columns
 
 

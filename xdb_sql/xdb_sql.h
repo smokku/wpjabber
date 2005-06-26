@@ -155,10 +155,6 @@ extern xmlnode xdbsql_simple_get(XdbSqlDatas *self, query_def qd, const char *us
 extern int xdbsql_simple_set (XdbSqlDatas *self, query_def qd,
 			      const char *user, xmlnode datas);
 
-/*  xdb_sql_mood.c */
-extern xmlnode xdbsql_mood_get(XdbSqlDatas *self, const char *user);
-extern int xdbsql_mood_set(XdbSqlDatas *self, const char *user, xmlnode data);
-
 /* xdb_sql_offline.c */
 extern xmlnode xdbsql_offline_get(XdbSqlDatas *self, const char *user);
 extern int xdbsql_offline_set(XdbSqlDatas *self, const char *user, xmlnode data);
