@@ -383,7 +383,7 @@ int xdbsql_vcard_set(XdbSqlDatas *self, const char *user, xmlnode data){
 	data_b_day = "";
 
     validate_iso8601_date(data_b_day, b_day_8601, 28);
-    log_debug("[xdb_sql_vcard] data_b_day: (%s), b_day_8601: (%s)", data_b_day, b_day_8601);
+    log_debug("data_b_day: (%s), b_day_8601: (%s)", data_b_day, b_day_8601);
 
     /* Fill in the rest of the query parameters. */
     if (data_full_name	&& *data_full_name )
