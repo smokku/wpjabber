@@ -199,8 +199,7 @@ xdbsql_last_set (XdbSqlDatas * self, const char *username, xmlnode last){
   if (!query1){				/* no query - eep! */
       log_error (NULL, "--!!-- WTF? last-set query not found?");
       return 0;
-
-    } /* end if */
+  } /* end if */
 
   /*
    * Get rid of any existing last entries for the username.
@@ -228,7 +227,7 @@ xdbsql_last_set (XdbSqlDatas * self, const char *username, xmlnode last){
   if (!result){			/* the query failed - bail out! */
       log_warn (ZONE, "[xdbsql_last_set] query failure on header"
 		" for %s : %s", username, sqldb_error (self));
-    } /* end if */
+  } /* end if */
   sqldb_free_result (result);
 
 
