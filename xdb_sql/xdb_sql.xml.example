@@ -27,8 +27,7 @@ $Id: xdb_sql.xml,v 1.8 2003/04/07 20:10:55 bobeal Exp $
 
   <xdb_sql xmlns="jabberd:xdb_sql:config">
     <!-- Backend to use -->
-    <!-- mysql, pgsql/postgre or odbc -->
-    <!-- for Oracle backend, use xdb_sql.oracle.xml file ! -->
+    <!-- mysql, pgsql/postgres or odbc -->
     <backend>pgsql</backend>
 
     <!-- Configure information about the SQL connection -->
@@ -139,14 +138,14 @@ $Id: xdb_sql.xml,v 1.8 2003/04/07 20:10:55 bobeal Exp $
 
       <!-- loads individual users from the roster -->
       <querydef name="roster-load-1">
-        <text>SELECT jid, nick, subscription, ask, server, subscribe, type FROM rosterusers WHERE username = '$$user$$'</text>
+        <text>SELECT jid, nick, subscription, ask, subscribe, extension, type FROM rosterusers WHERE username = '$$user$$'</text>
         <bindvar name="user">$$user$$</bindvar>
         <bindcol name="jid" offset="0"/>
         <bindcol name="nickname" offset="1"/>
         <bindcol name="subscription" offset="2"/>
         <bindcol name="ask" offset="3"/>
-        <bindcol name="server" offset="4"/>
-        <bindcol name="subscribe" offset="5"/>
+        <bindcol name="subscribe" offset="4"/>
+        <bindcol name="x" offset="5"/>
         <bindcol name="type" offset="6"/>
       </querydef>
 
@@ -173,14 +172,14 @@ $Id: xdb_sql.xml,v 1.8 2003/04/07 20:10:55 bobeal Exp $
 
       <!-- adds a new roster user item -->
       <querydef name="roster-add-1">
-        <text>INSERT INTO rosterusers (username,jid,nick,subscription,ask,server,subscribe,type) VALUES ('$$user$$','$$jid$$','$$nick$$','$$sub$$','$$ask$$','$$srv$$','$$subscribe$$','$$type$$')</text>
+        <text>INSERT INTO rosterusers (username,jid,nick,subscription,ask,subscribe,extension,type) VALUES ('$$user$$','$$jid$$','$$nick$$','$$sub$$','$$ask$$','$$subscribe$$','$$ext$$','$$type$$')</text>
         <bindvar name="user">$$user$$</bindvar>
         <bindvar name="jid">$$jid$$</bindvar>
         <bindvar name="nickname">$$nick$$</bindvar>
         <bindvar name="subscription" default="N" escape="no" length="1">$$sub$$</bindvar>
         <bindvar name="ask" default="-" escape="no">$$ask$$</bindvar>
-        <bindvar name="server" default="Y" escape="no">$$srv$$</bindvar>
         <bindvar name="subscribe" escape="yes" length="255">$$subscribe$$</bindvar>
+        <bindvar name="x">$$ext$$</bindvar>
         <bindvar name="type" escape="no">$$type$$</bindvar>
       </querydef>
 
@@ -192,22 +191,32 @@ $Id: xdb_sql.xml,v 1.8 2003/04/07 20:10:55 bobeal Exp $
         <bindvar name="grp">$$grp$$</bindvar>
       </querydef>
 
-      <!-- gets resources for a given user -->
-      <querydef name="resource-get">
-        <text>SELECT resource FROM userres WHERE username = '$$u$$'</text>
-        <bindvar name="user">$$u$$</bindvar>
-        <bindcol name="resource" offset="0"/>
+      <!-- gets registered info for a given user -->
+      <querydef name="register-get">
+        <text>SELECT login, password, full_name, email, stamp, type FROM registered WHERE username = '$$user$$'</text>
+        <bindvar name="user">$$user$$</bindvar>
+        <bindcol name="login" offset="0"/>
+        <bindcol name="password" offset="1"/>
+        <bindcol name="name" offset="2"/>
+        <bindcol name="email" offset="3"/>
+        <bindcol name="stamp" offset="4"/>
+        <bindcol name="type" offset="5"/>
       </querydef>
-      <!-- removes resources for a given user -->
-      <querydef name="resource-remove">
-        <text>DELETE FROM userres WHERE username = '$$u$$'</text>
-        <bindvar name="user">$$u$$</bindvar>
+      <!-- removes registered info for a given user -->
+      <querydef name="register-remove">
+        <text>DELETE FROM registered WHERE username = '$$user$$'</text>
+        <bindvar name="user">$$user$$</bindvar>
       </querydef>
-      <!-- adds resources for a given user -->
-      <querydef name="resource-set">
-        <text>INSERT INTO userres (username, resource) VALUES ('$$u$$', '$$r$$')</text>
-        <bindvar name="user">$$u$$</bindvar>
-        <bindvar name="resource">$$r$$</bindvar>
+      <!-- adds registered info for a given user -->
+      <querydef name="register-set">
+        <text>INSERT INTO registered (username, login, password, full_name, email, stamp, type) VALUES ('$$user$$', '$$login$$', '$$pass$$', '$$name$$', '$$email$$', '$$stamp$$', '$$type$$')</text>
+        <bindvar name="user">$$user$$</bindvar>
+        <bindvar name="login">$$login$$</bindvar>
+        <bindvar name="password">$$pass$$</bindvar>
+        <bindvar name="name">$$name$$</bindvar>
+        <bindvar name="email">$$email$$</bindvar>
+        <bindvar name="stamp">$$stamp$$</bindvar>
+        <bindvar name="type">$$type$$</bindvar>
       </querydef>
 
       <!-- Message offline storage query -->
@@ -436,6 +445,32 @@ $Id: xdb_sql.xml,v 1.8 2003/04/07 20:10:55 bobeal Exp $
 	<bindcol tag="pass" offset="1"/> 
       </querydef>
 
+      <!-- MSN set query -->
+      <querydef name="msn-set" dtd="2" type="set" namespace="msntrans:data">
+	<text>INSERT INTO msn VALUES ('$$user$$', '$$id$$', '$$pass$$')</text>
+	<user>$$user$$</user>
+        <bindvar attrib="id">$$id$$</bindvar>
+        <bindvar attrib="pass">$$pass$$</bindvar>
+	<purge>msn-remove</purge>
+      </querydef>
+
+      <!-- MSN removal query -->
+      <querydef name="msn-remove" dtd="2" type="remove" namespace="msntrans:data">
+        <text>DELETE FROM msn where username='$$user$$'</text>
+        <user>$$user$$</user>
+      </querydef>
+
+      <!-- MSN get query -->
+      <querydef name="msn-get" dtd="2" type="get" namespace="msntrans:data">
+	<text>SELECT id, pass  FROM msn WHERE username = '$$user$$'</text>
+	<user>$$user$$</user>
+        <top-result>
+           <logon/>
+        </top-result>
+        <bindcol tag="id" offset="0"/>
+	<bindcol tag="pass" offset="1"/> 
+      </querydef>
+
       <querydef name="auth0k-get">
         <text>SELECT hash, token, sequence FROM users0k WHERE username = '$$username$$'</text>
         <bindvar name="user">$$username$$</bindvar>
@@ -498,7 +533,7 @@ $Id: xdb_sql.xml,v 1.8 2003/04/07 20:10:55 bobeal Exp $
       <!-- ****************** muc:room:config ********************** -->
 
       <querydef name="roomconfig-get">
-        <text>select owner, name, secret, private, leave, join, rename, public, subjectlock, maxusers, moderated, defaultype, privmsg, invitation, invites, legacy, visible, logformat, logging, description, persistant from roomconfig where roomid = '$$room$$'</text>
+        <text>select owner, name, secret, private, leave, "join", rename, "public", subjectlock, maxusers, moderated, defaultype, privmsg, invitation, invites, legacy, visible, logformat, logging, description, persistant from roomconfig where roomid = '$$room$$'</text>
         <bindvar name="room">$$room$$</bindvar>
         <bindcol name="owner" offset="0"/>
         <bindcol name="name" offset="1"/>
@@ -524,8 +559,7 @@ $Id: xdb_sql.xml,v 1.8 2003/04/07 20:10:55 bobeal Exp $
       </querydef>
 
       <querydef name="roomconfig-set">
-        <text>insert into roomconfig (roomid, owner, name, secret, private, leave, join, rename, public, persistant, subjectlock, maxusers, moderated, defaultype, privmsg, invitation, invites, legacy, visible, logformat, logging, description) values ( '$$room$$', '$$owner$$', '$$name$$', '$$secret$$', '$$private$$', '$$leave$$', '$$join$$', '$$rename$$', '$$public$$', '$$persistant$$', '$$subjectlock$$', '$$maxusers$$', '$$moderated$$', '$$defaultype$$', '$$privmsg$$', '$$invitation$$', '$$invites$$', '$$legacy$$', '$$visible$$', '$$logformat$$', '$$logging$$', '$$description$$')
-</text>
+        <text>insert into roomconfig (roomid, owner, name, secret, private, leave, "join", rename, "public", persistant, subjectlock, maxusers, moderated, defaultype, privmsg, invitation, invites, legacy, visible, logformat, logging, description) values ( '$$room$$', '$$owner$$', '$$name$$', '$$secret$$', '$$private$$', '$$leave$$', '$$join$$', '$$rename$$', '$$public$$', '$$persistant$$', '$$subjectlock$$', '$$maxusers$$', '$$moderated$$', '$$defaultype$$', '$$privmsg$$', '$$invitation$$', '$$invites$$', '$$legacy$$', '$$visible$$', '$$logformat$$', '$$logging$$', '$$description$$')</text>
         <bindvar name="room">$$room$$</bindvar>
         <bindvar name="owner">$$owner$$</bindvar>
         <bindvar name="name">$$name$$</bindvar>
@@ -664,8 +698,7 @@ $Id: xdb_sql.xml,v 1.8 2003/04/07 20:10:55 bobeal Exp $
 
     <!-- just an example for dtd=2 queries definition
      <querydef name="url-set" dtd="2" type="set" namespace="test:iq:url">
-        <text>UPDATE users SET site = '$$domain$$', page = '$$file$$' WHERE
-username = '$$user$$'</text>
+        <text>UPDATE users SET site = '$$domain$$', page = '$$file$$' WHERE username = '$$user$$'</text>
         <user>$$user$$</user>
         <bindvar tag="domain">$$domain$$</bindvar>
         <bindvar tag="file">$$file$$</bindvar>
@@ -680,8 +713,7 @@ username = '$$user$$'</text>
         <bindcol tag="file" offset="1"/>
         </querydef>
 
-      <querydef name="url-remove" dtd="2" type="remove"
-namespace="test:iq:url">
+      <querydef name="url-remove" dtd="2" type="remove" namespace="test:iq:url">
         <text>UPDATE users SET site='', page='' WHERE username='$$user$$'</text>
         <user>$$user$$</user>
         <bindvar tag="domain">$$domain$$</bindvar>

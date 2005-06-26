@@ -44,8 +44,8 @@ static int validate_last_get(xmlnode q_root);
 static int validate_load_roster_1(xmlnode q_root);
 static int validate_load_roster_2(xmlnode q_root);
 static int validate_add_roster_2(xmlnode q_root);
-static int validate_resource_get(xmlnode q_root);
-static int validate_simple_user_resource(xmlnode q_root);
+static int validate_registered_get(xmlnode q_root);
+static int validate_registered_set(xmlnode q_root);
 static int validate_add_roster_1(xmlnode q_root);
 static int validate_spool(xmlnode q_root);
 static int validate_despool(xmlnode q_root);
@@ -84,10 +84,9 @@ static const struct query_table s_query_table[] =
     { "roster-load-2",	 NULL, validate_load_roster_2	     },
     { "roster-purge-2",  NULL, validate_simple_user	     },
     { "roster-add-2",	 NULL, validate_add_roster_2	     },
-    { "resource-get",	 NULL, validate_resource_get	     },
-    { "resource-remove", NULL, validate_simple_user	     },
-    { "resource-set",	 NULL, validate_simple_user_resource },
-    { "moodurl-remove",  NULL, validate_simple_user	     },
+    { "register-get",	 NULL, validate_registered_get	     },
+    { "register-remove", NULL, validate_simple_user	     },
+    { "register-set",	 NULL, validate_registered_set       },
     { "roster-purge-1",  NULL, validate_simple_user	     },
     { "roster-add-1",	 NULL, validate_add_roster_1	     },
     { "spool",		 NULL, validate_spool		     },
@@ -101,10 +100,10 @@ static const struct query_table s_query_table[] =
     { "filter-remove",	 NULL, validate_simple_user	     },
     { "roomconfig-get",  NULL, validate_roomconfig_get	     },
     { "roomconfig-set",  NULL, validate_roomconfig_set	     },
-    { "roomconfig-remove", NULL, validate_simple_room },
-    { "roomoutcast-get",  NULL, validate_roomoutcast_get     },
-    { "roomoutcast-set",  NULL, validate_roomoutcast_set     },
-    { "roomoutcast-remove",  NULL, validate_simple_room },
+    { "roomconfig-remove", NULL, validate_simple_room        },
+    { "roomoutcast-get", NULL, validate_roomoutcast_get      },
+    { "roomoutcast-set", NULL, validate_roomoutcast_set      },
+    { "roomoutcast-remove",  NULL, validate_simple_room      },
     { NULL,		 NULL, NULL			     } /* SENTINEL */
 };
 
@@ -313,7 +312,7 @@ static int validate_load_roster_1(xmlnode q_root){
     int nickname_spec = 0;
     int subscription_spec = 0;
     int ask_spec = 0;
-    int server_spec = 0;
+    int ext_spec = 0;
 
     for (tmp=xmlnode_get_firstchild(q_root); tmp; tmp=xmlnode_get_nextsibling(tmp)){ /* look for both variable bindings and column bindings */
 	if (j_strcmp(xmlnode_get_name(tmp),bindvar_name)==0){ /* get the variable name and check it */
@@ -332,15 +331,15 @@ static int validate_load_roster_1(xmlnode q_root){
 		subscription_spec = 1;
 	    else if (j_strcmp(attr,"ask")==0)
 		ask_spec = 1;
-	    else if (j_strcmp(attr,"server")==0)
-		server_spec = 1;
+	    else if (j_strcmp(attr,"x")==0)
+		ext_spec = 1;
 
 	} /* end else if */
 
     } /* end for */
 
     return user_spec && jid_spec && nickname_spec && subscription_spec
-	   && ask_spec && server_spec;
+	   && ask_spec && ext_spec;
 
 } /* end validate_load_roster_1 */
 
@@ -381,7 +380,7 @@ static int validate_add_roster_1(xmlnode q_root){
     int nickname_spec = 0;
     int subscription_spec = 0;
     int ask_spec = 0;
-    int server_spec = 0;
+    int ext_spec = 0;
 
     for (tmp=xmlnode_get_firstchild(q_root); tmp; tmp=xmlnode_get_nextsibling(tmp)){ /* look for variable bindings */
 	if (j_strcmp(xmlnode_get_name(tmp),bindvar_name)==0){ /* get the variable name and check it */
@@ -396,15 +395,15 @@ static int validate_add_roster_1(xmlnode q_root){
 		subscription_spec = 1;
 	    else if (j_strcmp(attr,"ask")==0)
 		ask_spec = 1;
-	    else if (j_strcmp(attr,"server")==0)
-		server_spec = 1;
+	    else if (j_strcmp(attr,"x")==0)
+		ext_spec = 1;
 
 	} /* end if */
 
     } /* end for */
 
     return user_spec && jid_spec && nickname_spec && subscription_spec
-	   && ask_spec && server_spec;
+	   && ask_spec && ext_spec;
 
 } /* end validate_add_roster_1 */
 
@@ -433,53 +432,70 @@ static int validate_add_roster_2(xmlnode q_root){
 
 } /* end validate_add_roster_2 */
 
-static int validate_resource_get(xmlnode q_root){
+static int validate_registered_get(xmlnode q_root){
     xmlnode tmp;
+    int i;
     char *attr;
-    int user_spec = 0;
-    int resource_spec = 0;
+    char test[8];
+    char *keys[7] = {
+      "user"	,
+      "login"	,
+      "password",
+      "name"	,
+      "email"	,
+      "stamp"	,
+      "type"
+    };
 
-    for (tmp=xmlnode_get_firstchild(q_root); tmp; tmp=xmlnode_get_nextsibling(tmp)){ /* look for both variable bindings and column bindings */
-	if (j_strcmp(xmlnode_get_name(tmp),bindvar_name)==0){ /* get the variable name and check it */
-	    attr = xmlnode_get_attrib(tmp,name_attr_name);
-	    if (j_strcmp(attr,"user")==0)
-		user_spec = 1;
+    memset(test,' ',7);
+    test[7] = 0;
 
-	} /* end if */
-	else if (j_strcmp(xmlnode_get_name(tmp),bindcol_name)==0){ /* get the variable name and check it */
-	    attr = xmlnode_get_attrib(tmp,name_attr_name);
-	    if (j_strcmp(attr,"resource")==0)
-		resource_spec = 1;
+    for (tmp=xmlnode_get_firstchild(q_root); tmp; tmp=xmlnode_get_nextsibling(tmp)){
+	attr = xmlnode_get_attrib(tmp,name_attr_name);
 
-	} /* end else if */
+	if (j_strcmp(xmlnode_get_name(tmp),bindvar_name)==0){
+	    if (j_strcmp(attr,keys[0])==0)
+	      test[0] = 'X';
+	  }
+	else
+	  for (i = 1; i < 7; i++)
+	    if (j_strcmp(xmlnode_get_name(tmp),bindcol_name)==0)
+	      if (j_strcmp(attr,keys[i])==0)
+		test[i] = 'X';
+      } /* end for */
 
-    } /* end for */
+    return (strncmp(test, "XXXXXXX", 7)==0);
+} /* end validate_registered_get */
 
-    return user_spec && resource_spec;
-
-} /* end validate_resource_get */
-
-static int validate_simple_user_resource(xmlnode q_root){
+static int validate_registered_set(xmlnode q_root){
     xmlnode tmp;
+    int i;
     char *attr;
-    int user_spec = 0;
-    int resource_spec = 0;
+    char test[8];
+    char *keys[7] = {
+      "user"	,
+      "login"	,
+      "password",
+      "name"	,
+      "email"	,
+      "stamp"	,
+      "type"
+    };
 
-    for (tmp=xmlnode_get_firstchild(q_root); tmp; tmp=xmlnode_get_nextsibling(tmp)){ /* look for both variable bindings and column bindings */
-	if (j_strcmp(xmlnode_get_name(tmp),bindvar_name)==0){ /* get the variable name and check it */
-	    attr = xmlnode_get_attrib(tmp,name_attr_name);
-	    if (j_strcmp(attr,"user")==0)
-		user_spec = 1;
-	    else if (j_strcmp(attr,"resource")==0)
-		resource_spec = 1;
+    memset(test,' ',7);
+    test[7] = 0;
 
-	} /* end if */
+    for (tmp=xmlnode_get_firstchild(q_root); tmp; tmp=xmlnode_get_nextsibling(tmp)){
+	attr = xmlnode_get_attrib(tmp,name_attr_name);
+	for (i = 0; i < 7; i++)
+	  if (j_strcmp(xmlnode_get_name(tmp),bindvar_name)==0)
+	    if (j_strcmp(attr,keys[i])==0)
+	      test[i] = 'X';
+      } /* end for */
 
-    } /* end for */
+    return (strncmp(test, "XXXXXXX", 7)==0);
 
-    return user_spec && resource_spec;
-
-} /* end validate_simple_user_resource */
+} /* end validate_registered_set */
 
 static int validate_spool(xmlnode q_root){
     xmlnode tmp;
