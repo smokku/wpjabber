@@ -81,7 +81,8 @@ xmlnode xdbsql_roster_get(XdbSqlDatas *self, const char *user){
     query_def qd;	       /* the query definition */
     XdbSqlResult *result;      /* pointer to database result */
     int first = 1;	       /* first time through loop? */
-    int ndx_jid, ndx_nickname, ndx_subscription, ndx_ask, ndx_server, ndx_type, ndx_group;
+    spool s;		       /* string pooling */
+    int ndx_jid, ndx_nickname, ndx_subscription, ndx_ask, ndx_type, ndx_ext, ndx_group;
     int ndx_subscribe;
 
     const char *tmp_attr;      /* temporary attribute value */
@@ -141,24 +142,52 @@ xmlnode xdbsql_roster_get(XdbSqlDatas *self, const char *user){
 	    ndx_nickname = xdbsql_colmap_index(map,"nickname");
 	    ndx_subscription = xdbsql_colmap_index(map,"subscription");
 	    ndx_ask = xdbsql_colmap_index(map,"ask");
-	    ndx_server = xdbsql_colmap_index(map,"server");
 	    ndx_subscribe = xdbsql_colmap_index(map,"subscribe");
+	    ndx_ext = xdbsql_colmap_index(map,"x");
 	    ndx_type = xdbsql_colmap_index(map,"type");
 	    xdbsql_colmap_free(map);
 	    first = 0;
 
 	} /* end if */
 
-	/* Insert a new item or conference under the result. */
-	/* depending on the type of the record */
+	/* first let's see what type of rosteritem it is */
 	tmp_attr = sqldb_get_value(result, ndx_type);
-	if (strcmp(tmp_attr,"item") == 0){
-	    x1 = xmlnode_insert_tag(rc,"item");
-	} else{
-	    x1 = xmlnode_insert_tag(rc,"conference");
+	if (!tmp_attr){
+	    log_error(NULL,"[xdbsql_roster_get] error getting 'type' field\n");
+	    return NULL;
+	}
+	if (strcmp(tmp_attr,"item") != 0)
+	    tmp_attr = "conference";
+
+	/* get the extensions and start building the item tree */
+	tmp_str = sqldb_get_value(result, ndx_ext);
+	if (!tmp_str){
+	    log_error(NULL,"[xdbsql_roster_get] error getting 'extension' field\n");
+	    return NULL;
+	}
+	if (tmp_str && *tmp_str){
+	    xmlnode node;
+	    char *itemname;
+	    /* this is tricky because there may be multiple <x> tags; parse them with
+	     * the <itemtype></itemtype> (tmp_attr) surounding them
+	     */
+	    s = spool_new(xmlnode_pool(rc));
+	    spooler(s,"<",tmp_attr,">",tmp_str,"</",tmp_attr,">",s);
+	    tmp_str = spool_print(s);
+	    node = xmlnode_str((char *)tmp_str,strlen(tmp_str));
+	    x1 = xmlnode_insert_tag_node(rc, node);
+	    xmlnode_free(node);
+	}
+	else { /* just create a new item or conference under the result. */
+	       /* depending on the type of the record */
+	    x1 = xmlnode_insert_tag(rc,tmp_attr);
+	}
+	/* insert "type" attribute if it is a conference */
+	if (strcmp(tmp_attr,"conference") == 0){
 	    xmlnode_put_attrib(x1,"type",sqldb_get_value(result, ndx_type));
 	}
 
+	/* move to the item attributes */
 	xmlnode_put_attrib(x1,"jid",sqldb_get_value(result, ndx_jid));
 
 	tmp_attr = sqldb_get_value(result, ndx_nickname);
@@ -213,21 +242,6 @@ xmlnode xdbsql_roster_get(XdbSqlDatas *self, const char *user){
 	if (tmp_attr)
 	    xmlnode_put_attrib(x1,"ask",tmp_attr);
 	tmp_attr = NULL;
-
-	tmp_str = sqldb_get_value(result, ndx_server);
-	if (!tmp_str){
-	    log_error(NULL,"[xdbsql_roster_get] error getting 'server' field\n");
-	    return NULL;
-	}
-	switch (*tmp_str){
-	/* turn the "server" flag into an "hidden" attribute */
-	case 'Y':
-	    xmlnode_put_attrib(x1, "hidden", "");
-	    break;
-	} /* end switch */
-
-	if (tmp_attr)
-	    xmlnode_put_attrib(x1,"server",tmp_attr);
 
 	tmp_str = sqldb_get_value(result, ndx_subscribe);
 	if (!tmp_str){
@@ -322,6 +336,7 @@ int xdbsql_roster_set(XdbSqlDatas *self, const char *user, xmlnode roster){
     const char *tmp_attr;      /* temporary for getting attributes */
     char tmp_var[2];	       /* temporary for single-char variables */
     const char *querystr;      /* SQL query */
+    spool data_ext;	       /* extension data string pool */
 
     if (!user){ /* roster user not specified */
 	log_error(NULL,"[xdbsql_roster_set] user not specified");
@@ -388,15 +403,6 @@ int xdbsql_roster_set(XdbSqlDatas *self, const char *user, xmlnode roster){
 	    tmp_var[0] = 'U';
 	xdbsql_querydef_setvar(qd,"ask",tmp_var);
 
-	/* bind the "server" variable */
-	tmp_var[0] = 'N';
-	tmp_attr = xmlnode_get_attrib(x1,"hidden");
-	if (tmp_attr != NULL){
-	    if ((tmp_attr[0] == '\0') || (j_strcmp(tmp_attr, "yes") == 0))
-		tmp_var[0] = 'Y';
-	}
-	xdbsql_querydef_setvar(qd,"server", tmp_var);
-
 	/* bind the "subscribe" variable */
 	tmp_attr = NULL;
 	tmp_attr = xmlnode_get_attrib(x1,"subscribe");
@@ -417,6 +423,15 @@ int xdbsql_roster_set(XdbSqlDatas *self, const char *user, xmlnode roster){
 	} else{
 	    xdbsql_querydef_setvar(qd,"type","item");
 	}
+	
+	/* get the "eXtension"'s nodes */
+	data_ext = spool_new(xmlnode_pool(roster));
+        for (x2 = xmlnode_get_firstchild(x1); x2; x2 = xmlnode_get_nextsibling(x2)){ /* handle all the child nodes of the item */
+	    if (j_strcmp("x", xmlnode_get_name(x2)))
+		continue;
+	    spool_add(data_ext,xmlnode2str(x2));
+	}
+        xdbsql_querydef_setvar(qd,"x",spool_print(data_ext));
 
 	/* Execute the query! */
 	querystr = xdbsql_querydef_finalize(qd);
