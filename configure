@@ -56,14 +56,14 @@ CFLAGS="-g -Wall  $DEFINES"
 LIBS="$LIBS"
 
 if [ "$OWN_SYS_EPOLL" = "1"  ]; then
-  printf "Using onw sys epoll lib\n"
+  printf "Using own sys epoll lib\n"
   SYS_EPOLL_LIB='epoll_lib'
   WPJ_CFLAGS="-g -Wall -I../jabberd/lib -DHAVE_SSL -I epoll-lib/include -DOWN_SYS_EPOLL $DEFINES"
   WPJ_LIBS="$LIBS -Lepoll-lib/lib -lepoll"  
 else
   printf "Using system sys epoll\n"
   WPJ_CFLAGS="-g -Wall -I../jabberd/lib -DHAVE_SSL $DEFINES"
-  WPJ_LIBS="$LIBS"
+  WPJ_LIBS="$LIBS -lepoll"
 fi
 
 
