@@ -163,6 +163,9 @@ XdbPgsqlResult *xdbpgsql_query (XdbPgsqlBackend *self, const char *query){
     ExecStatusType st;
     int i;
 
+    /* let's see wat the actual query is */
+    log_debug("PSQL query: %s", query);
+    
     if (!self->async_mode){
 	/* synchronous mode */
 	r = PQexec(self->connection, query);
@@ -196,20 +199,23 @@ XdbPgsqlResult *xdbpgsql_query (XdbPgsqlBackend *self, const char *query){
     st = PQresultStatus(r);
 
     if (st != PGRES_COMMAND_OK && st !=PGRES_TUPLES_OK){
-      log_error(ZONE, "error: r=%p [%s]\n", r, PQresultErrorMessage(r));
+	log_error(ZONE, "error: r=%p [%s]\n", r, PQresultErrorMessage(r));
 	PQclear(r);
+	if (self->async_mode)
+	    SEM_UNLOCK(self->sem);
 	return NULL;
     }
 
     res = result_new(self, r);
     if (!res){
 	PQclear(r);
+	if (self->async_mode)
+	    SEM_UNLOCK(self->sem);
 	return NULL;
     }
 
     if (self->async_mode)
 	SEM_UNLOCK(self->sem);
-
     return res;
 }
 
