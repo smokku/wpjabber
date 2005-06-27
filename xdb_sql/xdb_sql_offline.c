@@ -63,7 +63,7 @@ xmlnode xdbsql_offline_get(XdbSqlDatas *self, const char *user){
     } /* end if */
 
     /* Initialize the return value. */
-    rc = xmlnode_new_tag("offline");
+    rc = xmlnode_new_tag("foo");
     xmlnode_put_attrib(rc,"xmlns",NS_OFFLINE);
 
     while (sqldb_next_tuple(result)){ /* look for all offline messages and add them to the list */
@@ -314,14 +314,14 @@ int xdbsql_offline_set(XdbSqlDatas *self, const char *user, xmlnode xdb_request_
     else{
 	/* old set "all-or-nothing" behaviour */
 
-	if (!test_root_node(data, "offline"))
+	if (!test_root_node(data, "foo"))
 	    return 1;  /* error already reported */
 
 	/* Purge any existing offline messages. */
 	(void)purge_offline(self, user);
 
 	for (x = xmlnode_get_firstchild(data); x; x = xmlnode_get_nextsibling(x)){
-	    if (!j_strcmp("offline", xmlnode_get_name(x))){
+	    if (!j_strcmp("message", xmlnode_get_name(x))){
 		continue;
 	    }
 
