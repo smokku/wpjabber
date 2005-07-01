@@ -40,7 +40,6 @@ Supported namespaces:
 * jabber:iq:register
 * jabber:iq:auth
 * jabber:iq:auth:crypt
-* jabber:iq:auth:0k
 * jabber:iq:last
 * jabber:iq:roster
 * jabber:x:offline

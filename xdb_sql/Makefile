@@ -35,7 +35,6 @@ CFLAGS += -I. -I../jabberd -D$(BACKEND)
 
 xdb_sql_OBJECTS= \
 	xdb_sql.o \
-	xdb_sql_auth0k.o \
 	xdb_sql_auth.o \
 	xdb_sql_offline.o \
 	xdb_sql_register.o \

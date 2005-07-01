@@ -14,13 +14,6 @@ CREATE TABLE usershash (
   authhash VARCHAR(34) NOT NULL
 );
 
-CREATE TABLE users0k (
-  username VARCHAR(2048) NOT NULL PRIMARY KEY,
-  hash     VARCHAR(41) NOT NULL,
-  token    VARCHAR(10) NOT NULL,
-  sequence VARCHAR(8)  NOT NULL
-);
-
 CREATE TABLE last (
   username VARCHAR(2048) NOT NULL PRIMARY KEY,
   seconds  VARCHAR(32) NOT NULL,
@@ -203,9 +196,6 @@ create table roomregistration (
 CREATE UNIQUE INDEX PK_roomregistration ON roomregistration (id, conference);
 
 
-alter table users0k add constraint users0k_user
-    foreign key(username) references users(username) on delete cascade;
-
 alter table last add constraint last_user
     foreign key(username) references users(username) on delete cascade;
 
@@ -237,4 +227,4 @@ alter table aim add constraint aim_user
     foreign key(username) references users(username) on delete cascade;
 
 /* Grant privileges to some users */
-GRANT ALL ON users, users0k, last, userres, rosterusers, rostergroups, spool, filters, vcard, yahoo, icq, aim, rooms, roomadmin , roommember, roomoutcast, roomregistration TO jabber;
+GRANT ALL ON users, last, userres, rosterusers, rostergroups, spool, filters, vcard, yahoo, icq, aim, rooms, roomadmin , roommember, roomoutcast, roomregistration TO jabber;

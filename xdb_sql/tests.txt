@@ -23,16 +23,6 @@ RECV :
 <iq id='A6' type='result' from='aaazzz@localhost/1.4'><vCard prodid='-//HandGen//NONSGML vGen v1.0//EN' version='3.0' xmlns='vcard-temp'><FN>fullname</FN><N><FAMILY>last_name</FAMILY><GIVEN>first_name</GIVEN></N><NICKNAME>nickname</NICKNAME><URL>url</URL><ADR><STREET>address1</STREET><EXTADD>address2</EXTADD><LOCALITY>locality</LOCALITY><REGION>region</REGION><PCODE>pcode</PCODE><COUNTRY>country</COUNTRY></ADR><TEL>telephone</TEL><EMAIL>email</EMAIL><ORG><ORGNAME>orgname</ORGNAME><ORGUNIT>orgunit</ORGUNIT></ORG><TITLE>title</TITLE><ROLE>role</ROLE><DESC>desc</DESC><BDAY>2001-03-07</BDAY></vCard></iq>
 
 
-AUTH_0K
-SEND :
-<iq id='6' type='get'><query xmlns='jabber:iq:auth'><username>yo53</username></query></iq>
-RECV :
-<iq id='6' type='result'><query xmlns='jabber:iq:auth'><username>yo53</username><password/><digest/><sequence>499</sequence><token>3A9516C4</token><resource/></query></iq>
-
-SEND :
-<iq id='6' type='set'><query xmlns='jabber:iq:auth:0k'><zerok xmlns='jabber:iq:auth:0k' xdbns='jabber:iq:auth:0k'><hash>6f4adcac3efb4cd4641e83badb5221d676d64dea</hash><token>3A8818F4</token><sequence>500</sequence></zerok></query></iq>
-
-
 LAST
 SEND :
 <iq id='7' type='set'><query xmlns='jabber:iq:last' last='982588272'>Registered</query></iq>

@@ -40,7 +40,6 @@ xdb_sql_generic.c  : generic SQL database helpers
 xdb_sql_querydef.c : Manages queries from configuration file
 
 xdb_sql_auth.c     : One file per namespace.
-xdb_sql_auth0k.c   : 
 xdb_sql_filter.c   : 
 xdb_sql_vcard.c    : 
 xdb_sql_offline.c  :

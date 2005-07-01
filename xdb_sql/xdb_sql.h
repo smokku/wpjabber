@@ -123,10 +123,6 @@ extern int xdbsql_auth_set(XdbSqlDatas *self, const char *user, xmlnode data);
 extern xmlnode xdbsql_authhash_get(XdbSqlDatas *self, const char *user);
 extern int xdbsql_authhash_set(XdbSqlDatas *self, const char *user, xmlnode data);
 
-/* xdb_sql_auth0k.c */
-extern xmlnode xdbsql_auth0k_get(XdbSqlDatas *self, const char *user);
-extern int xdbsql_auth0k_set(XdbSqlDatas *self, const char *user, xmlnode data);
-
 /* xdb_sql_config.c */
 extern int is_true(const char *str);
 extern int is_false(const char *str);

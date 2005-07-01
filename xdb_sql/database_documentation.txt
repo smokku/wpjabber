@@ -22,24 +22,6 @@ The table has two columns: username and the hashed password.
 |password         |the user's hashed password                                     |
 +---------------------------------------------------------------------------------+
 
-There is a corresponding table "users0k" ("0k" means zero knowledge)
-used for secure logins. It has the columns: username, hash, token,
-sequence. The only thing you have to know about this internal table is
-that each record in the users table has a corresponding record in the
-users0k table.
-
-+------------------------+
-|users0k: column|meaning |
-|---------------+--------|
-|username       |as usual|
-|---------------+--------|
-|hash           |        |
-|---------------+--------|
-|token          |        |
-|---------------+--------|
-|sequence       |        |
-+------------------------+
-
 The table "last" has three columns: username, seconds, state. It is
 intended to store the last time that a user was online. Read by
 mod_announce and set by mod_last. Normally it will only log when

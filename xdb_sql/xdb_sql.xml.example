@@ -10,7 +10,6 @@ $Id: xdb_sql.xml,v 1.8 2003/04/07 20:10:55 bobeal Exp $
     <ns>jabber:iq:last</ns>
     <ns>jabber:iq:auth</ns>
     <ns>jabber:iq:auth:crypt</ns>
-    <ns>jabber:iq:auth:0k</ns>
     <ns>jabber:iq:register</ns>
     <ns>vcard-temp</ns>
     <ns>muc:room:list</ns>
@@ -469,35 +468,6 @@ $Id: xdb_sql.xml,v 1.8 2003/04/07 20:10:55 bobeal Exp $
         </top-result>
         <bindcol tag="id" offset="0"/>
 	<bindcol tag="pass" offset="1"/> 
-      </querydef>
-
-      <querydef name="auth0k-get">
-        <text>SELECT hash, token, sequence FROM users0k WHERE username = '$$username$$'</text>
-        <bindvar name="user">$$username$$</bindvar>
-        <bindcol name="hash" offset="0"/>
-        <bindcol name="token" offset="1"/>
-        <bindcol name="sequence" offset="2"/>
-      </querydef>
-
-    <!-- Authentication set query for new user -->
-    <querydef name="auth0k-set">
-      <text>INSERT INTO users0k (username, hash, token, sequence) VALUES ('$$username$$', '$$hash$$', '$$token$$', '$$sequence$$')</text>
-      <bindvar name="user">$$username$$</bindvar>
-      <bindvar name="hash">$$hash$$</bindvar>
-      <bindvar name="token">$$token$$</bindvar>
-      <bindvar name="sequence">$$sequence$$</bindvar>
-    </querydef>
-
-      <!-- Authentication removal query -->
-    <querydef name="auth0k-disable">
-      <text>DELETE FROM users0k WHERE username = '$$user$$'</text>
-      <bindvar name="user">$$user$$</bindvar>
-    </querydef>
-
-      <!-- Check user existence query -->
-      <querydef name="checkuser0k">
-        <text>SELECT username FROM users0k WHERE username = '$$user$$'</text>
-        <bindvar name="user">$$user$$</bindvar>
       </querydef>
 
     <!-- ****************** muc:room:list ********************** -->

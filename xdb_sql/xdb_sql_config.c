@@ -36,8 +36,6 @@ static const char name_attr_name[] = "name";
 /* forward declarations for query table */
 static int validate_auth_get(xmlnode q_root);
 static int validate_auth_set(xmlnode q_root);
-static int validate_auth0k_get(xmlnode q_root);
-static int validate_auth0k_set(xmlnode q_root);
 static int validate_simple_user(xmlnode q_root);
 static int validate_last_set(xmlnode q_root);
 static int validate_last_get(xmlnode q_root);
@@ -69,10 +67,6 @@ static const struct query_table s_query_table[] =
     { "authhash-set",	 NULL, validate_auth_set	     },
     { "authhash-disable",NULL, validate_simple_user	     },
     { "chekuserhash",	 NULL, validate_simple_user	     },
-    { "auth0k-get",	 NULL, validate_auth0k_get	     },
-    { "auth0k-set",	 NULL, validate_auth0k_set	     },
-    { "auth0k-disable",  NULL, validate_simple_user	     },
-    { "checkuser0k",	 NULL, validate_simple_user	     },
     { "auth-set-new",	 NULL, validate_simple_user	     },
     { "auth-set-new",	 NULL, validate_auth_set	     },
     { "authhash-set-new",NULL, validate_simple_user	     },
@@ -112,7 +106,6 @@ static const struct query_table s_query_table[] =
  */
 static const XdbSqlModule static_modules[] =
 {
-    { NS_AUTH_0K,  xdbsql_auth0k_set,	xdbsql_auth0k_get   },
     { NS_AUTH,	   xdbsql_auth_set,	xdbsql_auth_get     },
     { NS_AUTH_CRYPT,xdbsql_authhash_set,xdbsql_authhash_get },
     { NS_LAST,	   xdbsql_last_set,	xdbsql_last_get     },
@@ -134,63 +127,6 @@ static int handle_query_v2 (XdbSqlDatas *self, xmlnode x);
 /***********************************************************************
  * Query validation routines
  */
-
-static int validate_auth0k_set(xmlnode q_root){
-  xmlnode tmp;
-  int username_spec = 0;
-  int hash_spec = 0;
-  int token_spec = 0;
-  int sequence_spec = 0;
-  char *buf;
-
-  for (tmp=xmlnode_get_firstchild(q_root); tmp; tmp=xmlnode_get_nextsibling(tmp)){ /* check to make sure the proper data is present */
-    if (j_strcmp(xmlnode_get_name(tmp), bindvar_name) == 0){
-      /* get the "name" attribute and check it out */
-      buf = xmlnode_get_attrib(tmp,name_attr_name);
-      if (j_strcmp(buf, "user") == 0)
-	username_spec = 1;
-      else if (j_strcmp(buf, "hash") == 0)
-	hash_spec = 1;
-      else if (j_strcmp(buf, "token") == 0)
-	token_spec = 1;
-      else if (j_strcmp(buf, "sequence") == 0)
-	sequence_spec = 1;
-    }
-
-  } /* end for */
-
-  return (username_spec && hash_spec && token_spec && sequence_spec);
-} /* end validate_auth0k_set */
-
-static int validate_auth0k_get(xmlnode q_root){
-  xmlnode tmp;
-  int username_spec = 0;
-  int hash_spec = 0;
-  int token_spec = 0;
-  int sequence_spec = 0;
-  char *buf;
-
-  for (tmp=xmlnode_get_firstchild(q_root); tmp; tmp=xmlnode_get_nextsibling(tmp)){ /* check to make sure the proper data is present */
-    if (j_strcmp(xmlnode_get_name(tmp), bindvar_name) == 0){
-      /* get the "name" attribute and check it out */
-      buf = xmlnode_get_attrib(tmp, name_attr_name);
-      if (j_strcmp(buf, "user") == 0)
-	username_spec = 1;
-    }
-    else if (j_strcmp(xmlnode_get_name(tmp),bindcol_name) == 0){
-      buf = xmlnode_get_attrib(tmp, name_attr_name);
-      if (j_strcmp(buf, "hash") == 0)
-	hash_spec = 1;
-      else if (j_strcmp(buf, "token") == 0)
-	token_spec = 1;
-      else if (j_strcmp(buf, "sequence") == 0)
-	sequence_spec = 1;
-    }
-
-  } /* end for */
-
-  return (username_spec && hash_spec && token_spec && sequence_spec);
-} /* end validate_auth0k_get */
 
 static int validate_auth_get(xmlnode q_root){
     xmlnode tmp;
