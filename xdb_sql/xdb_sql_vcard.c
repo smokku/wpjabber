@@ -168,16 +168,16 @@ xmlnode xdbsql_vcard_get(XdbSqlDatas *self, const char *user){
 
 	sptr = sqldb_get_value(result, ndx_country   );
 	if (sptr && *sptr)
-	  xmlnode_insert_cdata(xmlnode_insert_tag(x,"COUNTRY"	),sptr,-1);
+	  xmlnode_insert_cdata(xmlnode_insert_tag(x,"CTRY"	),sptr,-1);
 	/* end address node */
 
 	sptr = sqldb_get_value(result, ndx_telephone );
 	if (sptr && *sptr)
-	  xmlnode_insert_cdata(xmlnode_insert_tag(rc,"TEL" ),sptr,-1);
+	  xmlnode_insert_cdata(xmlnode_insert_tag(xmlnode_insert_tag(rc,"TEL"),"NUMBER"),sptr,-1);
 
 	sptr = sqldb_get_value(result, ndx_email     );
 	if (sptr && *sptr)
-	  xmlnode_insert_cdata(xmlnode_insert_tag(rc,"EMAIL"	 ),sptr,-1);
+	  xmlnode_insert_cdata(xmlnode_insert_tag(xmlnode_insert_tag(rc,"EMAIL"),"USERID"),sptr,-1);
 
 	/* begin org node */
 	x = xmlnode_insert_tag(rc,"ORG");
@@ -215,6 +215,7 @@ xmlnode xdbsql_vcard_get(XdbSqlDatas *self, const char *user){
 	  if (sptr && *sptr)
 	    xmlnode_insert_cdata(xmlnode_insert_tag(rc,"BINVAL"),sptr,-1);
 	}
+	/* end photo node */
 
     } /* end while */
 
@@ -360,14 +361,24 @@ int xdbsql_vcard_set(XdbSqlDatas *self, const char *user, xmlnode data){
 	    data_region     = GET_CHILD_DATA(x2);
 	  else if (j_strcmp(name,"PCODE")==0)
 	    data_pcode	    = GET_CHILD_DATA(x2);
-	  else if (j_strcmp(name,"COUNTRY")==0)
+	  else if (j_strcmp(name,"CTRY")==0)
 	    data_country    = GET_CHILD_DATA(x2);
 	}
       }
-      else if (j_strcmp(name,"TEL")==0)
-	data_telephone	= GET_CHILD_DATA(x);
-      else if (j_strcmp(name,"EMAIL")==0)
-	data_email	= GET_CHILD_DATA(x);
+      else if (j_strcmp(name,"TEL")==0){
+	for (x2=xmlnode_get_firstchild(x);x2;x2=xmlnode_get_nextsibling(x2)){
+	  name = xmlnode_get_name(x2);
+	  if (j_strcmp(name,"NUMBER")==0)
+	    data_telephone  = GET_CHILD_DATA(x2);
+	}
+      }
+      else if (j_strcmp(name,"EMAIL")==0){
+	for (x2=xmlnode_get_firstchild(x);x2;x2=xmlnode_get_nextsibling(x2)){
+	  name = xmlnode_get_name(x2);
+	  if (j_strcmp(name,"USERID")==0)
+	    data_email      = GET_CHILD_DATA(x2);
+	}
+      }
       else if (j_strcmp(name,"ORG")==0){
 	for (x2=xmlnode_get_firstchild(x);x2;x2=xmlnode_get_nextsibling(x2)){
 	  name = xmlnode_get_name(x2);
