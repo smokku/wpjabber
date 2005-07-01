@@ -52,6 +52,12 @@ Supported namespaces:
 * muc:list:member
 * muc:data
 
+Supported extensions to XMPP/Jabber
+* <conference/> rosteritem
+* <x/> elements in rosteritems
+* JEP-0153: vCard-Based Avatars support
+
+
 2/ General note on querydefs :
 ------------------------------
 

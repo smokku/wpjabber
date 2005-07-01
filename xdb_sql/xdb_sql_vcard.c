@@ -45,6 +45,8 @@ xmlnode xdbsql_vcard_get(XdbSqlDatas *self, const char *user){
     int ndx_role      ;
     int ndx_b_day     ;
     int ndx_descr     ;
+    int ndx_photo_t   ;
+    int ndx_photo_b   ;
 
 
     if (!user){ /* the user was not specified - we have to bug off */
@@ -111,6 +113,8 @@ xmlnode xdbsql_vcard_get(XdbSqlDatas *self, const char *user){
 	    ndx_role	   = xdbsql_colmap_index(map,"role"	 );
 	    ndx_b_day	   = xdbsql_colmap_index(map,"b_day"	 );
 	    ndx_descr	   = xdbsql_colmap_index(map,"descr"	 );
+	    ndx_photo_t	   = xdbsql_colmap_index(map,"photo_type");
+	    ndx_photo_b	   = xdbsql_colmap_index(map,"photo_bin" );
 
 	    xdbsql_colmap_free(map);
 	    first = 0;
@@ -202,6 +206,16 @@ xmlnode xdbsql_vcard_get(XdbSqlDatas *self, const char *user){
 	if (sptr && *sptr)
 	  xmlnode_insert_cdata(xmlnode_insert_tag(rc,"DESC"	),sptr,-1);
 
+	/* begin photo node */
+	sptr = sqldb_get_value(result, ndx_photo_t);
+	if (sptr && *sptr) {
+	  x = xmlnode_insert_tag(rc,"PHOTO");
+	  xmlnode_insert_cdata(xmlnode_insert_tag(x,"TYPE"),sptr,-1);
+	  sptr = sqldb_get_value(result, ndx_photo_b);
+	  if (sptr && *sptr)
+	    xmlnode_insert_cdata(xmlnode_insert_tag(rc,"BINVAL"),sptr,-1);
+	}
+
     } /* end while */
 
     sqldb_free_result(result);
@@ -280,6 +294,8 @@ int xdbsql_vcard_set(XdbSqlDatas *self, const char *user, xmlnode data){
     char *data_role	  = NULL;
     char *data_b_day	  = NULL;
     char *data_descr	  = NULL;
+    char *data_photo_t	  = NULL;
+    char *data_photo_b	  = NULL;
     const char *querystring;
     char *name;
     char b_day_8601[32];
@@ -316,14 +332,11 @@ int xdbsql_vcard_set(XdbSqlDatas *self, const char *user, xmlnode data){
     for (x=xmlnode_get_firstchild(data); x; x=xmlnode_get_nextsibling(x)){
       items++;
       name = xmlnode_get_name(x);
-
       if (j_strcmp(name,"FN")==0)
 	data_full_name	= GET_CHILD_DATA(x);
       else if (j_strcmp(name,"N")==0){
-
 	for (x2=xmlnode_get_firstchild(x);x2;x2=xmlnode_get_nextsibling(x2)){
 	  name = xmlnode_get_name(x2);
-
 	  if (j_strcmp(name,"GIVEN")==0)
 	    data_first_name = GET_CHILD_DATA(x2);
 	  else if (j_strcmp(name,"FAMILY")==0)
@@ -337,7 +350,6 @@ int xdbsql_vcard_set(XdbSqlDatas *self, const char *user, xmlnode data){
       else if (j_strcmp(name,"ADR")==0){
 	for (x2=xmlnode_get_firstchild(x);x2;x2=xmlnode_get_nextsibling(x2)){
 	  name = xmlnode_get_name(x2);
-
 	  if (j_strcmp(name,"STREET")==0)
 	    data_address1   = GET_CHILD_DATA(x2);
 	  else if (j_strcmp(name,"EXTADD")==0)
@@ -359,7 +371,6 @@ int xdbsql_vcard_set(XdbSqlDatas *self, const char *user, xmlnode data){
       else if (j_strcmp(name,"ORG")==0){
 	for (x2=xmlnode_get_firstchild(x);x2;x2=xmlnode_get_nextsibling(x2)){
 	  name = xmlnode_get_name(x2);
-
 	  if (j_strcmp(name,"ORGNAME")==0)
 	    data_orgname    = GET_CHILD_DATA(x2);
 	  else if (j_strcmp(name,"ORGUNIT")==0)
@@ -374,6 +385,15 @@ int xdbsql_vcard_set(XdbSqlDatas *self, const char *user, xmlnode data){
 	data_b_day	= GET_CHILD_DATA(x);
       else if (j_strcmp(name,"DESC")==0)
 	data_descr	= GET_CHILD_DATA(x);
+      else if (j_strcmp(name,"PHOTO")==0){
+	for (x2=xmlnode_get_firstchild(x);x2;x2=xmlnode_get_nextsibling(x2)){
+	  name = xmlnode_get_name(x2);
+	  if (j_strcmp(name,"TYPE")==0)
+	    data_photo_t    = GET_CHILD_DATA(x2);
+	  else if (j_strcmp(name,"BINVAL")==0)
+	    data_photo_b    = GET_CHILD_DATA(x2);
+	}
+      }
     } /* end for */
 
     if (0 == items)
@@ -423,6 +443,10 @@ int xdbsql_vcard_set(XdbSqlDatas *self, const char *user, xmlnode data){
     xdbsql_querydef_setvar(qd,"b_day",	   b_day_8601	  );
     if (data_descr	&& *data_descr	   )
       xdbsql_querydef_setvar(qd,"descr",     data_descr     );
+    if (data_photo_t	&& *data_photo_t	   )
+      xdbsql_querydef_setvar(qd,"photo_type",data_photo_t   );
+    if (data_photo_b	&& *data_photo_b	   )
+      xdbsql_querydef_setvar(qd,"photo_bin" ,data_photo_b   );
 
     /* Execute the query! */
     querystring = xdbsql_querydef_finalize(qd);

@@ -110,7 +110,9 @@ CREATE TABLE vcard (
   title      VARCHAR(32),
   role       VARCHAR(32),
   b_day      VARCHAR(32),
-  descr      TEXT
+  descr      TEXT,
+  photo_type VARCHAR(32),
+  photo_bin  TEXT
 );
 CREATE INDEX I_vcard_username ON vcard (username);
 

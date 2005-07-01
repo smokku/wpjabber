@@ -580,8 +580,8 @@ static int validate_vcard_get(xmlnode q_root){
     xmlnode tmp;
     int i;
     char *attr;
-    char test[21];
-    char *keys[20] = {
+    char test[23];
+    char *keys[22] = {
       "user"	  ,
       "full_name" ,
       "first_name",
@@ -601,11 +601,13 @@ static int validate_vcard_get(xmlnode q_root){
       "title"	  ,
       "role"	  ,
       "b_day"	  ,
-      "descr"
+      "descr"	  ,
+      "photo_type",
+      "photo_bin"
     };
 
-    memset(test,' ',20);
-    test[20] = 0;
+    memset(test,' ',22);
+    test[22] = 0;
 
     for (tmp=xmlnode_get_firstchild(q_root); tmp; tmp=xmlnode_get_nextsibling(tmp)){
 	attr = xmlnode_get_attrib(tmp,name_attr_name);
@@ -615,21 +617,21 @@ static int validate_vcard_get(xmlnode q_root){
 	      test[0] = 'X';
 	  }
 	else
-	  for (i = 1; i < 20; i++)
+	  for (i = 1; i < 22; i++)
 	    if (j_strcmp(xmlnode_get_name(tmp),bindcol_name)==0)
 	      if (j_strcmp(attr,keys[i])==0)
 		test[i] = 'X';
       } /* end for */
 
-    return (strncmp(test, "XXXXXXXXXXXXXXXXXXXX", 20)==0);
+    return (strncmp(test, "XXXXXXXXXXXXXXXXXXXXXX", 22)==0);
 } /* end validate_vcard_get */
 
 static int validate_vcard_set(xmlnode q_root){
     xmlnode tmp;
     int i;
     char *attr;
-    char test[20];
-    char *keys[20] = {
+    char test[23];
+    char *keys[22] = {
       "user"	  ,
       "full_name" ,
       "first_name",
@@ -649,21 +651,23 @@ static int validate_vcard_set(xmlnode q_root){
       "title"	  ,
       "role"	  ,
       "b_day"	  ,
-      "descr"
+      "descr"	  ,
+      "photo_type",
+      "photo_bin"
     };
 
-    memset(test,' ',20);
-    test[20] = 0;
+    memset(test,' ',22);
+    test[22] = 0;
 
     for (tmp=xmlnode_get_firstchild(q_root); tmp; tmp=xmlnode_get_nextsibling(tmp)){
 	attr = xmlnode_get_attrib(tmp,name_attr_name);
-	for (i = 0; i < 20; i++)
+	for (i = 0; i < 22; i++)
 	  if (j_strcmp(xmlnode_get_name(tmp),bindvar_name)==0)
 	    if (j_strcmp(attr,keys[i])==0)
 	      test[i] = 'X';
       } /* end for */
 
-    return (strncmp(test, "XXXXXXXXXXXXXXXXXXXX", 20)==0);
+    return (strncmp(test, "XXXXXXXXXXXXXXXXXXXXXX", 22)==0);
 
 } /* end validate_vcard_set */
 
