@@ -30,42 +30,48 @@
 
 #include "jabberd.h"
 
-result base_stderr_display(instance i, dpacket p, void* args){
-    char* message = NULL;
+result base_stderr_display(instance i, dpacket p, void *args)
+{
+	char *message = NULL;
 
-    /* Get the raw data from the packet */
-    message = xmlnode_get_data(p->x);
+	/* Get the raw data from the packet */
+	message = xmlnode_get_data(p->x);
 
-    if(message == NULL){
-	log_debug("base_stderr_deliver: no message available to print.");
-	return r_ERR;
-    }
+	if (message == NULL) {
+		log_debug
+		    ("base_stderr_deliver: no message available to print.");
+		return r_ERR;
+	}
 
-    /* We know message is non-null so fprintf is okay. */
-    fprintf(stderr, "%s\n", message);
+	/* We know message is non-null so fprintf is okay. */
+	fprintf(stderr, "%s\n", message);
 
-    pool_free(p->p);
-    return r_DONE;
+	pool_free(p->p);
+	return r_DONE;
 }
 
-result base_stderr_config(instance id, xmlnode x, void *arg){
-    if(id == NULL)
-	return r_PASS;
+result base_stderr_config(instance id, xmlnode x, void *arg)
+{
+	if (id == NULL)
+		return r_PASS;
 
-    if(id->type != p_LOG){
-	log_alert(NULL, "ERROR in instance %s: <stderr/> element only allowed in log sections", id->id);
-	return r_ERR;
-    }
+	if (id->type != p_LOG) {
+		log_alert(NULL,
+			  "ERROR in instance %s: <stderr/> element only allowed in log sections",
+			  id->id);
+		return r_ERR;
+	}
 
-    log_debug("base_stderr configuring instnace %s",id->id);
+	log_debug("base_stderr configuring instnace %s", id->id);
 
-    /* Register the handler, for this instance */
-    register_phandler(id, o_DELIVER, base_stderr_display, NULL);
+	/* Register the handler, for this instance */
+	register_phandler(id, o_DELIVER, base_stderr_display, NULL);
 
-    return r_DONE;
+	return r_DONE;
 }
 
-void base_stderr(void){
-    log_debug("base_stderr loading...");
-    register_config("stderr", base_stderr_config, NULL);
+void base_stderr(void)
+{
+	log_debug("base_stderr loading...");
+	register_config("stderr", base_stderr_config, NULL);
 }

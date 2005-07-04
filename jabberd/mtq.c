@@ -38,301 +38,299 @@
 mtqmaster mtq__master = NULL;
 volatile int mtq__shutdown = 0;
 
-void mtq_cleanup(void *arg){
-    mtq q = (mtq)arg;
+void mtq_cleanup(void *arg)
+{
+	mtq q = (mtq) arg;
 
-    q->users_count--;
+	q->users_count--;
 }
 
 void mtq_init();
 
 /* public queue creation function, queue lives as long as the pool */
-mtq mtq_new_que(pool p,  mtq que){
-    mtq q;
-    int n,mtq_n;
-    int count;
+mtq mtq_new_que(pool p, mtq que)
+{
+	mtq q;
+	int n, mtq_n;
+	int count;
 
-    log_debug("MTQ(new)");
+	log_debug("MTQ(new)");
 
 
-	if (p==NULL)
-	  return NULL;
+	if (p == NULL)
+		return NULL;
 
-    if(mtq__master == NULL){
-	  mtq_init();
+	if (mtq__master == NULL) {
+		mtq_init();
 	}
 
-	if (que){
-	  que->users_count++;
-	  pool_cleanup(p, mtq_cleanup, (void *)que);
-	  return que;
+	if (que) {
+		que->users_count++;
+		pool_cleanup(p, mtq_cleanup, (void *) que);
+		return que;
 	}
 
 	/* find queue with less users */
-	count=999999;
+	count = 999999;
 	mtq_n = 0;
-	for(n = 0; n < MTQ_THREADS; n++)
-	  if(mtq__master->all[n]->mtq->users_count < count){
-		count = mtq__master->all[n]->mtq->users_count;
-		mtq_n = n;
-	  }
+	for (n = 0; n < MTQ_THREADS; n++)
+		if (mtq__master->all[n]->mtq->users_count < count) {
+			count = mtq__master->all[n]->mtq->users_count;
+			mtq_n = n;
+		}
 	q = mtq__master->all[mtq_n]->mtq;
 
-    q->users_count++;
-    pool_cleanup(p, mtq_cleanup, (void *)q);
+	q->users_count++;
+	pool_cleanup(p, mtq_cleanup, (void *) q);
 
-    return q;
+	return q;
 }
 
 /* public queue creation function, queue lives as long as the pool */
-mtq mtq_new(pool p){
-    mtq q;
-    int n,mtq_n;
-    int count;
+mtq mtq_new(pool p)
+{
+	mtq q;
+	int n, mtq_n;
+	int count;
 
-	if (p==NULL)
-	  return NULL;
+	if (p == NULL)
+		return NULL;
 
-    if(mtq__master == NULL){
-	  mtq_init();
+	if (mtq__master == NULL) {
+		mtq_init();
 	}
 
 	/* find queue with less users */
-	count=999999;
+	count = 999999;
 	mtq_n = 0;
-	for(n = 0; n < MTQ_THREADS; n++)
-	  if(mtq__master->all[n]->mtq->users_count < count){
-		count = mtq__master->all[n]->mtq->users_count;
-		mtq_n = n;
-	  }
+	for (n = 0; n < MTQ_THREADS; n++)
+		if (mtq__master->all[n]->mtq->users_count < count) {
+			count = mtq__master->all[n]->mtq->users_count;
+			mtq_n = n;
+		}
 	q = mtq__master->all[mtq_n]->mtq;
 
-    q->users_count++;
-    pool_cleanup(p, mtq_cleanup, (void *)q);
+	q->users_count++;
+	pool_cleanup(p, mtq_cleanup, (void *) q);
 
-    return q;
+	return q;
 }
 
 /* main slave thread */
-void *mtq_main(void *arg){
-    mth t = (mth)arg;
-    mtqqueue mq; /* temp call structure */
-    _mtqqueue mqcall; /* temp call structure */
-    log_debug("mtq","%X starting mq=%d",t->thread,t->mtq);
+void *mtq_main(void *arg)
+{
+	mth t = (mth) arg;
+	mtqqueue mq;		/* temp call structure */
+	_mtqqueue mqcall;	/* temp call structure */
+	log_debug("mtq", "%X starting mq=%d", t->thread, t->mtq);
 
-    while(1){
+	while (1) {
 
-	  /* check if something to resolv */
-	  SEM_LOCK(t->mtq->sem);
-	  if (t->mtq->last == NULL){
-		COND_WAIT(t->mtq->cond,t->mtq->sem);
-	  }
+		/* check if something to resolv */
+		SEM_LOCK(t->mtq->sem);
+		if (t->mtq->last == NULL) {
+			COND_WAIT(t->mtq->cond, t->mtq->sem);
+		}
 
-	  /* get element */
-	  mq = t->mtq->last;
-	  if (mq != NULL){
-		mqcall.f = mq->f;
-		mqcall.arg = mq->arg;
+		/* get element */
+		mq = t->mtq->last;
+		if (mq != NULL) {
+			mqcall.f = mq->f;
+			mqcall.arg = mq->arg;
 
-		/* remove call from list */
-		t->mtq->last = t->mtq->last->prev;
-		t->mtq->dl--;
+			/* remove call from list */
+			t->mtq->last = t->mtq->last->prev;
+			t->mtq->dl--;
 
-		/* add mq to list */
-		mq->prev = NULL;
+			/* add mq to list */
+			mq->prev = NULL;
 
-		if (t->mtq->free_last == NULL)
-		  t->mtq->free_last = mq;
-		else
-		  t->mtq->free_first->prev = mq;
+			if (t->mtq->free_last == NULL)
+				t->mtq->free_last = mq;
+			else
+				t->mtq->free_first->prev = mq;
 
-		t->mtq->free_first = mq;
-	  }
+			t->mtq->free_first = mq;
+		}
 
-	  SEM_UNLOCK(t->mtq->sem);
+		SEM_UNLOCK(t->mtq->sem);
 
-	  if (mq != NULL){
-		(*(mqcall.f))(mqcall.arg);
-	  }
-	  else{
-		/* mq is NULL here, so no more packets in queue */
-		if (mtq__shutdown == 1)
-		  break;
-	  }
-	} /* loop end */
+		if (mq != NULL) {
+			(*(mqcall.f)) (mqcall.arg);
+		} else {
+			/* mq is NULL here, so no more packets in queue */
+			if (mtq__shutdown == 1)
+				break;
+		}
+	}			/* loop end */
 
-    log_debug("mtq","%X ending mq=%d",t->thread,t->mtq);
-    return NULL;
+	log_debug("mtq", "%X ending mq=%d", t->thread, t->mtq);
+	return NULL;
 }
 
-void mtq_stop(){
-    mth t = NULL;
-    int n;
-    int l,m; /* counter for mtq long */
-    void *ret;
+void mtq_stop()
+{
+	mth t = NULL;
+	int n;
+	int l, m;		/* counter for mtq long */
+	void *ret;
 
-    if ( mtq__master == NULL ){
-      log_debug("no mtq started");
-      return;
-    }
+	if (mtq__master == NULL) {
+		log_debug("no mtq started");
+		return;
+	}
 
-    /* 3 times check all quees */
-    m = 3;
-    while (m > 0){
+	/* 3 times check all quees */
+	m = 3;
+	while (m > 0) {
 
-      l = 0;
+		l = 0;
 
-      for(n=0;n < MTQ_THREADS;n++){
-	t = mtq__master->all[n];
-	l += t->mtq->dl;
-      }
+		for (n = 0; n < MTQ_THREADS; n++) {
+			t = mtq__master->all[n];
+			l += t->mtq->dl;
+		}
 
-      if (l == 0)
-	m--;
-      else
-	if (m < 3) m = 3;
-    }
+		if (l == 0)
+			m--;
+		else if (m < 3)
+			m = 3;
+	}
 
-    /* set exit flag */
-    mtq__shutdown = 1;
+	/* set exit flag */
+	mtq__shutdown = 1;
 
-    /* wait exit */
-    for(n=0;n < MTQ_THREADS;n++){
-	t = mtq__master->all[n];
-	SEM_LOCK(t->mtq->sem);
-	/* signal exit */
-	COND_SIGNAL(t->mtq->cond);
-	/* wait */
-	SEM_UNLOCK(t->mtq->sem);
-	pthread_join(t->thread,&ret);
-    }
+	/* wait exit */
+	for (n = 0; n < MTQ_THREADS; n++) {
+		t = mtq__master->all[n];
+		SEM_LOCK(t->mtq->sem);
+		/* signal exit */
+		COND_SIGNAL(t->mtq->cond);
+		/* wait */
+		SEM_UNLOCK(t->mtq->sem);
+		pthread_join(t->thread, &ret);
+	}
 
-    /* clean MTQ */
-    for(n=0;n<MTQ_THREADS;n++){
-	t = mtq__master->all[n];
-	pthread_mutex_destroy(&(t->mtq->sem));
-	pool_free(t->p);
-    }
+	/* clean MTQ */
+	for (n = 0; n < MTQ_THREADS; n++) {
+		t = mtq__master->all[n];
+		pthread_mutex_destroy(&(t->mtq->sem));
+		pool_free(t->p);
+	}
 
-    ret = mtq__master;
-    mtq__master = NULL;
-    free(ret);
+	ret = mtq__master;
+	mtq__master = NULL;
+	free(ret);
 }
 
-void mtq_send(mtq q, pool p, mtq_callback f, void *arg){
-    mtqqueue mq;  /* one element */
+void mtq_send(mtq q, pool p, mtq_callback f, void *arg)
+{
+	mtqqueue mq;		/* one element */
 	mtq mtq;
 
 
-    /* initialization stuff */
-    if(mtq__master == NULL){
-	  mtq_init();
-    }
+	/* initialization stuff */
+	if (mtq__master == NULL) {
+		mtq_init();
+	}
 
-    if(q != NULL){
-      mtq = q;
-    }
-    else{
-      /* take next thread */
-	  mtq__master->random++;
-	  if (mtq__master->random >= MTQ_THREADS)
-		mtq__master->random = 0;
+	if (q != NULL) {
+		mtq = q;
+	} else {
+		/* take next thread */
+		mtq__master->random++;
+		if (mtq__master->random >= MTQ_THREADS)
+			mtq__master->random = 0;
 
-	  mtq = mtq__master->all[mtq__master->random]->mtq;
-    }
+		mtq = mtq__master->all[mtq__master->random]->mtq;
+	}
 
-    /* build queue */
-    log_debug("mtq_send insert into mtq=%p",mtq);
+	/* build queue */
+	log_debug("mtq_send insert into mtq=%p", mtq);
 
-    /* lock operation on queue */
-    SEM_LOCK(mtq->sem);
+	/* lock operation on queue */
+	SEM_LOCK(mtq->sem);
 
-    /* find free memory */
-    mq = mtq->free_last;
+	/* find free memory */
+	mq = mtq->free_last;
 
-    if (mq == NULL){
-	  while ((mq = malloc(sizeof(_mtqqueue)))==NULL) Sleep(1000);
-	  /* it means new malloc
-		 maybe we should free this mq later ? */
-	  log_alert("error","MTQ new queue malloc");
-	  mq->memory = 1;
-	  mtq->length++;
-    }
-    else{
-	  /* take it out from queue */
-	  mtq->free_last = mtq->free_last->prev;
-    }
+	if (mq == NULL) {
+		while ((mq = malloc(sizeof(_mtqqueue))) == NULL)
+			Sleep(1000);
+		/* it means new malloc
+		   maybe we should free this mq later ? */
+		log_alert("error", "MTQ new queue malloc");
+		mq->memory = 1;
+		mtq->length++;
+	} else {
+		/* take it out from queue */
+		mtq->free_last = mtq->free_last->prev;
+	}
 
-    mq->f = f;
-    mq->arg = arg;
-    mq->prev = NULL;
+	mq->f = f;
+	mq->arg = arg;
+	mq->prev = NULL;
 
-    mtq->dl++;
+	mtq->dl++;
 
-    /* if queue is empty */
-    if (mtq->last == NULL)
-      mtq->last = mq;
-    else
-      mtq->first->prev = mq;
+	/* if queue is empty */
+	if (mtq->last == NULL)
+		mtq->last = mq;
+	else
+		mtq->first->prev = mq;
 
-    mtq->first = mq;
+	mtq->first = mq;
 
 	COND_SIGNAL(mtq->cond);
 
-    SEM_UNLOCK(mtq->sem);
+	SEM_UNLOCK(mtq->sem);
 }
 
-void mtq_init(){
-    mtq mtq = NULL; /* queue */
-    mth t = NULL;
-    int n,k;
-    pool newp;
+void mtq_init()
+{
+	mtq mtq = NULL;		/* queue */
+	mth t = NULL;
+	int n, k;
+	pool newp;
 
 
-	mtq__master = malloc(sizeof(_mtqmaster)); /* happens once, global */
+	mtq__master = malloc(sizeof(_mtqmaster));	/* happens once, global */
 	mtq__master->random = 0;
 
 	/* start MTQ threads */
-	for(n=0;n<MTQ_THREADS;n++){
-	  newp = pool_new();
-	  t = pmalloco(newp, sizeof(_mth));
-	  t->p = newp;
-	  t->mtq = pmalloco(newp,sizeof(_mtq));
-	  t->mtq->first = t->mtq->last = NULL;
-	  t->mtq->free_first = t->mtq->free_last = NULL;
-	  t->mtq->users_count = 0;
-	  t->mtq->dl = 0;
-	  t->mtq->length = 0;
+	for (n = 0; n < MTQ_THREADS; n++) {
+		newp = pool_new();
+		t = pmalloco(newp, sizeof(_mth));
+		t->p = newp;
+		t->mtq = pmalloco(newp, sizeof(_mtq));
+		t->mtq->first = t->mtq->last = NULL;
+		t->mtq->free_first = t->mtq->free_last = NULL;
+		t->mtq->users_count = 0;
+		t->mtq->dl = 0;
+		t->mtq->length = 0;
 
-	  mtq = t->mtq;
+		mtq = t->mtq;
 
-	  /* build queue cache */
-	  for (k=0;k<MTQ_QUEUE_LONG;k++){
-		/* mtq->free_last if the first to take from queue*/
-		mtq->queue[k].memory = 0;
-		mtq->queue[k].prev   = NULL;
+		/* build queue cache */
+		for (k = 0; k < MTQ_QUEUE_LONG; k++) {
+			/* mtq->free_last if the first to take from queue */
+			mtq->queue[k].memory = 0;
+			mtq->queue[k].prev = NULL;
 
-		/* if queue is empty */
-		if (mtq->free_last == NULL)
-		  mtq->free_last = &(mtq->queue[k]);
-		else
-		  mtq->free_first->prev = &(mtq->queue[k]);
+			/* if queue is empty */
+			if (mtq->free_last == NULL)
+				mtq->free_last = &(mtq->queue[k]);
+			else
+				mtq->free_first->prev = &(mtq->queue[k]);
 
-		mtq->free_first = &(mtq->queue[k]);
-		mtq->length++;
-	  }
+			mtq->free_first = &(mtq->queue[k]);
+			mtq->length++;
+		}
 
-	  SEM_INIT(t->mtq->sem);
-	  COND_INIT(t->mtq->cond);
+		SEM_INIT(t->mtq->sem);
+		COND_INIT(t->mtq->cond);
 
-	  pthread_create(&(t->thread), NULL, mtq_main, (void *)t);
-	  mtq__master->all[n] = t; /* assign it as available */
+		pthread_create(&(t->thread), NULL, mtq_main, (void *) t);
+		mtq__master->all[n] = t;	/* assign it as available */
 	}
 }
-
-
-
-
-
-
-

@@ -42,55 +42,64 @@
 
 #define TMZONE
 
-mreturn mod_time_reply(mapi m, void *arg){
-    time_t t;
-    char str[51];
-    struct tm tmd;
+mreturn mod_time_reply(mapi m, void *arg)
+{
+	time_t t;
+	char str[51];
+	struct tm tmd;
 
-    if(m->packet->type != JPACKET_IQ) return M_IGNORE;
-    if(!NSCHECK(m->packet->iq,NS_TIME) || m->packet->to->resource != NULL) return M_PASS;
+	if (m->packet->type != JPACKET_IQ)
+		return M_IGNORE;
+	if (!NSCHECK(m->packet->iq, NS_TIME)
+	    || m->packet->to->resource != NULL)
+		return M_PASS;
 
-    /* first, is this a valid request? */
-    if(jpacket_subtype(m->packet) != JPACKET__GET){
-	js_bounce(m->si,m->packet->x,TERROR_NOTALLOWED);
-	return M_HANDLED;
-    }
+	/* first, is this a valid request? */
+	if (jpacket_subtype(m->packet) != JPACKET__GET) {
+		js_bounce(m->si, m->packet->x, TERROR_NOTALLOWED);
+		return M_HANDLED;
+	}
 
-    log_debug("handling time query from %s",jid_full(m->packet->from));
+	log_debug("handling time query from %s",
+		  jid_full(m->packet->from));
 
-    jutil_iqresult(m->packet->x);
-    xmlnode_put_attrib(xmlnode_insert_tag(m->packet->x,"query"),"xmlns",NS_TIME);
-    jpacket_reset(m->packet);
-    xmlnode_insert_cdata(xmlnode_insert_tag(m->packet->iq,"utc"),jutil_timestamp(),-1);
+	jutil_iqresult(m->packet->x);
+	xmlnode_put_attrib(xmlnode_insert_tag(m->packet->x, "query"),
+			   "xmlns", NS_TIME);
+	jpacket_reset(m->packet);
+	xmlnode_insert_cdata(xmlnode_insert_tag(m->packet->iq, "utc"),
+			     jutil_timestamp(), -1);
 
-    /* create nice display time */
-    t = time(NULL);
+	/* create nice display time */
+	t = time(NULL);
 #ifdef WIN32
-    tmd = *localtime( &t);
+	tmd = *localtime(&t);
 #else
-	localtime_r( &t , &tmd);
+	localtime_r(&t, &tmd);
 #endif
-	/*	"Wed Jun 24 14:26:08 2003\n" */
-	strftime(str,50,"%a %b %d %T %G\n",&tmd);
-    xmlnode_insert_cdata(xmlnode_insert_tag(m->packet->iq,"display"),str,-1);
+	/*      "Wed Jun 24 14:26:08 2003\n" */
+	strftime(str, 50, "%a %b %d %T %G\n", &tmd);
+	xmlnode_insert_cdata(xmlnode_insert_tag(m->packet->iq, "display"),
+			     str, -1);
 
 #ifndef WIN32
 #ifdef TMZONE
-    xmlnode_insert_cdata(xmlnode_insert_tag(m->packet->iq,"tz"),tmd.tm_zone,-1);
+	xmlnode_insert_cdata(xmlnode_insert_tag(m->packet->iq, "tz"),
+			     tmd.tm_zone, -1);
 #else
-    /* some platforms don't have tzname I guess */
-    tzset();
-    xmlnode_insert_cdata(xmlnode_insert_tag(m->packet->iq,"tz"),tzname[0],-1);
+	/* some platforms don't have tzname I guess */
+	tzset();
+	xmlnode_insert_cdata(xmlnode_insert_tag(m->packet->iq, "tz"),
+			     tzname[0], -1);
 #endif
 #endif
 
-    js_deliver(m->si,m->packet);
+	js_deliver(m->si, m->packet);
 
-    return M_HANDLED;
+	return M_HANDLED;
 }
 
-JSM_FUNC void mod_time(jsmi si){
-    js_mapi_register(si,e_SERVER,mod_time_reply,NULL);
+JSM_FUNC void mod_time(jsmi si)
+{
+	js_mapi_register(si, e_SERVER, mod_time_reply, NULL);
 }
-
-

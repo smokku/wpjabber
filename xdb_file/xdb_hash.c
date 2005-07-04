@@ -74,23 +74,23 @@ static const unsigned int crc32tab[256] = {
 
 #define CRC32(crc, ch)	 (crc = (crc >> 8) ^ crc32tab[(crc ^ (ch)) & 0xff])
 
-void generate_dir(unsigned char * name,unsigned char * path,int pathsize){
-  int len,nr;
-  unsigned char *p = NULL;
-  unsigned long crc = 0;
+void generate_dir(unsigned char *name, unsigned char *path, int pathsize)
+{
+	int len, nr;
+	unsigned char *p = NULL;
+	unsigned long crc = 0;
 
-  nr  = strlen(name);
-  len = 0;
-  p   = name;
+	nr = strlen(name);
+	len = 0;
+	p = name;
 
-  for (len += nr; nr--; ++p){
-    CRC32(crc, *p);
-  }
+	for (len += nr; nr--; ++p) {
+		CRC32(crc, *p);
+	}
 
-  sprintf(path,"%08lX",crc);
-  path[0]='/';
-  path[3]='/';
-  path[6]=0;
-  return;
+	sprintf(path, "%08lX", crc);
+	path[0] = '/';
+	path[3] = '/';
+	path[6] = 0;
+	return;
 }
-

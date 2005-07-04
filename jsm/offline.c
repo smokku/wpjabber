@@ -53,21 +53,21 @@ changes
 #include "jsm.h"
 
 
-void js_offline_main(jsmi si, jpacket jp){
-    udata user;
+void js_offline_main(jsmi si, jpacket jp)
+{
+	udata user;
 
-    /* performace hack, don't lookup the udata again */
-    user = (udata)jp->aux1;
+	/* performace hack, don't lookup the udata again */
+	user = (udata) jp->aux1;
 
-    /* debug message */
-    log_debug("THREAD:OFFLINE received %s's packet: %s",jid_full(user->id),xmlnode2str(jp->x));
+	/* debug message */
+	log_debug("THREAD:OFFLINE received %s's packet: %s",
+		  jid_full(user->id), xmlnode2str(jp->x));
 
-    /* let the modules handle the packet */
-    if(!js_mapi_call(si, e_OFFLINE, jp, user, NULL))
-	js_bounce(si,jp->x,TERROR_UNAVAIL);
+	/* let the modules handle the packet */
+	if (!js_mapi_call(si, e_OFFLINE, jp, user, NULL))
+		js_bounce(si, jp->x, TERROR_UNAVAIL);
 
-    /* it can be cleaned up now */
-    THREAD_DEC(user->ref);
+	/* it can be cleaned up now */
+	THREAD_DEC(user->ref);
 }
-
-

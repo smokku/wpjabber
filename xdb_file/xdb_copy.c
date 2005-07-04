@@ -45,118 +45,114 @@
 #include <ctype.h>
 #include <time.h>
 
-void generate_dir(char * name,char * path,int pathsize);
+void generate_dir(char *name, char *path, int pathsize);
 
-int main (int argc, char** argv){
-  struct stat s;
-  char buf[500];
-  char sciezka[500];
-  char * a,*b;
-  char *f;
-  char *t[10];
-  int index = 0;
-  void * start;
-  int fd,fd2;
+int main(int argc, char **argv)
+{
+	struct stat s;
+	char buf[500];
+	char sciezka[500];
+	char *a, *b;
+	char *f;
+	char *t[10];
+	int index = 0;
+	void *start;
+	int fd, fd2;
 
 
-  if (argc != 2){
-    fprintf(stderr,"xdb_copy needs parameter.\r\n");
-    return 0;
-  }
+	if (argc != 2) {
+		fprintf(stderr, "xdb_copy needs parameter.\r\n");
+		return 0;
+	}
 
-  /* build path */
-  /* we have */
-  /*		     0		  1		*/
-  /*  ./spool/offline/jabber.wp.pl/a/aa/ala.xml */
-  a = argv[1];
-  b = sciezka;
-  a += 6;
-  memcpy(b,"./spool1/",9);
-  b +=9;
-  *b=0;
-
-  while(1){
-    if (*a == 0){
-      break;
-    }
-
-    if (*a == '/'){
-      f = a;
-
-      if (index < 2){
+	/* build path */
+	/* we have */
+	/*                 0            1             */
+	/*  ./spool/offline/jabber.wp.pl/a/aa/ala.xml */
+	a = argv[1];
+	b = sciezka;
+	a += 6;
+	memcpy(b, "./spool1/", 9);
+	b += 9;
 	*b = 0;
 
-	//fprintf(stderr,"create >%s<\r\n",sciezka);
-	if (stat(sciezka,&s) < 0)
-	  mkdir(sciezka, S_IRWXU);
+	while (1) {
+		if (*a == 0) {
+			break;
+		}
 
-	t[index] = b;
-	index++;
+		if (*a == '/') {
+			f = a;
 
-	*b = *a;
-	b++;
-      }
-      a++;
-      continue;
-    }
+			if (index < 2) {
+				*b = 0;
 
-    if (index < 2){
-      *b = *a;
-      b++;
-    }
-    a++;
-  }
+				//fprintf(stderr,"create >%s<\r\n",sciezka);
+				if (stat(sciezka, &s) < 0)
+					mkdir(sciezka, S_IRWXU);
 
-  /* generate path_info */
-  f++;
-  generate_dir(f,buf,200);
+				t[index] = b;
+				index++;
 
-  memcpy(b,buf+1,2);
-  b+=2;
-  *b=0;
+				*b = *a;
+				b++;
+			}
+			a++;
+			continue;
+		}
 
-  // fprintf(stderr,"create >%s<\r\n",sciezka);
-  if (stat(sciezka,&s) < 0)
-   mkdir(sciezka, S_IRWXU);
+		if (index < 2) {
+			*b = *a;
+			b++;
+		}
+		a++;
+	}
 
-  *b='/';
-  memcpy(b+1,buf+4,2);
-  b+=3;
-  *b=0;
+	/* generate path_info */
+	f++;
+	generate_dir(f, buf, 200);
 
-  //  fprintf(stderr,"create >%s<\r\n",sciezka);
-  if (stat(sciezka,&s) < 0)
-    mkdir(sciezka, S_IRWXU);
+	memcpy(b, buf + 1, 2);
+	b += 2;
+	*b = 0;
 
-  *b='/';
-  memcpy(b+1,f,a-f);
-  b+=a-f+1;
-  *b=0;
+	// fprintf(stderr,"create >%s<\r\n",sciezka);
+	if (stat(sciezka, &s) < 0)
+		mkdir(sciezka, S_IRWXU);
 
-  /* copy file */
-  if (stat(argv[1],&s) < 0){
-    fprintf(stdout,"error >%s<\r\n",argv[1]);
-    return 0;
-  }
+	*b = '/';
+	memcpy(b + 1, buf + 4, 2);
+	b += 3;
+	*b = 0;
 
-  fd = open(argv[1],O_RDONLY);
-  start = mmap(NULL,s.st_size,PROT_READ,MAP_SHARED,fd,0);
+	//  fprintf(stderr,"create >%s<\r\n",sciezka);
+	if (stat(sciezka, &s) < 0)
+		mkdir(sciezka, S_IRWXU);
 
-  fd2 = open(sciezka,O_TRUNC | O_CREAT | O_WRONLY,S_IRUSR|S_IWUSR|S_IRGRP);
-  write(fd2,start,s.st_size);
-  close(fd2);
+	*b = '/';
+	memcpy(b + 1, f, a - f);
+	b += a - f + 1;
+	*b = 0;
 
-  munmap(start,s.st_size);
-  close(fd);
+	/* copy file */
+	if (stat(argv[1], &s) < 0) {
+		fprintf(stdout, "error >%s<\r\n", argv[1]);
+		return 0;
+	}
 
-  fprintf(stdout,"%s\r\n",sciezka);
+	fd = open(argv[1], O_RDONLY);
+	start = mmap(NULL, s.st_size, PROT_READ, MAP_SHARED, fd, 0);
 
-  return 0;
+	fd2 =
+	    open(sciezka, O_TRUNC | O_CREAT | O_WRONLY,
+		 S_IRUSR | S_IWUSR | S_IRGRP);
+	write(fd2, start, s.st_size);
+	close(fd2);
+
+	munmap(start, s.st_size);
+	close(fd);
+
+	fprintf(stdout, "%s\r\n", sciezka);
+
+	return 0;
 }
-
-
-
-
-
-
-

@@ -21,11 +21,11 @@ typedef unsigned char UCHAR;
 
 typedef unsigned short WORD;
 typedef unsigned short USHORT;
-typedef short	       SHORT;
+typedef short SHORT;
 
-typedef int	      SOCKET;
-typedef int	      INT;
-typedef unsigned int  UINT;
+typedef int SOCKET;
+typedef int INT;
+typedef unsigned int UINT;
 
 #ifdef LONG64B
 typedef long INT64;

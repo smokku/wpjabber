@@ -30,55 +30,69 @@
 
 #include "jabberd.h"
 
-result base_to_deliver(instance id,dpacket p,void* arg){
-    char* log_data = xmlnode_get_data(p->x);
-    char* subject;
-    xmlnode message;
+result base_to_deliver(instance id, dpacket p, void *arg)
+{
+	char *log_data = xmlnode_get_data(p->x);
+	char *subject;
+	xmlnode message;
 
-    if(log_data == NULL)
-	return r_ERR;
+	if (log_data == NULL)
+		return r_ERR;
 
-    message = xmlnode_new_tag("message");
+	message = xmlnode_new_tag("message");
 
-    xmlnode_insert_cdata(xmlnode_insert_tag(message,"body"), log_data, -1);
-    subject=spools(xmlnode_pool(message), "Log Packet from ", xmlnode_get_attrib(p->x, "from"), xmlnode_pool(message));
-    xmlnode_insert_cdata(xmlnode_insert_tag(message, "thread"), shahash(subject), -1);
-    xmlnode_insert_cdata(xmlnode_insert_tag(message, "subject"), subject, -1);
-    xmlnode_put_attrib(message, "from", xmlnode_get_attrib(p->x, "from"));
-    xmlnode_put_attrib(message, "to", (char*)arg);
+	xmlnode_insert_cdata(xmlnode_insert_tag(message, "body"), log_data,
+			     -1);
+	subject =
+	    spools(xmlnode_pool(message), "Log Packet from ",
+		   xmlnode_get_attrib(p->x, "from"),
+		   xmlnode_pool(message));
+	xmlnode_insert_cdata(xmlnode_insert_tag(message, "thread"),
+			     shahash(subject), -1);
+	xmlnode_insert_cdata(xmlnode_insert_tag(message, "subject"),
+			     subject, -1);
+	xmlnode_put_attrib(message, "from",
+			   xmlnode_get_attrib(p->x, "from"));
+	xmlnode_put_attrib(message, "to", (char *) arg);
 
-    deliver(dpacket_new(message), id);
-    pool_free(p->p);
+	deliver(dpacket_new(message), id);
+	pool_free(p->p);
 
-    return r_DONE;
+	return r_DONE;
 }
 
-result base_to_config(instance id, xmlnode x, void *arg){
-    if(id == NULL){
-	jid j = jid_new(xmlnode_pool(x), xmlnode_get_data(x));
+result base_to_config(instance id, xmlnode x, void *arg)
+{
+	if (id == NULL) {
+		jid j = jid_new(xmlnode_pool(x), xmlnode_get_data(x));
 
-	log_debug("base_to_config validating configuration\n");
-	if(j == NULL){
-	    xmlnode_put_attrib(x, "error", "'to' tag must contain a jid to send log data to");
-	    log_debug("Invalid Configuration for base_to");
-	    return r_ERR;
+		log_debug("base_to_config validating configuration\n");
+		if (j == NULL) {
+			xmlnode_put_attrib(x, "error",
+					   "'to' tag must contain a jid to send log data to");
+			log_debug("Invalid Configuration for base_to");
+			return r_ERR;
+		}
+		return r_PASS;
 	}
-	return r_PASS;
-    }
 
-    log_debug("base_to configuring instance %s", id->id);
+	log_debug("base_to configuring instance %s", id->id);
 
-    if(id->type != p_LOG){
-	log_alert(NULL, "ERROR in instance %s: <to>..</to> element only allowed in log sections", id->id);
-	return r_ERR;
-    }
+	if (id->type != p_LOG) {
+		log_alert(NULL,
+			  "ERROR in instance %s: <to>..</to> element only allowed in log sections",
+			  id->id);
+		return r_ERR;
+	}
 
-    register_phandler(id, o_DELIVER, base_to_deliver, (void*)xmlnode_get_data(x));
+	register_phandler(id, o_DELIVER, base_to_deliver,
+			  (void *) xmlnode_get_data(x));
 
-    return r_DONE;
+	return r_DONE;
 }
 
-void base_to(void){
-    log_debug("base_to loading...");
-    register_config("to",base_to_config,NULL);
+void base_to(void)
+{
+	log_debug("base_to loading...");
+	register_config("to", base_to_config, NULL);
 }

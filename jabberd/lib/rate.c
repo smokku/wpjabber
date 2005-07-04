@@ -60,19 +60,20 @@
  * @param maxp maximum number of points available for the time interval given in maxt
  * @return new instance of jlimit (has to be freed with jlimit_free if not used anymore)
  */
-jlimit jlimit_new(int maxt, int maxp){
-    pool p;
-    jlimit r;
+jlimit jlimit_new(int maxt, int maxp)
+{
+	pool p;
+	jlimit r;
 
-    p = pool_new();
-    r = pmalloc(p,sizeof(_jlimit));
-    r->key = NULL;
-    r->start = r->points = 0;
-    r->maxt = maxt;
-    r->maxp = maxp;
-    r->p = p;
+	p = pool_new();
+	r = pmalloc(p, sizeof(_jlimit));
+	r->key = NULL;
+	r->start = r->points = 0;
+	r->maxt = maxt;
+	r->maxp = maxp;
+	r->p = p;
 
-    return r;
+	return r;
 }
 
 /**
@@ -80,11 +81,13 @@ jlimit jlimit_new(int maxt, int maxp){
  *
  * @param r the jlimit instance that should be freed
  */
-void jlimit_free(jlimit r){
-    if(r != NULL){
-	if(r->key != NULL) free(r->key);
-	pool_free(r->p);
-    }
+void jlimit_free(jlimit r)
+{
+	if (r != NULL) {
+		if (r->key != NULL)
+			free(r->key);
+		pool_free(r->p);
+	}
 }
 
 /**
@@ -98,30 +101,32 @@ void jlimit_free(jlimit r){
  * @param points how many points of the limit should be consumed
  * @return 1 if limit reached, 0 if we are still within the rate limit
  */
-int jlimit_check(jlimit r, char *key, int points){
-    int now = time(NULL);
+int jlimit_check(jlimit r, char *key, int points)
+{
+	int now = time(NULL);
 
-    if(r == NULL) return 0;
+	if (r == NULL)
+		return 0;
 
-    /* make sure we didn't go over the time frame or get a null/new key */
-    if((now - r->start) > r->maxt || key == NULL || j_strcmp(key,r->key) != 0){ /* start a new key */
-	free(r->key);
-	if(key != NULL)
-	  /* We use strdup instead of pstrdup since r->key needs to be free'd before
-	     and more often than the rest of the rlimit structure */
-	    r->key = strdup(key);
-	else
-	    r->key = NULL;
-	r->start = now;
-	r->points = 0;
-    }
+	/* make sure we didn't go over the time frame or get a null/new key */
+	if ((now - r->start) > r->maxt || key == NULL || j_strcmp(key, r->key) != 0) {	/* start a new key */
+		free(r->key);
+		if (key != NULL)
+			/* We use strdup instead of pstrdup since r->key needs to be free'd before
+			   and more often than the rest of the rlimit structure */
+			r->key = strdup(key);
+		else
+			r->key = NULL;
+		r->start = now;
+		r->points = 0;
+	}
 
-    r->points += points;
+	r->points += points;
 
-    /* if we're within the time frame and over the point limit */
-    if(r->points > r->maxp && (now - r->start) < r->maxt){
-	return 1; /* we don't reset the rate here, so that it remains rated until the time runs out */
-    }
+	/* if we're within the time frame and over the point limit */
+	if (r->points > r->maxp && (now - r->start) < r->maxt) {
+		return 1;	/* we don't reset the rate here, so that it remains rated until the time runs out */
+	}
 
-    return 0;
+	return 0;
 }

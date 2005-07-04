@@ -75,23 +75,23 @@ changes:
 
 /* master event types */
 typedef int event;
-#define e_SESSION  0  /* when a session is starting up */
-#define e_OFFLINE  1  /* data for an offline user */
-#define e_SERVER   2  /* packets for the server.host */
-#define e_DELIVER  3  /* about to deliver a packet to an mp */
-#define e_SHUTDOWN 4  /* server is shutting down, last chance! */
-#define e_AUTH	   5  /* authentication handlers */
-#define e_REGISTER 6  /* registration request */
+#define e_SESSION  0		/* when a session is starting up */
+#define e_OFFLINE  1		/* data for an offline user */
+#define e_SERVER   2		/* packets for the server.host */
+#define e_DELIVER  3		/* about to deliver a packet to an mp */
+#define e_SHUTDOWN 4		/* server is shutting down, last chance! */
+#define e_AUTH	   5		/* authentication handlers */
+#define e_REGISTER 6		/* registration request */
 /* always add new event types here, to maintain backwards binary compatibility */
-#define e_LAST	   7  /* flag for the highest */
+#define e_LAST	   7		/* flag for the highest */
 
 /* session event types */
-#define es_IN	   0  /* for packets coming into the session */
-#define es_OUT	   1  /* for packets originating from the session */
-#define es_END	   2  /* when a session ends */
+#define es_IN	   0		/* for packets coming into the session */
+#define es_OUT	   1		/* for packets originating from the session */
+#define es_END	   2		/* when a session ends */
 /* always add new event types here, to maintain backwards binary compatibility */
-#define es_POSTOUT 3  /* when a session ends */
-#define es_LAST    4  /* flag for the highest */
+#define es_POSTOUT 3		/* when a session ends */
+#define es_LAST    4		/* flag for the highest */
 
 /* admin user account flags */
 #define ADMIN_UNKNOWN	0x00
@@ -100,46 +100,44 @@ typedef int event;
 #define ADMIN_WRITE	0x04
 
 
-typedef enum {M_PASS,	/* we don't want this packet this time */
-	      M_IGNORE, /* we don't want this packet ever */
-	      M_HANDLED /* stop mapi processing on this packet */
-	     } mreturn;
+typedef enum { M_PASS,		/* we don't want this packet this time */
+	M_IGNORE,		/* we don't want this packet ever */
+	M_HANDLED		/* stop mapi processing on this packet */
+} mreturn;
 
 typedef struct udata_struct *udata, _udata;
 typedef struct session_struct *session, _session;
 typedef struct jsmi_struct *jsmi, _jsmi;
 
-typedef struct mapi_struct
-{
-    jsmi si;
-    jpacket packet;
-    event e;
-    udata user;
-    session s;
+typedef struct mapi_struct {
+	jsmi si;
+	jpacket packet;
+	event e;
+	udata user;
+	session s;
 } *mapi, _mapi;
 
-typedef mreturn (*mcall)(mapi m, void *arg);
+typedef mreturn(*mcall) (mapi m, void *arg);
 
-typedef struct mlist_struct
-{
-    mcall c;
-    void *arg;
-    unsigned char mask;
-    struct mlist_struct *next;
+typedef struct mlist_struct {
+	mcall c;
+	void *arg;
+	unsigned char mask;
+	struct mlist_struct *next;
 } *mlist, _mlist;
 
 typedef struct jsmi_stats_struct {
-  unsigned int sessioncount;
-  unsigned int usercount;
-  unsigned int session_max_today; /* highest sesion count from last day */
-  unsigned int session_max_yesterday; /* highest sesion count from last day */
-  unsigned int last_max_day;
-  unsigned int users_registered_today;
-  unsigned int users_registered_from_start;
-  unsigned long packets_in;
-  unsigned long packets_out;
-  time_t started;
-  char * stats_file;
+	unsigned int sessioncount;
+	unsigned int usercount;
+	unsigned int session_max_today;	/* highest sesion count from last day */
+	unsigned int session_max_yesterday;	/* highest sesion count from last day */
+	unsigned int last_max_day;
+	unsigned int users_registered_today;
+	unsigned int users_registered_from_start;
+	unsigned long packets_in;
+	unsigned long packets_out;
+	time_t started;
+	char *stats_file;
 } _jsmi_stats, *jsmi_stats;
 
 #define DEFAULT_DELIVER_THREADS 2
@@ -147,95 +145,92 @@ typedef struct jsmi_stats_struct {
 #define DEFAULT_SESSION_THREADS 10
 
 typedef struct fast_mtq_queue {
-  fast_mtq mtq;
-  int count;
+	fast_mtq mtq;
+	int count;
 } *jsm_mtq_queue_p, jsm_mtq_queue_t;
 
 /* globals for this instance of jsm */
-struct jsmi_struct
-{
-    instance i;
-    pool p;
-    xmlnode config;
+struct jsmi_struct {
+	instance i;
+	pool p;
+	xmlnode config;
 
-    wpxht users;
-    SEM_VAR sem;
+	wpxht users;
+	SEM_VAR sem;
 
-    char * host; /* our host */
-    xdbcache xc;
-    mlist events[e_LAST];
-    jid gtrust; /* globaly trusted jids */
-    jsmi_stats stats;
+	char *host;		/* our host */
+	xdbcache xc;
+	mlist events[e_LAST];
+	jid gtrust;		/* globaly trusted jids */
+	jsmi_stats stats;
 
-    fast_mtq mtq_deliver;
-    fast_mtq mtq_authreg;
-    jsm_mtq_queue_p *mtq_session;
-    int mtq_session_count;
+	fast_mtq mtq_deliver;
+	fast_mtq mtq_authreg;
+	jsm_mtq_queue_p *mtq_session;
+	int mtq_session_count;
 
-    int shutdown;
+	int shutdown;
 };
 
-struct udata_struct  /*  56 B */
-{
-    WPHASH_BUCKET;
-    char *user;
-    char *pass;
-    jid id;
-    volatile void *roster_cache;
-    jsmi si;
-    pool p;
-    struct udata_struct *next;
-    volatile session sessions;
-    SEM_VAR sem; /* sessions sem */
-    volatile unsigned int ref;
-    volatile unsigned int scount;
-    int removed;
+struct udata_struct {		/*  56 B */
+	WPHASH_BUCKET;
+	char *user;
+	char *pass;
+	jid id;
+	volatile void *roster_cache;
+	jsmi si;
+	pool p;
+	struct udata_struct *next;
+	volatile session sessions;
+	SEM_VAR sem;		/* sessions sem */
+	volatile unsigned int ref;
+	volatile unsigned int scount;
+	int removed;
 };
 
-struct session_struct /*  60B */
-{
-    struct session_struct *next;
-    /* general session data */
-    jsmi si;
-    char *res;
-    char *ip;
-    volatile xmlnode presence;
+struct session_struct {		/*  60B */
+	struct session_struct *next;
+	/* general session data */
+	jsmi si;
+	char *res;
+	char *ip;
+	volatile xmlnode presence;
 
-    /* mechanics */
-    pool p;
-    mlist events[es_LAST];
+	/* mechanics */
+	pool p;
+	mlist events[es_LAST];
 
-    jsm_mtq_queue_p q; /* thread queue */
+	jsm_mtq_queue_p q;	/* thread queue */
 
-    udata u;
-    jid id;
-    jid uid; /* id without resource */
+	udata u;
+	jid id;
+	jid uid;		/* id without resource */
 
-    /* our routed id, and remote session id */
-    jid route;
-    jid sid;
+	/* our routed id, and remote session id */
+	jid route;
+	jid sid;
 
-    time_t started;
+	time_t started;
 
-    volatile unsigned int exit_flag;
-    unsigned int roster; /* flag that sesion got roster */
+	volatile unsigned int exit_flag;
+	unsigned int roster;	/* flag that sesion got roster */
 
-    volatile int priority;
-    int c_in, c_out;
+	volatile int priority;
+	int c_in, c_out;
 };
 
 typedef struct packet_thread_struct {
-  FAST_MTQ_ELEMENT;
-  union {
-    void *arg1;
-    jpacket jp;
-    session s;
-  };
-  union {
-    void *arg2;
-    dpacket p;
-    int type;
-  };
+	FAST_MTQ_ELEMENT;
+	union {
+		void *arg1;
+		jpacket jp;
+		session s;
+	};
+	union {
+		void *arg2;
+		dpacket p;
+		int type;
+	};
 } *packet_thread_p, packet_thread_t;
 
 /* session */
@@ -252,9 +247,9 @@ udata js_user(jsmi si, jid id, int online);
 
 /* main events */
 void js_post_out(void *arg);
-void js_post_out_main(session s,jpacket jp);
+void js_post_out_main(session s, jpacket jp);
 void js_server_main(jsmi si, jpacket jp);
-void js_offline_main(jsmi si,jpacket jp);
+void js_offline_main(jsmi si, jpacket jp);
 
 /* external events */
 JSM_FUNC result js_packet(instance i, dpacket p, void *arg);
@@ -278,10 +273,10 @@ xmlnode js_config(jsmi si, char *query);
 //int js_admin(udata u, int flag);
 int js_admin_jid(jsmi si, jid from, int flag);
 int js_islocal(jsmi si, jid id);
-int js_trust(udata u, jid id); /* checks if id is trusted by user u + globally trusted */
-int js_istrusted(udata u,jid id); /* checks if user is trusted by users in his roster */
+int js_trust(udata u, jid id);	/* checks if id is trusted by user u + globally trusted */
+int js_istrusted(udata u, jid id);	/* checks if user is trusted by users in his roster */
 void js_roster_save(udata u, xmlnode roster);
-void js_trust_populate_presence(mapi m,jid notify); /* for speeding up mod_presence */
-int js_roster_item_group(udata u,jid id,char *group);
-int js_online(mapi m); /* logic to tell if this is a go-online call */
-xmlnode util_offline_event(xmlnode old, char *from, char *to,char *id);
+void js_trust_populate_presence(mapi m, jid notify);	/* for speeding up mod_presence */
+int js_roster_item_group(udata u, jid id, char *group);
+int js_online(mapi m);		/* logic to tell if this is a go-online call */
+xmlnode util_offline_event(xmlnode old, char *from, char *to, char *id);

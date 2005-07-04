@@ -52,70 +52,76 @@
 #include <sys/utsname.h>
 #endif
 
-mreturn mod_version_reply(mapi m, void *arg){
-  xmlnode version = (xmlnode)arg;
+mreturn mod_version_reply(mapi m, void *arg)
+{
+	xmlnode version = (xmlnode) arg;
 
-    if(m->packet->type != JPACKET_IQ) return M_IGNORE;
-    if(!NSCHECK(m->packet->iq,NS_VERSION) ||
-	   m->packet->to->resource != NULL) return M_PASS;
+	if (m->packet->type != JPACKET_IQ)
+		return M_IGNORE;
+	if (!NSCHECK(m->packet->iq, NS_VERSION) ||
+	    m->packet->to->resource != NULL)
+		return M_PASS;
 
-    /* first, is this a valid request? */
-    if(jpacket_subtype(m->packet) != JPACKET__GET){
-	js_bounce(m->si,m->packet->x,TERROR_NOTALLOWED);
-	return M_HANDLED;
-    }
+	/* first, is this a valid request? */
+	if (jpacket_subtype(m->packet) != JPACKET__GET) {
+		js_bounce(m->si, m->packet->x, TERROR_NOTALLOWED);
+		return M_HANDLED;
+	}
 
-    log_debug("mod_version","handling query from",jid_full(m->packet->from));
+	log_debug("mod_version", "handling query from",
+		  jid_full(m->packet->from));
 
-    jutil_iqresult(m->packet->x);
+	jutil_iqresult(m->packet->x);
 	xmlnode_insert_tag_node(m->packet->x, version);
-    jpacket_reset(m->packet);
+	jpacket_reset(m->packet);
 
-    js_deliver(m->si,m->packet);
+	js_deliver(m->si, m->packet);
 
-    return M_HANDLED;
+	return M_HANDLED;
 }
 
-JSM_FUNC void mod_version(jsmi si){
-  xmlnode version,os,config;
+JSM_FUNC void mod_version(jsmi si)
+{
+	xmlnode version, os, config;
 #ifndef WIN32
-  struct utsname un;
+	struct utsname un;
 #endif
-  char *n,*v,*o,*cv;
-  char buf[401];
+	char *n, *v, *o, *cv;
+	char buf[401];
 
-  log_debug("mod_version","init");
+	log_debug("mod_version", "init");
 
-  config = js_config(si,"mod_version");
-  n  = xmlnode_get_tag_data(config, "name");
-  v  = xmlnode_get_tag_data(config, "version");
-  cv = xmlnode_get_tag_data(config, "core_version");
-  o  = xmlnode_get_tag_data(config, "os");
+	config = js_config(si, "mod_version");
+	n = xmlnode_get_tag_data(config, "name");
+	v = xmlnode_get_tag_data(config, "version");
+	cv = xmlnode_get_tag_data(config, "core_version");
+	o = xmlnode_get_tag_data(config, "os");
 
-  version = xmlnode_new_tag("query");
-  xmlnode_put_attrib(version, "xmlns", NS_VERSION);
-  xmlnode_insert_cdata(xmlnode_insert_tag(version,"name"),
-					   n ? n : "jsm",3);
-  xmlnode_insert_cdata(xmlnode_insert_tag(version,"version"),
-					   v ? v : MOD_VERSION,-1);
-  xmlnode_insert_cdata(xmlnode_insert_tag(version,"core_version"),
-					   cv ? cv : VERSION,-1);
+	version = xmlnode_new_tag("query");
+	xmlnode_put_attrib(version, "xmlns", NS_VERSION);
+	xmlnode_insert_cdata(xmlnode_insert_tag(version, "name"),
+			     n ? n : "jsm", 3);
+	xmlnode_insert_cdata(xmlnode_insert_tag(version, "version"),
+			     v ? v : MOD_VERSION, -1);
+	xmlnode_insert_cdata(xmlnode_insert_tag(version, "core_version"),
+			     cv ? cv : VERSION, -1);
 
-  if (!xmlnode_get_tag(config, "no_os_version")){
-	os = xmlnode_insert_tag(version,"os");
-	if (o){
-	  xmlnode_insert_cdata(os, o ,-1);
-	}
-	else{
+	if (!xmlnode_get_tag(config, "no_os_version")) {
+		os = xmlnode_insert_tag(version, "os");
+		if (o) {
+			xmlnode_insert_cdata(os, o, -1);
+		} else {
 #ifdef WIN32
-	  xmlnode_insert_cdata(os,"WIN",-1);
+			xmlnode_insert_cdata(os, "WIN", -1);
 #else
-	  uname(&un);
-	  snprintf(buf,400,"%s %s",un.sysname,un.release);
-	  xmlnode_insert_cdata(os,buf,-1);
+			uname(&un);
+			snprintf(buf, 400, "%s %s", un.sysname,
+				 un.release);
+			xmlnode_insert_cdata(os, buf, -1);
 #endif
+		}
 	}
-  }
 
-  js_mapi_register(si, e_SERVER, mod_version_reply, (void*)version);
+	js_mapi_register(si, e_SERVER, mod_version_reply,
+			 (void *) version);
 }

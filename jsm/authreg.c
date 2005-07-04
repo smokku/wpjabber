@@ -57,110 +57,122 @@ udata js_ldap_user(jsmi si, jid to);
 #endif
 
 /* authreg threads */
-void js_authreg_thread_hander(void *arg, void *value){
-    jsmi si = (jsmi)arg;
-    packet_thread_p pt = (packet_thread_p)value;
-    jpacket p = pt->jp;
-    udata user;
-    char *ul;
-    xmlnode x;
+void js_authreg_thread_hander(void *arg, void *value)
+{
+	jsmi si = (jsmi) arg;
+	packet_thread_p pt = (packet_thread_p) value;
+	jpacket p = pt->jp;
+	udata user;
+	char *ul;
+	xmlnode x;
 
 
-    log_debug("Handle Authreg packet");
+	log_debug("Handle Authreg packet");
 
-    /* enforce the username to lowercase */
-    if(p->to->user != NULL)
-      for(ul = p->to->user;*ul != '\0'; ul++)
-	*ul = tolower(*ul);
+	/* enforce the username to lowercase */
+	if (p->to->user != NULL)
+		for (ul = p->to->user; *ul != '\0'; ul++)
+			*ul = tolower(*ul);
 
-    if(p->to->user != NULL && (jpacket_subtype(p) == JPACKET__GET || p->to->resource != NULL) && NSCHECK(p->iq,NS_AUTH)){
-	/* is this a valid auth request? */
+	if (p->to->user != NULL
+	    && (jpacket_subtype(p) == JPACKET__GET
+		|| p->to->resource != NULL) && NSCHECK(p->iq, NS_AUTH)) {
+		/* is this a valid auth request? */
 
-	log_debug("auth request");
+		log_debug("auth request");
 
-	if(jpacket_subtype(p) == JPACKET__GET){
-	  if(!js_mapi_call(si, e_AUTH, p, NULL, NULL)){
-	    xmlnode_insert_tag(p->iq,"resource");
-	    /* of course, resource is required :) */
-	    xmlnode_put_attrib(p->x,"type","result");
-	    jutil_tofrom(p->x);
-	  }
+		if (jpacket_subtype(p) == JPACKET__GET) {
+			if (!js_mapi_call(si, e_AUTH, p, NULL, NULL)) {
+				xmlnode_insert_tag(p->iq, "resource");
+				/* of course, resource is required :) */
+				xmlnode_put_attrib(p->x, "type", "result");
+				jutil_tofrom(p->x);
+			}
+		} else {
+#ifdef FORWP
+			int ldap_user = 0;
+#endif
+			/* attempt to fetch user data based on the username */
+			user = js_user(si, p->to, 0);
+#ifdef FORWP
+			if (!user) {
+				log_debug("Try getting user from ldap");
+
+				ldap_user = 1;
+				user = js_ldap_user(si, p->to);
+			}
+#endif
+			if (user) {
+				log_debug("Got user");
+
+				if (!js_mapi_call
+				    (si, e_AUTH, p, user, NULL)) {
+					log_debug("Bad auth");
+					jutil_error(p->x, TERROR_AUTH);
+				}
+#ifdef FORWP
+				if (ldap_user) {
+					//if result
+					if (j_strcmp
+					    (xmlnode_get_attrib
+					     (p->x, "type"),
+					     "result") == 0) {
+						log_debug
+						    ("OKI. register new user.");
+						//save user on disk after good login
+						js_register_ldap_user
+						    (user);
+					}
+				}
+#endif
+				THREAD_DEC(user->ref);
+			}	//user
+			else {
+				log_debug("NO user");
+				jutil_error(p->x, TERROR_AUTH);
+			}
+		}		//jpacket GET
+	} else if (NSCHECK(p->iq, NS_REGISTER)) {	/* is this a registration request? */
+		if (jpacket_subtype(p) == JPACKET__GET) {
+			log_debug("registration get request");
+			/* let modules try to handle it */
+			if (!js_mapi_call(si, e_REGISTER, p, NULL, NULL)) {
+				jutil_error(p->x, TERROR_NOTIMPL);
+			} else {	/* make a reply and the username requirement is built-in :) */
+				xmlnode_put_attrib(p->x, "type", "result");
+				jutil_tofrom(p->x);
+				xmlnode_insert_tag(p->iq, "username");
+			}
+		} else {
+			log_debug("registration set request");
+			if (p->to->user == NULL
+			    || xmlnode_get_tag_data(p->iq,
+						    "password") == NULL) {
+				jutil_error(p->x, TERROR_NOTACCEPTABLE);
+			} else if ((user = js_user(si, p->to, 0)) != NULL) {
+				THREAD_DEC(user->ref);
+				jutil_error(p->x,
+					    TERROR_USERNAMENOTAVAILABLE);
+			} else
+			    if (!js_mapi_call
+				(si, e_REGISTER, p, NULL, NULL)) {
+				jutil_error(p->x, TERROR_NOTIMPL);
+			}
+		}
+
+	} else {		/* unknown namespace or other problem */
+		jutil_error(p->x, TERROR_NOTACCEPTABLE);
 	}
-	else{
-#ifdef FORWP
-	  int ldap_user = 0;
-#endif
-	  /* attempt to fetch user data based on the username */
-	  user = js_user(si, p->to, 0);
-#ifdef FORWP
-	  if (!user){
-	    log_debug("Try getting user from ldap");
 
-	    ldap_user = 1;
-	    user = js_ldap_user(si, p->to);
-	  }
-#endif
-	  if (user){
-	    log_debug("Got user");
-
-	    if(!js_mapi_call(si, e_AUTH, p, user, NULL)){
-	      log_debug("Bad auth");
-	      jutil_error(p->x, TERROR_AUTH);
-	    }
-#ifdef FORWP
-	    if (ldap_user){
-	      //if result
-	      if(j_strcmp(xmlnode_get_attrib(p->x,"type"),"result") == 0){
-		log_debug("OKI. register new user.");
-		//save user on disk after good login
-		js_register_ldap_user(user);
-	      }
-	    }
-#endif
-	    THREAD_DEC(user->ref);
-	  }//user
-	  else{
-	    log_debug("NO user");
-	    jutil_error(p->x, TERROR_AUTH);
-	  }
-	}//jpacket GET
-      }
-    else if(NSCHECK(p->iq,NS_REGISTER)){ /* is this a registration request? */
-      if(jpacket_subtype(p) == JPACKET__GET){
-	  log_debug("registration get request");
-	  /* let modules try to handle it */
-	  if(!js_mapi_call(si, e_REGISTER, p, NULL, NULL)){
-	    jutil_error(p->x, TERROR_NOTIMPL);
-	  }else{ /* make a reply and the username requirement is built-in :) */
-	    xmlnode_put_attrib(p->x,"type","result");
-	    jutil_tofrom(p->x);
-	    xmlnode_insert_tag(p->iq,"username");
-	  }
-	}else{
-	  log_debug("registration set request");
-	  if(p->to->user == NULL || xmlnode_get_tag_data(p->iq,"password") == NULL){
-	      jutil_error(p->x, TERROR_NOTACCEPTABLE);
-	    }else if((user = js_user(si,p->to,0)) != NULL){
-	      THREAD_DEC(user->ref);
-	      jutil_error(p->x, TERROR_USERNAMENOTAVAILABLE);
-	    }else if(!js_mapi_call(si, e_REGISTER, p, NULL, NULL)){
-	      jutil_error(p->x, TERROR_NOTIMPL);
-	    }
-	}
-
-    }else{ /* unknown namespace or other problem */
-      jutil_error(p->x, TERROR_NOTACCEPTABLE);
-    }
-
-    /* restore the route packet */
-    x = xmlnode_wrap(p->x,"route");
-    xmlnode_put_attrib(x,"from",xmlnode_get_attrib(p->x,"from"));
-    xmlnode_put_attrib(x,"to",xmlnode_get_attrib(p->x,"to"));
-    xmlnode_put_attrib(x,"type",xmlnode_get_attrib(p->x,"route"));
-    /* hide our uglies */
-    xmlnode_hide_attrib(p->x,"from");
-    xmlnode_hide_attrib(p->x,"to");
-    xmlnode_hide_attrib(p->x,"route");
-    /* reply */
-    deliver(dpacket_new(x), si->i);
+	/* restore the route packet */
+	x = xmlnode_wrap(p->x, "route");
+	xmlnode_put_attrib(x, "from", xmlnode_get_attrib(p->x, "from"));
+	xmlnode_put_attrib(x, "to", xmlnode_get_attrib(p->x, "to"));
+	xmlnode_put_attrib(x, "type", xmlnode_get_attrib(p->x, "route"));
+	/* hide our uglies */
+	xmlnode_hide_attrib(p->x, "from");
+	xmlnode_hide_attrib(p->x, "to");
+	xmlnode_hide_attrib(p->x, "route");
+	/* reply */
+	deliver(dpacket_new(x), si->i);
 }

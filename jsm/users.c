@@ -65,23 +65,24 @@ changes
  *  returns
  *	1
  */
-void _js_users_del(wpxht h, char *key, void *val, void *arg){
-    jsmi_stats stats = (jsmi_stats)arg;
-    udata u = (udata)val;
+void _js_users_del(wpxht h, char *key, void *val, void *arg)
+{
+	jsmi_stats stats = (jsmi_stats) arg;
+	udata u = (udata) val;
 
 
-    if(u->ref > 0 || (u->sessions != NULL)){
-      if (u->sessions != NULL){
-		stats->sessioncount += u->scount;
-		stats->usercount++;
-      }
-      return;
-    }
+	if (u->ref > 0 || (u->sessions != NULL)) {
+		if (u->sessions != NULL) {
+			stats->sessioncount += u->scount;
+			stats->usercount++;
+		}
+		return;
+	}
 
-    wpxhash_zap(h,key);
-    pool_free(u->p);
+	wpxhash_zap(h, key);
+	pool_free(u->p);
 
-    return;
+	return;
 }
 
 
@@ -90,32 +91,32 @@ void _js_users_del(wpxht h, char *key, void *val, void *arg){
  *  flushes old users from memory.
  *  keeps stats
  */
-result js_users_gc(void *arg){
-    jsmi si = (jsmi)arg;
+result js_users_gc(void *arg)
+{
+	jsmi si = (jsmi) arg;
 
-    si->stats->usercount = 0;
-    si->stats->sessioncount = 0;
+	si->stats->usercount = 0;
+	si->stats->sessioncount = 0;
 
-    SEM_LOCK(si->sem);
-    wpxhash_walk(si->users,_js_users_del,(void *)si->stats);
-    SEM_UNLOCK(si->sem);
+	SEM_LOCK(si->sem);
+	wpxhash_walk(si->users, _js_users_del, (void *) si->stats);
+	SEM_UNLOCK(si->sem);
 
 	log_debug("%d sessions and %d users",
-		  si->stats->sessioncount,
-		  si->stats->usercount);
+		  si->stats->sessioncount, si->stats->usercount);
 
 	/* write stats to file after users loop */
-	if (si->stats->stats_file){
-	  FILE *fd;
-	  fd = fopen(si->stats->stats_file, "w");
-	  if (fd){
-		fprintf(fd, "%d\r\n", si->stats->usercount);
-		fprintf(fd, "%d", si->stats->sessioncount);
-		fclose(fd);
-	  }
-	  else{
-		log_alert("stats_file","Error opening JSM stats file");
-	  }
+	if (si->stats->stats_file) {
+		FILE *fd;
+		fd = fopen(si->stats->stats_file, "w");
+		if (fd) {
+			fprintf(fd, "%d\r\n", si->stats->usercount);
+			fprintf(fd, "%d", si->stats->sessioncount);
+			fclose(fd);
+		} else {
+			log_alert("stats_file",
+				  "Error opening JSM stats file");
+		}
 	}
 
 	return r_DONE;
@@ -131,80 +132,81 @@ result js_users_gc(void *arg){
  *  if that fails, it looks in xdb and creates new list entry.
  *  If THAT fails, it returns NULL (not a user).
  */
-udata js_user(jsmi si, jid id, int online){
-    pool p;
-    udata cur, newu;
-    char *ustr;
-    xmlnode x;
-    jid uid;
+udata js_user(jsmi si, jid id, int online)
+{
+	pool p;
+	udata cur, newu;
+	char *ustr;
+	xmlnode x;
+	jid uid;
 
-    if(si == NULL || id == NULL || id->user == NULL) return NULL;
+	if (si == NULL || id == NULL || id->user == NULL)
+		return NULL;
 
-    /* check is it our */
-	if (j_strcmp(si->host,id->server))
-	  return NULL;
+	/* check is it our */
+	if (j_strcmp(si->host, id->server))
+		return NULL;
 
-    /* copy the id and convert user to lower case */
-    uid = jid_new(id->p, jid_full(jid_user(id)));
-    for(ustr = uid->user; *ustr != '\0'; ustr++)
-	*ustr = tolower(*ustr);
+	/* copy the id and convert user to lower case */
+	uid = jid_new(id->p, jid_full(jid_user(id)));
+	for (ustr = uid->user; *ustr != '\0'; ustr++)
+		*ustr = tolower(*ustr);
 
-    /* debug message */
-    log_debug("js_user(%s)",jid_full(uid));
+	/* debug message */
+	log_debug("js_user(%s)", jid_full(uid));
 
-    /* try to get the user data from the hash table */
+	/* try to get the user data from the hash table */
 	SEM_LOCK(si->sem);
-    if((cur = wpxhash_get(si->users,uid->user)) != NULL){
-	  THREAD_INC(cur->ref);
-	  SEM_UNLOCK(si->sem);
-	  return cur;
+	if ((cur = wpxhash_get(si->users, uid->user)) != NULL) {
+		THREAD_INC(cur->ref);
+		SEM_UNLOCK(si->sem);
+		return cur;
 	}
 	SEM_UNLOCK(si->sem);
 
-	if (online){
-	  log_debug("user not online");
-	  return NULL;
+	if (online) {
+		log_debug("user not online");
+		return NULL;
 	}
 
-    /* debug message */
-    log_debug("js_user not current");
+	/* debug message */
+	log_debug("js_user not current");
 
-    /* try to get the user auth data from xdb */
-    if((x = xdb_get(si->xc, uid, NS_AUTH)) == NULL)
-	return NULL;
+	/* try to get the user auth data from xdb */
+	if ((x = xdb_get(si->xc, uid, NS_AUTH)) == NULL)
+		return NULL;
 
-    /* create a udata struct */
-    p = pool_heap(512);
-    newu = pmalloco(p, sizeof(_udata));
-    newu->p = p;
-    newu->si = si;
-    newu->user = pstrdup(p, uid->user);
-    newu->pass = pstrdup(p, xmlnode_get_data(x));
-    newu->id = jid_new(p,jid_full(uid));
-    jid_full(newu->id); /* to avoid race conditions */
-    SEM_INIT(newu->sem);
+	/* create a udata struct */
+	p = pool_heap(512);
+	newu = pmalloco(p, sizeof(_udata));
+	newu->p = p;
+	newu->si = si;
+	newu->user = pstrdup(p, uid->user);
+	newu->pass = pstrdup(p, xmlnode_get_data(x));
+	newu->id = jid_new(p, jid_full(uid));
+	jid_full(newu->id);	/* to avoid race conditions */
+	SEM_INIT(newu->sem);
 
-    xmlnode_free(x);
+	xmlnode_free(x);
 
 	/* I don't like this */
 	SEM_LOCK(si->sem);
-    cur = wpxhash_get(si->users,uid->user);
-    if(cur == NULL){
-	  newu->ref = 1;
-	  wpxhash_put(si->users,newu->user,newu);
-    }
-    else{
-	  THREAD_INC(cur->ref);
-	  SEM_UNLOCK(si->sem);
+	cur = wpxhash_get(si->users, uid->user);
+	if (cur == NULL) {
+		newu->ref = 1;
+		wpxhash_put(si->users, newu->user, newu);
+	} else {
+		THREAD_INC(cur->ref);
+		SEM_UNLOCK(si->sem);
 
-	  /* free user struct - it's already in hash */
-	  pool_free(newu->p);
+		/* free user struct - it's already in hash */
+		pool_free(newu->p);
 
-	  /* return struct from hash */
-	  return cur;
-    }
+		/* return struct from hash */
+		return cur;
+	}
 
-    /* got the user, add it to the user list */
+	/* got the user, add it to the user list */
 	SEM_UNLOCK(si->sem);
-    return newu;
+	return newu;
 }

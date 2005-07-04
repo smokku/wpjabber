@@ -30,15 +30,14 @@
 #include "jabberd.h"
 
 /* private heartbeat ring struct */
-typedef struct beat_struct
-{
-    beathandler f;
-    void *arg;
-    int freq;
-    int last;
-    pool p;
-    struct beat_struct *prev;
-    struct beat_struct *next;
+typedef struct beat_struct {
+	beathandler f;
+	void *arg;
+	int freq;
+	int last;
+	pool p;
+	struct beat_struct *prev;
+	struct beat_struct *next;
 } *beat, _beat;
 
 /* master hook for the ring */
@@ -46,119 +45,127 @@ beat heartbeat__ring;
 SEM_VAR heartbeat__sem;
 THREAD_VAR heartbeat__t;
 
-void *heartbeat(void *arg){
-    beat b, b2;
-    result r;
+void *heartbeat(void *arg)
+{
+	beat b, b2;
+	result r;
 
-    while(1){
-	  sleep(1);
+	while (1) {
+		sleep(1);
 
-	  /* run through the ring */
-	  SEM_LOCK(heartbeat__sem);
+		/* run through the ring */
+		SEM_LOCK(heartbeat__sem);
 
-	  if ( jab_shutdown ) break;
+		if (jab_shutdown)
+			break;
 
-	  for(b = heartbeat__ring->next; b != heartbeat__ring; b = b->next){
-	    /* beats can fire on a frequency, just keep a counter */
-	    if(b->last++ == b->freq){
-		b->last = 0;
-			SEM_UNLOCK(heartbeat__sem);
+		for (b = heartbeat__ring->next; b != heartbeat__ring;
+		     b = b->next) {
+			/* beats can fire on a frequency, just keep a counter */
+			if (b->last++ == b->freq) {
+				b->last = 0;
+				SEM_UNLOCK(heartbeat__sem);
 
-			/* call function */
-		r = (b->f)(b->arg);
+				/* call function */
+				r = (b->f) (b->arg);
 
-			SEM_LOCK(heartbeat__sem);
+				SEM_LOCK(heartbeat__sem);
 
-		if(r == r_UNREG){ /* this beat doesn't want to be fired anymore, unlink and free */
-		    b2 = b->prev;
-				b->prev->next = b->next;
-				b->next->prev = b->prev;
-				pool_free(b->p);
-				b = b2; /* reset b to accomodate the for loop */
+				if (r == r_UNREG) {	/* this beat doesn't want to be fired anymore, unlink and free */
+					b2 = b->prev;
+					b->prev->next = b->next;
+					b->next->prev = b->prev;
+					pool_free(b->p);
+					b = b2;	/* reset b to accomodate the for loop */
+				}
+			}
 		}
-	    }
-	  }
-	  SEM_UNLOCK(heartbeat__sem);
-    }
+		SEM_UNLOCK(heartbeat__sem);
+	}
 
-    SEM_UNLOCK(heartbeat__sem);
+	SEM_UNLOCK(heartbeat__sem);
 
-    return NULL;
+	return NULL;
 }
 
 /* register a function to receive heartbeats */
-beat new_beat(void){
-    beat newb;
-    pool p;
+beat new_beat(void)
+{
+	beat newb;
+	pool p;
 
-    p = pool_new();
-    newb = pmalloc_x(p, sizeof(_beat), 0);
-    newb->p = p;
+	p = pool_new();
+	newb = pmalloc_x(p, sizeof(_beat), 0);
+	newb->p = p;
 
-    return newb;
+	return newb;
 }
 
 /* register a function to receive heartbeats */
-void register_beat(int freq, beathandler f, void *arg){
-    beat newb;
+void register_beat(int freq, beathandler f, void *arg)
+{
+	beat newb;
 
-    if(freq <= 0 || f == NULL || heartbeat__ring == NULL) return; /* uhh, probbably don't want to allow negative heartbeats, since the counter will count infinitly to a core */
+	if (freq <= 0 || f == NULL || heartbeat__ring == NULL)
+		return;		/* uhh, probbably don't want to allow negative heartbeats, since the counter will count infinitly to a core */
 
 
-    /* setup the new beat */
-    newb = new_beat();
-    newb->f = f;
-    newb->arg = arg;
-    newb->freq = freq;
-    newb->last = 0;
+	/* setup the new beat */
+	newb = new_beat();
+	newb->f = f;
+	newb->arg = arg;
+	newb->freq = freq;
+	newb->last = 0;
 
-    /* insert into global ring */
+	/* insert into global ring */
 	pthread_mutex_lock(&heartbeat__sem);
 
-    newb->next = heartbeat__ring->next;
-    heartbeat__ring->next = newb;
-    newb->prev = heartbeat__ring;
-    newb->next->prev = newb;
+	newb->next = heartbeat__ring->next;
+	heartbeat__ring->next = newb;
+	newb->prev = heartbeat__ring;
+	newb->next->prev = newb;
 
 	pthread_mutex_unlock(&heartbeat__sem);
 }
 
 
 /* start up the heartbeat */
-void heartbeat_birth(void){
-    /* init the ring */
-    heartbeat__ring = new_beat();
-    heartbeat__ring->next = heartbeat__ring->prev = heartbeat__ring;
+void heartbeat_birth(void)
+{
+	/* init the ring */
+	heartbeat__ring = new_beat();
+	heartbeat__ring->next = heartbeat__ring->prev = heartbeat__ring;
 
-    SEM_INIT(heartbeat__sem);
+	SEM_INIT(heartbeat__sem);
 
-    /* start the thread */
-    pthread_create(&heartbeat__t, NULL, heartbeat, NULL);
+	/* start the thread */
+	pthread_create(&heartbeat__t, NULL, heartbeat, NULL);
 }
 
-void heartbeat_death(void){
-    beat cur;
-    void * ret;
+void heartbeat_death(void)
+{
+	beat cur;
+	void *ret;
 
-    /* close thread */
-    pthread_join(heartbeat__t,&ret);
+	/* close thread */
+	pthread_join(heartbeat__t, &ret);
 
-    pthread_mutex_lock(&heartbeat__sem);
-    while(heartbeat__ring != NULL){
-       cur = heartbeat__ring;
-       if(heartbeat__ring->next == heartbeat__ring){
-	   heartbeat__ring = NULL;
-       }
-       else{
-	   if(heartbeat__ring->next!=NULL)
-	       heartbeat__ring->next->prev=heartbeat__ring->prev;
-	   if(heartbeat__ring->prev!=NULL)
-	       heartbeat__ring->prev->next=heartbeat__ring->next;
-	   heartbeat__ring=heartbeat__ring->next;
-       }
-       pool_free(cur->p);
-    }
-   pthread_mutex_unlock(&heartbeat__sem);
+	pthread_mutex_lock(&heartbeat__sem);
+	while (heartbeat__ring != NULL) {
+		cur = heartbeat__ring;
+		if (heartbeat__ring->next == heartbeat__ring) {
+			heartbeat__ring = NULL;
+		} else {
+			if (heartbeat__ring->next != NULL)
+				heartbeat__ring->next->prev =
+				    heartbeat__ring->prev;
+			if (heartbeat__ring->prev != NULL)
+				heartbeat__ring->prev->next =
+				    heartbeat__ring->next;
+			heartbeat__ring = heartbeat__ring->next;
+		}
+		pool_free(cur->p);
+	}
+	pthread_mutex_unlock(&heartbeat__sem);
 
 }
-

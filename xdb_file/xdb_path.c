@@ -33,22 +33,24 @@
 
 
 
-void generate_dir(char * name,char * path,int pathsize);
+void generate_dir(char *name, char *path, int pathsize);
 
 
-int main (int argc, char** argv){
-  char buf[200];
+int main(int argc, char **argv)
+{
+	char buf[200];
 
-  if (argc != 2){
-    fprintf(stderr,"xdb_path needs parameter.\r\n");
-    fprintf(stderr,"\r\nExample:\r\n\t\t xdb_path rabbit.xml\r\n");
-    return 0;
-  }
+	if (argc != 2) {
+		fprintf(stderr, "xdb_path needs parameter.\r\n");
+		fprintf(stderr,
+			"\r\nExample:\r\n\t\t xdb_path rabbit.xml\r\n");
+		return 0;
+	}
 
-  /* generate path_info */
-  generate_dir(argv[1],buf,200);
+	/* generate path_info */
+	generate_dir(argv[1], buf, 200);
 
-  fprintf(stdout,"%s",buf);
+	fprintf(stdout, "%s", buf);
 
-  return 0;
+	return 0;
 }

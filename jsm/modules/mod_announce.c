@@ -40,144 +40,162 @@
  * --------------------------------------------------------------------------*/
 #include "jsm.h"
 
-typedef struct motd_struct
-{
-    volatile xmlnode x;
-    char *stamp;
-    time_t set;
-    /*	XXX add sem here for safety */
+typedef struct motd_struct {
+	volatile xmlnode x;
+	char *stamp;
+	time_t set;
+	/*  XXX add sem here for safety */
 } *motd, _motd;
 
-int _mod_announce_avail(void *arg, void *key, void *data){
-    xmlnode msg = (xmlnode)arg;
-    udata u = (udata)data;
-    session s = js_session_primary(u);
+int _mod_announce_avail(void *arg, void *key, void *data)
+{
+	xmlnode msg = (xmlnode) arg;
+	udata u = (udata) data;
+	session s = js_session_primary(u);
 
-    if(s == NULL) return 1;
+	if (s == NULL)
+		return 1;
 
-    msg = xmlnode_dup(msg);
-    xmlnode_put_attrib(msg,"to",jid_full(s->id));
-    js_session_to(s,jpacket_new(msg));
+	msg = xmlnode_dup(msg);
+	xmlnode_put_attrib(msg, "to", jid_full(s->id));
+	js_session_to(s, jpacket_new(msg));
 
-    return 1;
+	return 1;
 }
 
-mreturn mod_announce_avail(jsmi si, jpacket p){
-    xmlnode_put_attrib(p->x,"from",p->to->server);
+mreturn mod_announce_avail(jsmi si, jpacket p)
+{
+	xmlnode_put_attrib(p->x, "from", p->to->server);
 
 	SEM_LOCK(si->sem);
-	wpghash_walk(si->users, _mod_announce_avail, (void *)(p->x));
+	wpghash_walk(si->users, _mod_announce_avail, (void *) (p->x));
 	SEM_UNLOCK(si->sem);
 
-    xmlnode_free(p->x);
-    return M_HANDLED;
+	xmlnode_free(p->x);
+	return M_HANDLED;
 }
 
-mreturn mod_announce_motd(jsmi si, jpacket p, motd a){
-  xmlnode old_x;
+mreturn mod_announce_motd(jsmi si, jpacket p, motd a)
+{
+	xmlnode old_x;
 
-    if(j_strcmp(p->to->resource,"announce/motd/delete") == 0){
+	if (j_strcmp(p->to->resource, "announce/motd/delete") == 0) {
 		old_x = a->x;
-	a->x = NULL;
-	xmlnode_free(p->x);
+		a->x = NULL;
+		xmlnode_free(p->x);
 
 		xmlnode_free(old_x);
-	return M_HANDLED;
-    }
+		return M_HANDLED;
+	}
 
-    /* store new message for all new sessions */
-    xmlnode_put_attrib(p->x,"from",p->to->server);
-    jutil_delay(p->x,"Announced");
+	/* store new message for all new sessions */
+	xmlnode_put_attrib(p->x, "from", p->to->server);
+	jutil_delay(p->x, "Announced");
 	old_x = a->x;
-    a->x = p->x;
-    a->set = time(NULL);
-    a->stamp = pstrdup(p->p, jutil_timestamp());
+	a->x = p->x;
+	a->set = time(NULL);
+	a->stamp = pstrdup(p->p, jutil_timestamp());
 
-    /* tell current sessions if this wasn't an update */
-    if(j_strcmp(p->to->resource,"announce/motd/update") != 0){
-	  SEM_LOCK(si->sem);
-      wpghash_walk(si->users, _mod_announce_avail, (void *)(a->x));
-	  SEM_UNLOCK(si->sem);
+	/* tell current sessions if this wasn't an update */
+	if (j_strcmp(p->to->resource, "announce/motd/update") != 0) {
+		SEM_LOCK(si->sem);
+		wpghash_walk(si->users, _mod_announce_avail,
+			     (void *) (a->x));
+		SEM_UNLOCK(si->sem);
 	}
 
 	xmlnode_free(old_x);
-    return M_HANDLED;
+	return M_HANDLED;
 }
 
-mreturn mod_announce_dispatch(mapi m, void *arg){
-    int admin = 0;
+mreturn mod_announce_dispatch(mapi m, void *arg)
+{
+	int admin = 0;
 
-    if(m->packet->type != JPACKET_MESSAGE) return M_IGNORE;
-    if(j_strncmp(m->packet->to->resource,"announce/",9) != 0) return M_PASS;
+	if (m->packet->type != JPACKET_MESSAGE)
+		return M_IGNORE;
+	if (j_strncmp(m->packet->to->resource, "announce/", 9) != 0)
+		return M_PASS;
 
-    log_debug("handling announce message from %s",jid_full(m->packet->from));
+	log_debug("handling announce message from %s",
+		  jid_full(m->packet->from));
 
 	/* server event always has user struct if user is local !! */
-	//	admin = js_admin(m->user, ADMIN_WRITE);
-	admin = js_admin_jid(m->si, jid_user(m->packet->from), ADMIN_WRITE);
+	//      admin = js_admin(m->user, ADMIN_WRITE);
+	admin =
+	    js_admin_jid(m->si, jid_user(m->packet->from), ADMIN_WRITE);
 
-    if(admin){
-	  if(j_strncmp(m->packet->to->resource,"announce/online",15) == 0) return mod_announce_avail(m->si, m->packet);
-	  if(j_strncmp(m->packet->to->resource,"announce/motd",13) == 0) return mod_announce_motd(m->si, m->packet, (motd)arg);
-    }
-
-    js_bounce(m->si,m->packet->x,TERROR_NOTALLOWED);
-    return M_HANDLED;
-}
-
-mreturn mod_announce_sess_avail(mapi m, void *arg){
-    motd a = (motd)arg;
-    xmlnode last;
-    xmlnode msg;
-    int lastt;
-
-    if(m->packet->type != JPACKET_PRESENCE) return M_IGNORE;
-    if(a->x == NULL) return M_IGNORE;
-
-    /* as soon as we become available */
-    if(!js_online(m))
-	return M_PASS;
-
-    /* no announces to sessions with negative priority */
-    if (m->s->priority < 0)
-	return M_PASS;
-
-    /* check the last time we were on to see if we haven't gotten the announcement yet */
-    last = xdb_get(m->si->xc, m->user->id, NS_LAST);
-    lastt = j_atoi(xmlnode_get_attrib(last,"last"),0);
-	xmlnode_free(last);
-
-    if(lastt > 0 && lastt > a->set){ /* if there's a last and it's newer than the announcement, ignore us */
-	  return M_IGNORE;
+	if (admin) {
+		if (j_strncmp
+		    (m->packet->to->resource, "announce/online", 15) == 0)
+			return mod_announce_avail(m->si, m->packet);
+		if (j_strncmp(m->packet->to->resource, "announce/motd", 13)
+		    == 0)
+			return mod_announce_motd(m->si, m->packet,
+						 (motd) arg);
 	}
 
-    /* well, we met all the criteria, we should be announced to */
-    msg = xmlnode_dup(a->x);
-	if (msg){
-	  xmlnode_put_attrib(msg,"to",jid_full(m->s->id));
-	  js_session_to(m->s,jpacket_new(msg));
-	  return M_IGNORE;
+	js_bounce(m->si, m->packet->x, TERROR_NOTALLOWED);
+	return M_HANDLED;
+}
+
+mreturn mod_announce_sess_avail(mapi m, void *arg)
+{
+	motd a = (motd) arg;
+	xmlnode last;
+	xmlnode msg;
+	int lastt;
+
+	if (m->packet->type != JPACKET_PRESENCE)
+		return M_IGNORE;
+	if (a->x == NULL)
+		return M_IGNORE;
+
+	/* as soon as we become available */
+	if (!js_online(m))
+		return M_PASS;
+
+	/* no announces to sessions with negative priority */
+	if (m->s->priority < 0)
+		return M_PASS;
+
+	/* check the last time we were on to see if we haven't gotten the announcement yet */
+	last = xdb_get(m->si->xc, m->user->id, NS_LAST);
+	lastt = j_atoi(xmlnode_get_attrib(last, "last"), 0);
+	xmlnode_free(last);
+
+	if (lastt > 0 && lastt > a->set) {	/* if there's a last and it's newer than the announcement, ignore us */
+		return M_IGNORE;
+	}
+
+	/* well, we met all the criteria, we should be announced to */
+	msg = xmlnode_dup(a->x);
+	if (msg) {
+		xmlnode_put_attrib(msg, "to", jid_full(m->s->id));
+		js_session_to(m->s, jpacket_new(msg));
+		return M_IGNORE;
 	}
 
 	/* ignore after msg was sended */
-    return M_PASS;
+	return M_PASS;
 }
 
-mreturn mod_announce_sess(mapi m, void *arg){
-    motd a = (motd)arg;
+mreturn mod_announce_sess(mapi m, void *arg)
+{
+	motd a = (motd) arg;
 
-    if(a->x != NULL)
-	js_mapi_session(es_OUT, m->s, mod_announce_sess_avail, arg);
+	if (a->x != NULL)
+		js_mapi_session(es_OUT, m->s, mod_announce_sess_avail,
+				arg);
 
-    return M_PASS;
+	return M_PASS;
 }
 
-JSM_FUNC void mod_announce(jsmi si){
-    motd a;
+JSM_FUNC void mod_announce(jsmi si)
+{
+	motd a;
 
-    a = pmalloco(si->p, sizeof(_motd));
-    js_mapi_register(si,e_SERVER,mod_announce_dispatch,(void *)a);
-    js_mapi_register(si,e_SESSION,mod_announce_sess,(void *)a);
+	a = pmalloco(si->p, sizeof(_motd));
+	js_mapi_register(si, e_SERVER, mod_announce_dispatch, (void *) a);
+	js_mapi_register(si, e_SESSION, mod_announce_sess, (void *) a);
 }
-
-

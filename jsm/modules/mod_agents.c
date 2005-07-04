@@ -40,122 +40,153 @@
  * --------------------------------------------------------------------------*/
 #include "jsm.h"
 
-mreturn mod_agents_agents(mapi m){
-    xmlnode ret, retq, agents, cur, a, cur2;
+mreturn mod_agents_agents(mapi m)
+{
+	xmlnode ret, retq, agents, cur, a, cur2;
 
-    /* get data from the config file */
-    agents = js_config(m->si,"browse");
+	/* get data from the config file */
+	agents = js_config(m->si, "browse");
 
-    /* if we don't have anything to say, bounce */
-    if(agents == NULL)
-	return M_PASS;
+	/* if we don't have anything to say, bounce */
+	if (agents == NULL)
+		return M_PASS;
 
-    log_debug("handling agents query");
+	log_debug("handling agents query");
 
-    /* build the result IQ */
-    ret = jutil_iqresult(m->packet->x);
-    retq = xmlnode_insert_tag(ret,"query");
-    xmlnode_put_attrib(retq,"xmlns",NS_AGENTS);
+	/* build the result IQ */
+	ret = jutil_iqresult(m->packet->x);
+	retq = xmlnode_insert_tag(ret, "query");
+	xmlnode_put_attrib(retq, "xmlns", NS_AGENTS);
 
-    /* parse the new browse data into old agents format */
-    for(cur = xmlnode_get_firstchild(agents); cur != NULL; cur = xmlnode_get_nextsibling(cur)){
-	if(xmlnode_get_type(cur) != NTYPE_TAG) continue;
+	/* parse the new browse data into old agents format */
+	for (cur = xmlnode_get_firstchild(agents); cur != NULL;
+	     cur = xmlnode_get_nextsibling(cur)) {
+		if (xmlnode_get_type(cur) != NTYPE_TAG)
+			continue;
 
-	/* generic <agent> part */
-	a = xmlnode_insert_tag(retq,"agent");
-	xmlnode_put_attrib(a, "jid", xmlnode_get_attrib(cur,"jid"));
-	xmlnode_insert_cdata(xmlnode_insert_tag(a,"name"), xmlnode_get_attrib(cur,"name"), -1);
-	xmlnode_insert_cdata(xmlnode_insert_tag(a,"service"), xmlnode_get_attrib(cur,"type"), -1);
+		/* generic <agent> part */
+		a = xmlnode_insert_tag(retq, "agent");
+		xmlnode_put_attrib(a, "jid",
+				   xmlnode_get_attrib(cur, "jid"));
+		xmlnode_insert_cdata(xmlnode_insert_tag(a, "name"),
+				     xmlnode_get_attrib(cur, "name"), -1);
+		xmlnode_insert_cdata(xmlnode_insert_tag(a, "service"),
+				     xmlnode_get_attrib(cur, "type"), -1);
 
-	if(j_strcmp(xmlnode_get_name(cur),"conference") == 0)
-	    xmlnode_insert_tag(a,"groupchat");
+		if (j_strcmp(xmlnode_get_name(cur), "conference") == 0)
+			xmlnode_insert_tag(a, "groupchat");
 
-	/* map the included <ns>'s in browse to the old agent flags */
-	for(cur2 = xmlnode_get_firstchild(cur); cur2 != NULL; cur2 = xmlnode_get_nextsibling(cur2)){
-	    if(j_strcmp(xmlnode_get_name(cur2),"ns") != 0) continue;
-	    if(j_strcmp(xmlnode_get_data(cur2),"jabber:iq:register") == 0)
-		xmlnode_insert_tag(a,"register");
-	    if(j_strcmp(xmlnode_get_data(cur2),"jabber:iq:search") == 0)
-		xmlnode_insert_tag(a,"search");
-	    if(j_strcmp(xmlnode_get_data(cur2),"jabber:iq:gateway") == 0)
-		xmlnode_insert_cdata(xmlnode_insert_tag(a,"transport"),"Enter ID", -1);
+		/* map the included <ns>'s in browse to the old agent flags */
+		for (cur2 = xmlnode_get_firstchild(cur); cur2 != NULL;
+		     cur2 = xmlnode_get_nextsibling(cur2)) {
+			if (j_strcmp(xmlnode_get_name(cur2), "ns") != 0)
+				continue;
+			if (j_strcmp
+			    (xmlnode_get_data(cur2),
+			     "jabber:iq:register") == 0)
+				xmlnode_insert_tag(a, "register");
+			if (j_strcmp
+			    (xmlnode_get_data(cur2),
+			     "jabber:iq:search") == 0)
+				xmlnode_insert_tag(a, "search");
+			if (j_strcmp
+			    (xmlnode_get_data(cur2),
+			     "jabber:iq:gateway") == 0)
+				xmlnode_insert_cdata(xmlnode_insert_tag
+						     (a, "transport"),
+						     "Enter ID", -1);
+		}
 	}
-    }
 
-    jpacket_reset(m->packet);
-    if(m->s != NULL) /* XXX null session hack! */
-    {
-	xmlnode_put_attrib(m->packet->x,"from",m->packet->from->server);
-	js_session_to(m->s,m->packet);
-    }else{
-	js_deliver(m->si,m->packet);
-    }
+	jpacket_reset(m->packet);
+	if (m->s != NULL) {	/* XXX null session hack! */
+		xmlnode_put_attrib(m->packet->x, "from",
+				   m->packet->from->server);
+		js_session_to(m->s, m->packet);
+	} else {
+		js_deliver(m->si, m->packet);
+	}
 
-    return M_HANDLED;
+	return M_HANDLED;
 }
 
-mreturn mod_agents_agent(mapi m){
-    xmlnode ret, retq, info, agents, reg;
+mreturn mod_agents_agent(mapi m)
+{
+	xmlnode ret, retq, info, agents, reg;
 
-    /* get data from the config file */
-    info = js_config(m->si,"vCard");
-    agents = js_config(m->si,"agents");
-    reg = js_config(m->si,"register");
+	/* get data from the config file */
+	info = js_config(m->si, "vCard");
+	agents = js_config(m->si, "agents");
+	reg = js_config(m->si, "register");
 
-    /* if we don't have anything to say, bounce */
-    if(info == NULL && agents == NULL && reg == NULL)
+	/* if we don't have anything to say, bounce */
+	if (info == NULL && agents == NULL && reg == NULL)
+		return M_PASS;
+
+	log_debug("handling agent query");
+
+	/* build the result IQ */
+	ret = jutil_iqresult(m->packet->x);
+	retq = xmlnode_insert_tag(ret, "query");
+	xmlnode_put_attrib(retq, "xmlns", NS_AGENT);
+
+	/* copy in the vCard info */
+	xmlnode_insert_cdata(xmlnode_insert_tag(retq, "name"),
+			     xmlnode_get_tag_data(info, "FN"), -1);
+	xmlnode_insert_cdata(xmlnode_insert_tag(retq, "url"),
+			     xmlnode_get_tag_data(info, "URL"), -1);
+	xmlnode_insert_cdata(xmlnode_insert_tag(retq, "service"), "jabber",
+			     6);
+
+	/* set the flags */
+	if (agents != NULL)
+		xmlnode_insert_tag(retq, "agents");
+	if (reg != NULL)
+		xmlnode_insert_tag(retq, "register");
+
+	jpacket_reset(m->packet);
+	if (m->s != NULL) {	/* XXX null session hack! */
+		xmlnode_put_attrib(m->packet->x, "from",
+				   m->packet->from->server);
+		js_session_to(m->s, m->packet);
+	} else {
+		js_deliver(m->si, m->packet);
+	}
+
+	return M_HANDLED;
+}
+
+mreturn mod_agents_handler(mapi m, void *arg)
+{
+	if (m->packet->type != JPACKET_IQ)
+		return M_IGNORE;
+
+	if (jpacket_subtype(m->packet) != JPACKET__GET)
+		return M_PASS;
+	if (m->s != NULL
+	    && (m->packet->to != NULL
+		&& j_strcmp(jid_full(m->packet->to),
+			    m->packet->from->server) != 0))
+		return M_PASS;	/* for session calls, only answer to=NULL or to=server */
+
+	if (NSCHECK(m->packet->iq, NS_AGENT))
+		return mod_agents_agent(m);
+	if (NSCHECK(m->packet->iq, NS_AGENTS))
+		return mod_agents_agents(m);
+
 	return M_PASS;
-
-    log_debug("handling agent query");
-
-    /* build the result IQ */
-    ret = jutil_iqresult(m->packet->x);
-    retq = xmlnode_insert_tag(ret,"query");
-    xmlnode_put_attrib(retq,"xmlns",NS_AGENT);
-
-    /* copy in the vCard info */
-    xmlnode_insert_cdata(xmlnode_insert_tag(retq,"name"),xmlnode_get_tag_data(info,"FN"),-1);
-    xmlnode_insert_cdata(xmlnode_insert_tag(retq,"url"),xmlnode_get_tag_data(info,"URL"),-1);
-    xmlnode_insert_cdata(xmlnode_insert_tag(retq,"service"),"jabber",6);
-
-    /* set the flags */
-    if(agents != NULL)
-	xmlnode_insert_tag(retq,"agents");
-    if(reg != NULL)
-	xmlnode_insert_tag(retq,"register");
-
-    jpacket_reset(m->packet);
-    if(m->s != NULL) /* XXX null session hack! */
-    {
-	xmlnode_put_attrib(m->packet->x,"from",m->packet->from->server);
-	js_session_to(m->s,m->packet);
-    }else{
-	js_deliver(m->si,m->packet);
-    }
-
-    return M_HANDLED;
-}
-
-mreturn mod_agents_handler(mapi m, void *arg){
-    if(m->packet->type != JPACKET_IQ) return M_IGNORE;
-
-    if(jpacket_subtype(m->packet) != JPACKET__GET) return M_PASS;
-    if(m->s != NULL && (m->packet->to != NULL && j_strcmp(jid_full(m->packet->to),m->packet->from->server) != 0)) return M_PASS; /* for session calls, only answer to=NULL or to=server */
-
-    if(NSCHECK(m->packet->iq,NS_AGENT)) return mod_agents_agent(m);
-    if(NSCHECK(m->packet->iq,NS_AGENTS)) return mod_agents_agents(m);
-
-    return M_PASS;
 }
 
 /* XXX supid null to workaround! */
-mreturn mod_agents_shack(mapi m, void *arg){
-    js_mapi_session(es_OUT,m->s,mod_agents_handler,NULL);
-    return M_PASS;
+mreturn mod_agents_shack(mapi m, void *arg)
+{
+	js_mapi_session(es_OUT, m->s, mod_agents_handler, NULL);
+	return M_PASS;
 }
 
-JSM_FUNC void mod_agents(jsmi si){
-    log_debug("init");
-    js_mapi_register(si,e_SERVER, mod_agents_handler, NULL);
-    js_mapi_register(si,e_SESSION, mod_agents_shack, NULL);
+JSM_FUNC void mod_agents(jsmi si)
+{
+	log_debug("init");
+	js_mapi_register(si, e_SERVER, mod_agents_handler, NULL);
+	js_mapi_register(si, e_SESSION, mod_agents_shack, NULL);
 }

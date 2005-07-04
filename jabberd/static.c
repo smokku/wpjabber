@@ -41,15 +41,15 @@ void base_stderr(void);
 //void base_dynamic(void);
 
 /* load all base modules */
-void static_init(void){
-    base_accept();
-    base_connect();
+void static_init(void)
+{
+	base_accept();
+	base_connect();
 //    base_exec();
-    base_file();
-    base_format();
-    base_to();
-    base_stderr();
+	base_file();
+	base_format();
+	base_to();
+	base_stderr();
 //    base_stdout();
 //    base_dynamic();
 }
-

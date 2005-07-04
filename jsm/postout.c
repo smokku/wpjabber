@@ -48,25 +48,23 @@
 #include "jsm.h"
 
 /* use this function to move call to session thread */
-void js_post_out(void *arg){
-  jpacket jp = (jpacket)arg;
-  session s = (session)jp->aux1;
+void js_post_out(void *arg)
+{
+	jpacket jp = (jpacket) arg;
+	session s = (session) jp->aux1;
 
-  js_post_out_main(s,jp);
+	js_post_out_main(s, jp);
 }
 
 /* handle outgoing session packets */
-void js_post_out_main(session s, jpacket jp){
-  log_debug("THREAD:POST_OUT received a packet: %s",xmlnode2str(jp->x));
+void js_post_out_main(session s, jpacket jp)
+{
+	log_debug("THREAD:POST_OUT received a packet: %s",
+		  xmlnode2str(jp->x));
 
-  /* let the modules handle it, if nobody handle this, just send it */
-  if(js_mapi_call(NULL, es_POSTOUT, jp, s->u, s))
-	return;
+	/* let the modules handle it, if nobody handle this, just send it */
+	if (js_mapi_call(NULL, es_POSTOUT, jp, s->u, s))
+		return;
 
-  js_deliver(s->si,jp);
+	js_deliver(s->si, jp);
 }
-
-
-
-
-

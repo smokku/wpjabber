@@ -20,11 +20,11 @@
 
 
 
-XdbSqlBackend *xdboracle_backend_new (void);
+XdbSqlBackend *xdboracle_backend_new(void);
 
 
 
 
 
 
-#endif /* XDB_SQL_ORACLE_H_INCLUDED */
+#endif				/* XDB_SQL_ORACLE_H_INCLUDED */

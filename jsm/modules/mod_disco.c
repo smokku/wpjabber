@@ -42,95 +42,107 @@
 
 //#define NS_DISCO_INFO "http://jabber.org/protocol/disco#info"
 
-mreturn mod_disco_server_info(mapi m, void *arg){
-    xmlnode query, identity, disco;
+mreturn mod_disco_server_info(mapi m, void *arg)
+{
+	xmlnode query, identity, disco;
 
-    if((xmlnode_get_attrib(m->packet->x,"node")) != NULL) return M_PASS;
+	if ((xmlnode_get_attrib(m->packet->x, "node")) != NULL)
+		return M_PASS;
 
-    log_debug("handling disco#info query");
+	log_debug("handling disco#info query");
 
-    /* config get */
-    disco = js_config(m->si,"disco");
+	/* config get */
+	disco = js_config(m->si, "disco");
 
 	/* build the result IQ */
-    query = xmlnode_insert_tag(jutil_iqresult(m->packet->x),"query");
-    xmlnode_put_attrib(query,"xmlns",NS_DISCO_INFO);
+	query = xmlnode_insert_tag(jutil_iqresult(m->packet->x), "query");
+	xmlnode_put_attrib(query, "xmlns", NS_DISCO_INFO);
 
 	/* if config */
 	identity = NULL;
-    if (disco != NULL)
-	  identity = xmlnode_get_tag(disco,"identity");
+	if (disco != NULL)
+		identity = xmlnode_get_tag(disco, "identity");
 
 	/* if bad config , put identity */
-    if (disco == NULL || identity == NULL){
-	  identity = xmlnode_insert_tag(query,"identity");
-	  xmlnode_put_attrib(identity,"category","services");
-	  xmlnode_put_attrib(identity,"type","jabber");
-	  xmlnode_put_attrib(identity,"name",
-						 xmlnode_get_data(js_config(m->si,"vCard/FN")));
-    }
+	if (disco == NULL || identity == NULL) {
+		identity = xmlnode_insert_tag(query, "identity");
+		xmlnode_put_attrib(identity, "category", "services");
+		xmlnode_put_attrib(identity, "type", "jabber");
+		xmlnode_put_attrib(identity, "name",
+				   xmlnode_get_data(js_config
+						    (m->si, "vCard/FN")));
+	}
 
 	/* put disco info if exist */
-    if (disco != NULL)
-	  xmlnode_insert_node(query, xmlnode_get_firstchild(disco));
+	if (disco != NULL)
+		xmlnode_insert_node(query, xmlnode_get_firstchild(disco));
 
-    jpacket_reset(m->packet);
-    js_deliver(m->si,m->packet);
+	jpacket_reset(m->packet);
+	js_deliver(m->si, m->packet);
 
-    return M_HANDLED;
+	return M_HANDLED;
 }
 
 
 //#define NS_DISCO_ITEMS "http://jabber.org/protocol/disco#items"
 
-mreturn mod_disco_server_items(mapi m, void *arg){
-  xmlnode browse, query, cur;
+mreturn mod_disco_server_items(mapi m, void *arg)
+{
+	xmlnode browse, query, cur;
 
-  if((xmlnode_get_attrib(m->packet->x,"node")) != NULL) return M_PASS;
+	if ((xmlnode_get_attrib(m->packet->x, "node")) != NULL)
+		return M_PASS;
 
-  /* config get */
-  if((browse = js_config(m->si,"browse")) == NULL)
-	return M_PASS;
+	/* config get */
+	if ((browse = js_config(m->si, "browse")) == NULL)
+		return M_PASS;
 
-  log_debug("handling disco#items query");
+	log_debug("handling disco#items query");
 
-  /* build the result IQ */
-  query = xmlnode_insert_tag(jutil_iqresult(m->packet->x),"query");
-  xmlnode_put_attrib(query,"xmlns",NS_DISCO_ITEMS);
+	/* build the result IQ */
+	query = xmlnode_insert_tag(jutil_iqresult(m->packet->x), "query");
+	xmlnode_put_attrib(query, "xmlns", NS_DISCO_ITEMS);
 
-  /* copy in the configured services */
-  for(cur = xmlnode_get_firstchild(browse);
-	  cur != NULL;
-	  cur = xmlnode_get_nextsibling(cur)){
-	xmlnode item;
-	const char *jid,*name;
+	/* copy in the configured services */
+	for (cur = xmlnode_get_firstchild(browse);
+	     cur != NULL; cur = xmlnode_get_nextsibling(cur)) {
+		xmlnode item;
+		const char *jid, *name;
 
-	jid = xmlnode_get_attrib(cur,"jid");
-	if (!jid) continue;
+		jid = xmlnode_get_attrib(cur, "jid");
+		if (!jid)
+			continue;
 
-	item = xmlnode_insert_tag(query,"item");
-	xmlnode_put_attrib(item,"jid",jid);
-	name = xmlnode_get_attrib(cur,"name");
-	if (name) xmlnode_put_attrib(item,"name",name);
-  }
+		item = xmlnode_insert_tag(query, "item");
+		xmlnode_put_attrib(item, "jid", jid);
+		name = xmlnode_get_attrib(cur, "name");
+		if (name)
+			xmlnode_put_attrib(item, "name", name);
+	}
 
-  jpacket_reset(m->packet);
-  js_deliver(m->si,m->packet);
+	jpacket_reset(m->packet);
+	js_deliver(m->si, m->packet);
 
-  return M_HANDLED;
+	return M_HANDLED;
 }
 
-mreturn mod_disco_server(mapi m, void *arg){
-    if (m->packet->type != JPACKET_IQ) return M_IGNORE;
-    if (jpacket_subtype(m->packet) != JPACKET__GET) return M_PASS;
-	if (m->packet->to->resource != NULL) return M_PASS;
-    if (NSCHECK(m->packet->iq,NS_DISCO_ITEMS)) return mod_disco_server_items(m,arg);
-    if (NSCHECK(m->packet->iq,NS_DISCO_INFO)) return mod_disco_server_info(m,arg);
-    return M_PASS;
+mreturn mod_disco_server(mapi m, void *arg)
+{
+	if (m->packet->type != JPACKET_IQ)
+		return M_IGNORE;
+	if (jpacket_subtype(m->packet) != JPACKET__GET)
+		return M_PASS;
+	if (m->packet->to->resource != NULL)
+		return M_PASS;
+	if (NSCHECK(m->packet->iq, NS_DISCO_ITEMS))
+		return mod_disco_server_items(m, arg);
+	if (NSCHECK(m->packet->iq, NS_DISCO_INFO))
+		return mod_disco_server_info(m, arg);
+	return M_PASS;
 }
 
 /* mod disco based on JEP-030 */
-JSM_FUNC void mod_disco(jsmi si){
-    js_mapi_register(si,e_SERVER,mod_disco_server,NULL);
+JSM_FUNC void mod_disco(jsmi si)
+{
+	js_mapi_register(si, e_SERVER, mod_disco_server, NULL);
 }
-

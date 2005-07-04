@@ -14,4 +14,3 @@ extern void debug_log(const char *msgfmt, ...);
 #else
 #define log_debug(format,arg...) if(debug_flag) debug_log(__FILE__ ":" S(__LINE__) " \t " format, ## arg );
 #endif
-

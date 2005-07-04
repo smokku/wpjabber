@@ -41,102 +41,107 @@
 #include "jsm.h"
 
 /* logs session characteristics */
-mreturn mod_log_session_end(mapi m, void *arg){
-    time_t t = time(NULL);
+mreturn mod_log_session_end(mapi m, void *arg)
+{
+	time_t t = time(NULL);
 
-    log_debug("creating session log entry");
+	log_debug("creating session log entry");
 
-    log_record(jid_full(m->user->id), "session", "end", "%s %d %d %d %s",
-			   m->s->ip,
-			   (int)(t - m->s->started),
-			   m->s->c_in,
-			   m->s->c_out,
-			   m->s->res);
+	log_record(jid_full(m->user->id), "session", "end",
+		   "%s %d %d %d %s", m->s->ip, (int) (t - m->s->started),
+		   m->s->c_in, m->s->c_out, m->s->res);
 
-    return M_PASS;
+	return M_PASS;
 }
 
-mreturn mod_log_archiver(mapi m, void* arg){
-    jid svcs = (jid)arg;
-    xmlnode x;
-    char ts[101];
-    struct tm now;
-    unsigned long ltime;
+mreturn mod_log_archiver(mapi m, void *arg)
+{
+	jid svcs = (jid) arg;
+	xmlnode x;
+	char ts[101];
+	struct tm now;
+	unsigned long ltime;
 
-    if(m->packet->type != JPACKET_MESSAGE) return M_IGNORE;
+	if (m->packet->type != JPACKET_MESSAGE)
+		return M_IGNORE;
 
-    log_debug("archiving message");
+	log_debug("archiving message");
 
-    /* get a copy wrapped w/ a route and stamp it w/ a type='archive' (why not?) */
-    x = xmlnode_wrap(xmlnode_dup(m->packet->x), "route");
-    xmlnode_put_attrib(x,"type","archive");
+	/* get a copy wrapped w/ a route and stamp it w/ a type='archive' (why not?) */
+	x = xmlnode_wrap(xmlnode_dup(m->packet->x), "route");
+	xmlnode_put_attrib(x, "type", "archive");
 
-    /* Mark the route with an direction attribute */
-    switch(m->e){
-    case es_IN:
-	  xmlnode_put_attrib(x, "direction", "in");
-	  break;
-    case es_OUT:
-	  xmlnode_put_attrib(x, "direction", "out");
-	  break;
-    }
+	/* Mark the route with an direction attribute */
+	switch (m->e) {
+	case es_IN:
+		xmlnode_put_attrib(x, "direction", "in");
+		break;
+	case es_OUT:
+		xmlnode_put_attrib(x, "direction", "out");
+		break;
+	}
 
-    /* Mark the route with a timeStamp attribute */
-    time( &ltime );
+	/* Mark the route with a timeStamp attribute */
+	time(&ltime);
 #ifdef WIN32
-    now = *localtime( &ltime );
+	now = *localtime(&ltime);
 #else
-	localtime_r( &ltime , &now);
+	localtime_r(&ltime, &now);
 #endif
 
-    strftime((char *)ts,100,"%m/%d/%Y %H:%M:%S",&now);
+	strftime((char *) ts, 100, "%m/%d/%Y %H:%M:%S", &now);
 
-    xmlnode_put_attrib(x, "stamp", ts);
+	xmlnode_put_attrib(x, "stamp", ts);
 
-    /* if there's more than one service, copy to the others */
-    for(;svcs->next != NULL; svcs = svcs->next){
+	/* if there's more than one service, copy to the others */
+	for (; svcs->next != NULL; svcs = svcs->next) {
+		xmlnode_put_attrib(x, "to", jid_full(svcs));
+		deliver(dpacket_new(xmlnode_dup(x)), NULL);
+	}
+
+	/* send off to the last (or only) one */
 	xmlnode_put_attrib(x, "to", jid_full(svcs));
-	deliver(dpacket_new(xmlnode_dup(x)), NULL);
-    }
+	deliver(dpacket_new(x), NULL);
 
-    /* send off to the last (or only) one */
-    xmlnode_put_attrib(x, "to", jid_full(svcs));
-    deliver(dpacket_new(x), NULL);
-
-    return M_PASS;
+	return M_PASS;
 }
 
 /* log session */
-mreturn mod_log_session(mapi m, void *arg){
-    jid svcs = (jid)arg;
+mreturn mod_log_session(mapi m, void *arg)
+{
+	jid svcs = (jid) arg;
 
-    if(svcs != NULL){
-	js_mapi_session(es_IN, m->s, mod_log_archiver, svcs);
-	js_mapi_session(es_OUT, m->s, mod_log_archiver, svcs);
-    }
+	if (svcs != NULL) {
+		js_mapi_session(es_IN, m->s, mod_log_archiver, svcs);
+		js_mapi_session(es_OUT, m->s, mod_log_archiver, svcs);
+	}
 
-    /* we always generate log records, if you don't like it, don't use mod_log :) */
-    js_mapi_session(es_END, m->s, mod_log_session_end, NULL);
+	/* we always generate log records, if you don't like it, don't use mod_log :) */
+	js_mapi_session(es_END, m->s, mod_log_session_end, NULL);
 
-    return M_PASS;
+	return M_PASS;
 }
 
 /* we should be last in the list of modules */
-JSM_FUNC void mod_log(jsmi si){
-    xmlnode cfg = js_config(si,"archive");
-    jid svcs = NULL;
+JSM_FUNC void mod_log(jsmi si)
+{
+	xmlnode cfg = js_config(si, "archive");
+	jid svcs = NULL;
 
-    log_debug("mod_log init");
+	log_debug("mod_log init");
 
-    /* look for archiving service too */
-    for(cfg = xmlnode_get_firstchild(cfg); cfg != NULL; cfg = xmlnode_get_nextsibling(cfg)){
-	if(xmlnode_get_type(cfg) != NTYPE_TAG || j_strcmp(xmlnode_get_name(cfg),"service") != 0) continue;
-	if(svcs == NULL)
-	    svcs = jid_new(si->p,xmlnode_get_data(cfg));
-	else
-	    jid_append(svcs,jid_new(si->p,xmlnode_get_data(cfg)));
-    }
+	/* look for archiving service too */
+	for (cfg = xmlnode_get_firstchild(cfg); cfg != NULL;
+	     cfg = xmlnode_get_nextsibling(cfg)) {
+		if (xmlnode_get_type(cfg) != NTYPE_TAG
+		    || j_strcmp(xmlnode_get_name(cfg), "service") != 0)
+			continue;
+		if (svcs == NULL)
+			svcs = jid_new(si->p, xmlnode_get_data(cfg));
+		else
+			jid_append(svcs,
+				   jid_new(si->p, xmlnode_get_data(cfg)));
+	}
 
-    js_mapi_register(si,e_SESSION, mod_log_session, (void*)svcs);
+	js_mapi_register(si, e_SESSION, mod_log_session, (void *) svcs);
 }
-

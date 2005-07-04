@@ -19,6 +19,6 @@
 #include "xdb_sql_backend.h"
 #include <mysql.h>
 
-XdbSqlBackend *xdbmysql_backend_new (void);
+XdbSqlBackend *xdbmysql_backend_new(void);
 
-#endif /* XDB_SQL_MYSQL_H_INCLUDED */
+#endif				/* XDB_SQL_MYSQL_H_INCLUDED */

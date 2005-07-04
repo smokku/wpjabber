@@ -49,27 +49,30 @@
  * type = NETSOCKET_UDP is a UDP connection socket
  */
 
-int make_netsocket(u_short port, char *host, int type){
-    int s, flag = 1;
-    struct sockaddr_in sa;
-    struct in_addr *saddr;
-    int socket_type;
+int make_netsocket(u_short port, char *host, int type)
+{
+	int s, flag = 1;
+	struct sockaddr_in sa;
+	struct in_addr *saddr;
+	int socket_type;
 
-    /* is this a UDP socket or a TCP socket? */
-    socket_type = (type == NETSOCKET_UDP)?SOCK_DGRAM:SOCK_STREAM;
+	/* is this a UDP socket or a TCP socket? */
+	socket_type = (type == NETSOCKET_UDP) ? SOCK_DGRAM : SOCK_STREAM;
 
-    bzero((void *)&sa,sizeof(struct sockaddr_in));
+	bzero((void *) &sa, sizeof(struct sockaddr_in));
 
-    if((s = socket(AF_INET,socket_type,0)) < 0)
-	return(-1);
-    if(setsockopt(s, SOL_SOCKET, SO_REUSEADDR, (char*)&flag, sizeof(flag)) < 0)
-	return(-1);
+	if ((s = socket(AF_INET, socket_type, 0)) < 0)
+		return (-1);
+	if (setsockopt
+	    (s, SOL_SOCKET, SO_REUSEADDR, (char *) &flag,
+	     sizeof(flag)) < 0)
+		return (-1);
 
-    saddr = make_addr(host);
-    if(saddr == NULL && type != NETSOCKET_UDP)
-	return(-1);
-    sa.sin_family = AF_INET;
-    sa.sin_port = htons(port);
+	saddr = make_addr(host);
+	if (saddr == NULL && type != NETSOCKET_UDP)
+		return (-1);
+	sa.sin_family = AF_INET;
+	sa.sin_port = htons(port);
 /*
     if (make_addr_long(host, &sa))
       if (type != NETSOCKET_UDP)
@@ -78,71 +81,74 @@ int make_netsocket(u_short port, char *host, int type){
     sa.sin_family = AF_INET;
     sa.sin_port = htons(port);
 */
-    if(type == NETSOCKET_SERVER){
-	/* bind to specific address if specified */
-	if(host != NULL)
-	    sa.sin_addr.s_addr = saddr->s_addr;
+	if (type == NETSOCKET_SERVER) {
+		/* bind to specific address if specified */
+		if (host != NULL)
+			sa.sin_addr.s_addr = saddr->s_addr;
 
-	if(bind(s,(struct sockaddr*)&sa,sizeof sa) < 0){
-	    close(s);
-printf ("\n\n--- unable to bind ---\n\n");
-	    return(-1);
+		if (bind(s, (struct sockaddr *) &sa, sizeof sa) < 0) {
+			close(s);
+			printf("\n\n--- unable to bind ---\n\n");
+			return (-1);
+		}
 	}
-    }
-    if(type == NETSOCKET_CLIENT){
-	sa.sin_addr.s_addr = saddr->s_addr;
-	if(connect(s,(struct sockaddr*)&sa,sizeof sa) < 0){
-	    close(s);
-	    return(-1);
+	if (type == NETSOCKET_CLIENT) {
+		sa.sin_addr.s_addr = saddr->s_addr;
+		if (connect(s, (struct sockaddr *) &sa, sizeof sa) < 0) {
+			close(s);
+			return (-1);
+		}
 	}
-    }
-    if(type == NETSOCKET_UDP){
-	/* bind to all addresses for now */
-	if(bind(s,(struct sockaddr*)&sa,sizeof sa) < 0){
-	    close(s);
-	    return(-1);
+	if (type == NETSOCKET_UDP) {
+		/* bind to all addresses for now */
+		if (bind(s, (struct sockaddr *) &sa, sizeof sa) < 0) {
+			close(s);
+			return (-1);
+		}
+
+		/* if specified, use a default recipient for read/write */
+		if (host != NULL && saddr != NULL) {
+			sa.sin_addr.s_addr = saddr->s_addr;
+			if (connect(s, (struct sockaddr *) &sa, sizeof sa)
+			    < 0) {
+				close(s);
+				return (-1);
+			}
+		}
 	}
 
-	/* if specified, use a default recipient for read/write */
-	if(host != NULL && saddr != NULL){
-	    sa.sin_addr.s_addr = saddr->s_addr;
-	    if(connect(s,(struct sockaddr*)&sa,sizeof sa) < 0){
-		close(s);
-		return(-1);
-	    }
-	}
-    }
 
-
-    return(s);
+	return (s);
 }
 
 
-struct in_addr *make_addr(char *host){
-    struct hostent *hp;
-    static struct in_addr addr;
-    char myname[MAXHOSTNAMELEN + 1];
+struct in_addr *make_addr(char *host)
+{
+	struct hostent *hp;
+	static struct in_addr addr;
+	char myname[MAXHOSTNAMELEN + 1];
 
-    if(host == NULL || strlen(host) == 0){
-	gethostname(myname,MAXHOSTNAMELEN);
-	hp = gethostbyname(myname);
-	if(hp != NULL){
-	    return (struct in_addr *) *hp->h_addr_list;
+	if (host == NULL || strlen(host) == 0) {
+		gethostname(myname, MAXHOSTNAMELEN);
+		hp = gethostbyname(myname);
+		if (hp != NULL) {
+			return (struct in_addr *) *hp->h_addr_list;
+		}
+	} else {
+		addr.s_addr = inet_addr(host);
+		if (addr.s_addr != -1) {
+			return &addr;
+		}
+		hp = gethostbyname(host);
+		if (hp != NULL) {
+			return (struct in_addr *) *hp->h_addr_list;
+		}
 	}
-    }else{
-	addr.s_addr = inet_addr(host);
-	if(addr.s_addr != -1){
-	    return &addr;
-	}
-	hp = gethostbyname(host);
-	if(hp != NULL){
-	    return (struct in_addr *) *hp->h_addr_list;
-	}
-    }
-    return NULL;
+	return NULL;
 }
 
-int make_addr_long(char *host, struct sockaddr_in *sa){
+int make_addr_long(char *host, struct sockaddr_in *sa)
+{
 #ifndef SUNOS
 	struct hostent *hp_ptr;
 #endif
@@ -152,45 +158,43 @@ int make_addr_long(char *host, struct sockaddr_in *sa){
 
 	char myname[MAXHOSTNAMELEN + 1];
 
-	if(host == NULL || strlen(host) == 0){
+	if (host == NULL || strlen(host) == 0) {
 		gethostname(myname, MAXHOSTNAMELEN);
 
 		if (
 #ifdef SUNOS
-			gethostbyname_r(myname, &hp, buf, 2048,
-							&err)
+			   gethostbyname_r(myname, &hp, buf, 2048, &err)
 #else
-			gethostbyname_r(myname, &hp, buf, 2048,
-							&hp_ptr, &err) == 0
+			   gethostbyname_r(myname, &hp, buf, 2048,
+					   &hp_ptr, &err) == 0
 #endif
+		    ) {
 
-			){
-
-			memcpy(&sa->sin_addr, hp.h_addr, (size_t)hp.h_length);
+			memcpy(&sa->sin_addr, hp.h_addr,
+			       (size_t) hp.h_length);
 			return 0;
 		}
 		/* XXX check error */
 		return 1;
-	}
-	else{
+	} else {
 		in_addr_t ip_addr;
 
 		ip_addr = inet_addr(host);
-		if((int)ip_addr != (int)INADDR_NONE){
+		if ((int) ip_addr != (int) INADDR_NONE) {
 			memcpy(&sa->sin_addr, &ip_addr, sizeof(ip_addr));
 			return 0;
 		}
 
 		if (
 #ifdef SUNOS
-			gethostbyname_r(host, &hp, buf, 2048,
-							&err)
+			   gethostbyname_r(host, &hp, buf, 2048, &err)
 #else
-			gethostbyname_r(host, &hp, buf, 2048,
-							&hp_ptr, &err) == 0
+			   gethostbyname_r(host, &hp, buf, 2048,
+					   &hp_ptr, &err) == 0
 #endif
-			){
-			memcpy(&sa->sin_addr, hp.h_addr, (size_t)hp.h_length);
+		    ) {
+			memcpy(&sa->sin_addr, hp.h_addr,
+			       (size_t) hp.h_length);
 			return 0;
 		}
 		return 1;
@@ -201,17 +205,17 @@ int make_addr_long(char *host, struct sockaddr_in *sa){
  * leave open across exec.
  * -- EJB 7/31/2000
  */
-int set_fd_close_on_exec(int fd, int flag){
-    int oldflags = fcntl(fd,F_GETFL);
-    int newflags;
+int set_fd_close_on_exec(int fd, int flag)
+{
+	int oldflags = fcntl(fd, F_GETFL);
+	int newflags;
 
-    if(flag)
-	newflags = oldflags | FD_CLOEXEC;
-    else
-	newflags = oldflags & (~FD_CLOEXEC);
+	if (flag)
+		newflags = oldflags | FD_CLOEXEC;
+	else
+		newflags = oldflags & (~FD_CLOEXEC);
 
-    if(newflags==oldflags)
-	return 0;
-    return fcntl(fd,F_SETFL,(long)newflags);
+	if (newflags == oldflags)
+		return 0;
+	return fcntl(fd, F_SETFL, (long) newflags);
 }
-

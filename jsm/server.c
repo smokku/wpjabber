@@ -51,29 +51,22 @@ changes
 
 #include "jsm.h"
 
-void js_server_main(jsmi si, jpacket jp){
-    udata u = NULL;
+void js_server_main(jsmi si, jpacket jp)
+{
+	udata u = NULL;
 
-    log_debug("THREAD:SERVER received a packet: %s", xmlnode2str(jp->x));
+	log_debug("THREAD:SERVER received a packet: %s",
+		  xmlnode2str(jp->x));
 
-    /* get the user struct for convience if the sender was local */
-    if(js_islocal(si, jp->from))
-	u = js_user(si, jp->from, 0);
+	/* get the user struct for convience if the sender was local */
+	if (js_islocal(si, jp->from))
+		u = js_user(si, jp->from, 0);
 
-    /* let the modules have a go at the packet; if nobody handles it... */
-    if(!js_mapi_call(si, e_SERVER, jp, u, NULL))
-	js_bounce(si,jp->x,TERROR_NOTFOUND);
+	/* let the modules have a go at the packet; if nobody handles it... */
+	if (!js_mapi_call(si, e_SERVER, jp, u, NULL))
+		js_bounce(si, jp->x, TERROR_NOTFOUND);
 
-    if (u != NULL){
-      THREAD_DEC(u->ref);
-    }
+	if (u != NULL) {
+		THREAD_DEC(u->ref);
+	}
 }
-
-
-
-
-
-
-
-
-

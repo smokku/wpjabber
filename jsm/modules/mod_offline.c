@@ -50,184 +50,214 @@
 #define OFFLINE_ERASE_OTHER_EVENTS 1
 
 /* handle an offline message */
-mreturn mod_offline_message(mapi m){
+mreturn mod_offline_message(mapi m)
+{
 #ifdef OFFLINE_SESSION_CHECK
-    session top;
+	session top;
 #endif
-    xmlnode cur = NULL, cur2;
-    char str[11];
+	xmlnode cur = NULL, cur2;
+	char str[11];
 	char *id;
 
-    /* if there's an existing session, just give it to them */
+	/* if there's an existing session, just give it to them */
 #ifdef OFFLINE_SESSION_CHECK
-    if ((top = js_session_primary_sem(m->user)) != NULL){
-	  js_session_to(top, m->packet);
-	  return M_HANDLED;
-    }
+	if ((top = js_session_primary_sem(m->user)) != NULL) {
+		js_session_to(top, m->packet);
+		return M_HANDLED;
+	}
 #endif
 
-    switch(jpacket_subtype(m->packet)){
-    case JPACKET__NONE:
-    case JPACKET__ERROR:
-    case JPACKET__CHAT:
-	break;
-    default:
-	return M_PASS;
-    }
+	switch (jpacket_subtype(m->packet)) {
+	case JPACKET__NONE:
+	case JPACKET__ERROR:
+	case JPACKET__CHAT:
+		break;
+	default:
+		return M_PASS;
+	}
 
 	/* look for event messages */
-	id = xmlnode_get_attrib(m->packet->x,"id");
-	if (id){
-	  for(cur = xmlnode_get_firstchild(m->packet->x); cur != NULL; cur = xmlnode_get_nextsibling(cur))
-		if(NSCHECK(cur,NS_EVENT)){
-		  if(xmlnode_get_tag(cur,"id") != NULL)
-			return M_PASS; /* bah, we don't want to store events offline (XXX: do we?) */
-		  if(xmlnode_get_tag(cur,"offline") != NULL)
-			break; /* cur remaining set is the flag */
-		}
-	  /* erase any other events */
+	id = xmlnode_get_attrib(m->packet->x, "id");
+	if (id) {
+		for (cur = xmlnode_get_firstchild(m->packet->x);
+		     cur != NULL; cur = xmlnode_get_nextsibling(cur))
+			if (NSCHECK(cur, NS_EVENT)) {
+				if (xmlnode_get_tag(cur, "id") != NULL)
+					return M_PASS;	/* bah, we don't want to store events offline (XXX: do we?) */
+				if (xmlnode_get_tag(cur, "offline") !=
+				    NULL)
+					break;	/* cur remaining set is the flag */
+			}
+		/* erase any other events */
 #ifdef OFFLINE_ERASE_OTHER_EVENTS
-	  if (cur)
-		xmlnode_hide(cur);
+		if (cur)
+			xmlnode_hide(cur);
 #endif
 	}
 
 
-    log_debug("handling message for %s", m->user->user);
+	log_debug("handling message for %s", m->user->user);
 
-    if((cur2 = xmlnode_get_tag(m->packet->x,"x?xmlns=" NS_EXPIRE)) != NULL){
+	if ((cur2 =
+	     xmlnode_get_tag(m->packet->x,
+			     "x?xmlns=" NS_EXPIRE)) != NULL) {
 
-	  /* do not put to offline message with expire < 2 sec */
-	  if(j_atoi(xmlnode_get_attrib(cur2, "seconds"),0) < 2)
-		  return M_PASS;
+		/* do not put to offline message with expire < 2 sec */
+		if (j_atoi(xmlnode_get_attrib(cur2, "seconds"), 0) < 2)
+			return M_PASS;
 
-	  sprintf(str,"%d",(int)time(NULL));
-	  xmlnode_put_attrib(cur2,"stored",str);
-    }
-    jutil_delay(m->packet->x,"Offline Storage");
+		sprintf(str, "%d", (int) time(NULL));
+		xmlnode_put_attrib(cur2, "stored", str);
+	}
+	jutil_delay(m->packet->x, "Offline Storage");
 
 	/* try to put */
-    if(xdb_act(m->si->xc, m->user->id, NS_OFFLINE, "insert", NULL, m->packet->x)){
+	if (xdb_act
+	    (m->si->xc, m->user->id, NS_OFFLINE, "insert", NULL,
+	     m->packet->x)) {
 
-	  /* free messages from us */
-	  if(jid_cmpx(m->packet->from, m->user->id, JID_USER | JID_SERVER) == 0){
-		log_alert("offline_error","Offline message from own user %s generated offline storage error", m->user->user);
-		xmlnode_free(m->packet->x);
-		return M_HANDLED;
-	  }
+		/* free messages from us */
+		if (jid_cmpx
+		    (m->packet->from, m->user->id,
+		     JID_USER | JID_SERVER) == 0) {
+			log_alert("offline_error",
+				  "Offline message from own user %s generated offline storage error",
+				  m->user->user);
+			xmlnode_free(m->packet->x);
+			return M_HANDLED;
+		}
 
-	  /* replay message */
-	  jutil_tofrom(m->packet->x);
+		/* replay message */
+		jutil_tofrom(m->packet->x);
 
-	  /* hide everythink */
-	  for(cur = xmlnode_get_firstchild(m->packet->x); cur != NULL; cur = xmlnode_get_nextsibling(cur))
-		xmlnode_hide(cur);
+		/* hide everythink */
+		for (cur = xmlnode_get_firstchild(m->packet->x);
+		     cur != NULL; cur = xmlnode_get_nextsibling(cur))
+			xmlnode_hide(cur);
 
-	  /* build message */
-	  {
-		char *body;
+		/* build message */
+		{
+			char *body;
 #ifdef FORWP
-		body = "System: Wiadomosci nie dostarczono. Skrzynka wiadomosci jest pelna.";
+			body =
+			    "System: Wiadomosci nie dostarczono. Skrzynka wiadomosci jest pelna.";
 #else
-		body = "System: Message wasn't delivered. Offline storage size was exceeded.";
+			body =
+			    "System: Message wasn't delivered. Offline storage size was exceeded.";
 #endif
-		xmlnode_insert_cdata (xmlnode_insert_tag (m->packet->x, "body"), body, -1);
-	  }
-	  log_alert("offline_error","Offline message not delivered from user %s",jid_full(m->packet->from));
+			xmlnode_insert_cdata(xmlnode_insert_tag
+					     (m->packet->x, "body"), body,
+					     -1);
+		}
+		log_alert("offline_error",
+			  "Offline message not delivered from user %s",
+			  jid_full(m->packet->from));
 
-	  js_deliver(m->si, jpacket_reset(m->packet));
+		js_deliver(m->si, jpacket_reset(m->packet));
 
-	  return M_HANDLED;
+		return M_HANDLED;
 	}
 
-    if(cur != NULL){
-	  log_debug("offline event");
+	if (cur != NULL) {
+		log_debug("offline event");
 
-	  cur = util_offline_event(m->packet->x,
-							   jid_full(m->user->id),
-							   xmlnode_get_attrib(m->packet->x,"from"),
-							   id);
-	  js_deliver(m->si, jpacket_new(cur));
-	}
-	else{
-	  xmlnode_free(m->packet->x);
+		cur = util_offline_event(m->packet->x,
+					 jid_full(m->user->id),
+					 xmlnode_get_attrib(m->packet->x,
+							    "from"), id);
+		js_deliver(m->si, jpacket_new(cur));
+	} else {
+		xmlnode_free(m->packet->x);
 	}
 
-    return M_HANDLED;
+	return M_HANDLED;
 }
 
 /* just breaks out to our message/presence offline handlers */
-mreturn mod_offline_handler(mapi m, void *arg){
-    if(m->packet->type == JPACKET_MESSAGE) return mod_offline_message(m);
+mreturn mod_offline_handler(mapi m, void *arg)
+{
+	if (m->packet->type == JPACKET_MESSAGE)
+		return mod_offline_message(m);
 
-    return M_IGNORE;
+	return M_IGNORE;
 }
 
 /* watches for when the user is available and sends out offline messages */
-void mod_offline_out_available(mapi m){
-    xmlnode opts, cur, x;
-    int now = time(NULL);
-    int expire, stored, diff;
-    char str[11];
+void mod_offline_out_available(mapi m)
+{
+	xmlnode opts, cur, x;
+	int now = time(NULL);
+	int expire, stored, diff;
+	char str[11];
 
-    if (j_atoi(xmlnode_get_tag_data(m->packet->x, "priority"), 0) < 0){
-	log_debug("negative priority, not delivering offline messages");
-	return;
-    }
-
-    log_debug("mod_offline avability established, check for messages");
-
-    if((opts = xdb_get(m->si->xc, m->user->id, NS_OFFLINE)) == NULL)
-	return;
-
-    /* check for msgs */
-    for(cur = xmlnode_get_firstchild(opts); cur != NULL; cur = xmlnode_get_nextsibling(cur)){
-	/* ignore CDATA between <message/> elements */
-	if (xmlnode_get_type(cur) != NTYPE_TAG)
-	    continue;
-
-	/* check for expired stuff */
-	if((x = xmlnode_get_tag(cur,"x?xmlns=" NS_EXPIRE)) != NULL){
-	    expire = j_atoi(xmlnode_get_attrib(x,"seconds"),0);
-	    stored = j_atoi(xmlnode_get_attrib(x,"stored"),now);
-	    diff = now - stored;
-	    if(diff >= expire){
-		log_debug("dropping expired message %s",xmlnode2str(cur));
-		xmlnode_hide(cur);
-		continue;
-	    }
-	    sprintf(str,"%d",expire - diff);
-	    xmlnode_put_attrib(x,"seconds",str);
-	    xmlnode_hide_attrib(x,"stored");
+	if (j_atoi(xmlnode_get_tag_data(m->packet->x, "priority"), 0) < 0) {
+		log_debug
+		    ("negative priority, not delivering offline messages");
+		return;
 	}
-	js_session_to(m->s,jpacket_new(xmlnode_dup(cur)));
-	xmlnode_hide(cur);
-    }
-    /* messages are gone, save the new sun-dried opts container */
-    xdb_set(m->si->xc, m->user->id, NS_OFFLINE, opts); /* can't do anything if this fails anyway :) */
-    xmlnode_free(opts);
+
+	log_debug("mod_offline avability established, check for messages");
+
+	if ((opts = xdb_get(m->si->xc, m->user->id, NS_OFFLINE)) == NULL)
+		return;
+
+	/* check for msgs */
+	for (cur = xmlnode_get_firstchild(opts); cur != NULL;
+	     cur = xmlnode_get_nextsibling(cur)) {
+		/* ignore CDATA between <message/> elements */
+		if (xmlnode_get_type(cur) != NTYPE_TAG)
+			continue;
+
+		/* check for expired stuff */
+		if ((x =
+		     xmlnode_get_tag(cur, "x?xmlns=" NS_EXPIRE)) != NULL) {
+			expire =
+			    j_atoi(xmlnode_get_attrib(x, "seconds"), 0);
+			stored =
+			    j_atoi(xmlnode_get_attrib(x, "stored"), now);
+			diff = now - stored;
+			if (diff >= expire) {
+				log_debug("dropping expired message %s",
+					  xmlnode2str(cur));
+				xmlnode_hide(cur);
+				continue;
+			}
+			sprintf(str, "%d", expire - diff);
+			xmlnode_put_attrib(x, "seconds", str);
+			xmlnode_hide_attrib(x, "stored");
+		}
+		js_session_to(m->s, jpacket_new(xmlnode_dup(cur)));
+		xmlnode_hide(cur);
+	}
+	/* messages are gone, save the new sun-dried opts container */
+	xdb_set(m->si->xc, m->user->id, NS_OFFLINE, opts);	/* can't do anything if this fails anyway :) */
+	xmlnode_free(opts);
 }
 
-mreturn mod_offline_out(mapi m, void *arg){
-    if(m->packet->type != JPACKET_PRESENCE) return M_IGNORE;
+mreturn mod_offline_out(mapi m, void *arg)
+{
+	if (m->packet->type != JPACKET_PRESENCE)
+		return M_IGNORE;
 
-    if(js_online(m))
-	mod_offline_out_available(m);
+	if (js_online(m))
+		mod_offline_out_available(m);
 
-    return M_PASS;
+	return M_PASS;
 }
 
 /* sets up the per-session listeners */
-mreturn mod_offline_session(mapi m, void *arg){
-    log_debug("session init");
+mreturn mod_offline_session(mapi m, void *arg)
+{
+	log_debug("session init");
 
-    js_mapi_session(es_OUT, m->s, mod_offline_out, NULL);
+	js_mapi_session(es_OUT, m->s, mod_offline_out, NULL);
 
-    return M_PASS;
+	return M_PASS;
 }
 
-JSM_FUNC void mod_offline(jsmi si){
-    log_debug("mod_offline init");
-    js_mapi_register(si,e_OFFLINE, mod_offline_handler, NULL);
-    js_mapi_register(si,e_SESSION, mod_offline_session, NULL);
+JSM_FUNC void mod_offline(jsmi si)
+{
+	log_debug("mod_offline init");
+	js_mapi_register(si, e_OFFLINE, mod_offline_handler, NULL);
+	js_mapi_register(si, e_SESSION, mod_offline_session, NULL);
 }

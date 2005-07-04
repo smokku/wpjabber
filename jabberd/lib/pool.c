@@ -50,13 +50,15 @@
 int pool__total = 0;
 int pool__ltotal = 0;
 HASHTABLE pool__disturbed = NULL;
-void *_pool__malloc(size_t size){
-    pool__total++;
-    return malloc(size);
+void *_pool__malloc(size_t size)
+{
+	pool__total++;
+	return malloc(size);
 }
-void _pool__free(void *block){
-    pool__total--;
-    free(block);
+void _pool__free(void *block)
+{
+	pool__total--;
+	free(block);
 }
 #else
 #define _pool__malloc malloc
@@ -65,311 +67,350 @@ void _pool__free(void *block){
 
 
 /* make an empty pool */
-pool _pool_new(char *zone){
-    pool p;
-    while((p = _pool__malloc(sizeof(_pool))) == NULL) sleep(1);
-    p->cleanup = NULL;
-    p->cleanup_end = NULL;
-    p->heap = NULL;
-    p->size = 0;
+pool _pool_new(char *zone)
+{
+	pool p;
+	while ((p = _pool__malloc(sizeof(_pool))) == NULL)
+		sleep(1);
+	p->cleanup = NULL;
+	p->cleanup_end = NULL;
+	p->heap = NULL;
+	p->size = 0;
 
 #ifdef POOL_DEBUG
-    p->lsize = -1;
-    p->zone[0] = '\0';
-    strcat(p->zone,zone);
-    sprintf(p->name,"%X",p);
+	p->lsize = -1;
+	p->zone[0] = '\0';
+	strcat(p->zone, zone);
+	sprintf(p->name, "%X", p);
 
-    if(pool__disturbed == NULL){
-	pool__disturbed = 1; /* reentrancy flag! */
-	pool__disturbed = ghash_create(POOL_DEBUG,(KEYHASHFUNC)str_hash_code,(KEYCOMPAREFUNC)j_strcmp);
-    }
-    if(pool__disturbed != 1)
-	ghash_put(pool__disturbed,p->name,p);
+	if (pool__disturbed == NULL) {
+		pool__disturbed = 1;	/* reentrancy flag! */
+		pool__disturbed =
+		    ghash_create(POOL_DEBUG, (KEYHASHFUNC) str_hash_code,
+				 (KEYCOMPAREFUNC) j_strcmp);
+	}
+	if (pool__disturbed != 1)
+		ghash_put(pool__disturbed, p->name, p);
 #endif
 
-    return p;
+	return p;
 }
 
 /* free a heap */
-void _pool_heap_free(void *arg){
-    struct pheap *h = (struct pheap *)arg;
+void _pool_heap_free(void *arg)
+{
+	struct pheap *h = (struct pheap *) arg;
 
 #ifndef FAST_POOL
-    _pool__free(h->block);
+	_pool__free(h->block);
 #endif
-    _pool__free(h);
+	_pool__free(h);
 }
 
 /* mem should always be freed last */
-void _pool_cleanup_append(pool p, struct pfree *pf){
-  //	struct pfree *cur;
+void _pool_cleanup_append(pool p, struct pfree *pf)
+{
+	//    struct pfree *cur;
 
-    if(p->cleanup == NULL){
-	p->cleanup = pf;
+	if (p->cleanup == NULL) {
+		p->cleanup = pf;
 		p->cleanup_end = pf;
-	return;
-    }
+		return;
+	}
 
-    /* fast forward to end of list */
-	//	for(cur = p->cleanup; cur->next != NULL; cur = cur->next);
-	//	cur->next = pf;
+	/* fast forward to end of list */
+	//      for(cur = p->cleanup; cur->next != NULL; cur = cur->next);
+	//      cur->next = pf;
 	p->cleanup_end->next = pf;
 	p->cleanup_end = pf;
 }
 
 /* create a cleanup tracker */
-struct pfree *_pool_free(pool p, pool_cleaner f, void *arg){
-    struct pfree *ret;
+struct pfree *_pool_free(pool p, pool_cleaner f, void *arg)
+{
+	struct pfree *ret;
 
-    /* make the storage for the tracker */
-    while((ret = _pool__malloc(sizeof(struct pfree))) == NULL) sleep(1);
-    ret->f = f;
-    ret->arg = arg;
-    ret->next = NULL;
-    return ret;
+	/* make the storage for the tracker */
+	while ((ret = _pool__malloc(sizeof(struct pfree))) == NULL)
+		sleep(1);
+	ret->f = f;
+	ret->arg = arg;
+	ret->next = NULL;
+	return ret;
 }
 
 #ifdef FAST_POOL
-struct pfree *_pool_free_fast(struct pfree *ret, pool_cleaner f, void *arg){
-    ret->f = f;
-    ret->arg = arg;
-    ret->next = NULL;
-    ret->heap = arg;
-    return ret;
+struct pfree *_pool_free_fast(struct pfree *ret, pool_cleaner f, void *arg)
+{
+	ret->f = f;
+	ret->arg = arg;
+	ret->next = NULL;
+	ret->heap = arg;
+	return ret;
 }
 #endif
 
 /* create a heap and make sure it get's cleaned up */
-struct pheap *_pool_heap(pool p, int size){
-    struct pheap *ret;
-    struct pfree *clean;
+struct pheap *_pool_heap(pool p, int size)
+{
+	struct pheap *ret;
+	struct pfree *clean;
 
 
 #ifdef FAST_POOL
-    while((ret = _pool__malloc(sizeof(struct pheap)+
-			       size+
-			       sizeof(struct pfree))) == NULL) sleep(1);
-    ret->block = (void*) ((unsigned char*)ret + sizeof(struct pheap));
+	while ((ret = _pool__malloc(sizeof(struct pheap) +
+				    size + sizeof(struct pfree))) == NULL)
+		sleep(1);
+	ret->block =
+	    (void *) ((unsigned char *) ret + sizeof(struct pheap));
 #else
-    /* make the return heap */
-    while((ret = _pool__malloc(sizeof(struct pheap))) == NULL) sleep(1);
-    while((ret->block = _pool__malloc(size)) == NULL) sleep(1);
+	/* make the return heap */
+	while ((ret = _pool__malloc(sizeof(struct pheap))) == NULL)
+		sleep(1);
+	while ((ret->block = _pool__malloc(size)) == NULL)
+		sleep(1);
 #endif
-    ret->size = size;
-    p->size += size;
-    ret->used = 0;
+	ret->size = size;
+	p->size += size;
+	ret->used = 0;
 
-    /* append to the cleanup list */
+	/* append to the cleanup list */
 #ifdef FAST_POOL
-    clean = _pool_free_fast(
-							(struct pfree *)((unsigned char *)ret->block+size),
-			    _pool_heap_free, (void *)ret);
+	clean = _pool_free_fast((struct pfree *) ((unsigned char *) ret->
+						  block + size),
+				_pool_heap_free, (void *) ret);
 #else
-    clean = _pool_free(p, _pool_heap_free, (void *)ret);
+	clean = _pool_free(p, _pool_heap_free, (void *) ret);
 #endif
-    clean->heap = ret; /* for future use in finding used mem for pstrdup */
-    _pool_cleanup_append(p, clean);
+	clean->heap = ret;	/* for future use in finding used mem for pstrdup */
+	_pool_cleanup_append(p, clean);
 
-    return ret;
+	return ret;
 }
 
-pool _pool_new_heap(int size, char *zone){
-    pool p;
+pool _pool_new_heap(int size, char *zone)
+{
+	pool p;
 #ifdef FAST_POOL
-    struct pheap *ret;
+	struct pheap *ret;
 
-    while((p = _pool__malloc(sizeof(_pool)+
-			     sizeof(struct pheap)+
-			     size)) == NULL) sleep(1);
-    p->cleanup = NULL;
-    p->cleanup_end = NULL;
-    p->size = 0;
+	while ((p = _pool__malloc(sizeof(_pool) +
+				  sizeof(struct pheap) + size)) == NULL)
+		sleep(1);
+	p->cleanup = NULL;
+	p->cleanup_end = NULL;
+	p->size = 0;
 
 #ifdef POOL_DEBUG
-    p->lsize = -1;
-    p->zone[0] = '\0';
-    strcat(p->zone,zone);
-    sprintf(p->name,"%X",p);
+	p->lsize = -1;
+	p->zone[0] = '\0';
+	strcat(p->zone, zone);
+	sprintf(p->name, "%X", p);
 
-    if(pool__disturbed == NULL){
-	pool__disturbed = 1; /* reentrancy flag! */
-	pool__disturbed = ghash_create(POOL_DEBUG,(KEYHASHFUNC)str_hash_code,(KEYCOMPAREFUNC)j_strcmp);
-      }
-    if(pool__disturbed != 1)
-      ghash_put(pool__disturbed,p->name,p);
+	if (pool__disturbed == NULL) {
+		pool__disturbed = 1;	/* reentrancy flag! */
+		pool__disturbed =
+		    ghash_create(POOL_DEBUG, (KEYHASHFUNC) str_hash_code,
+				 (KEYCOMPAREFUNC) j_strcmp);
+	}
+	if (pool__disturbed != 1)
+		ghash_put(pool__disturbed, p->name, p);
 #endif
 
-    ret = (void *) ((unsigned char*)p + sizeof(_pool));
-    ret->block = (void*) ((unsigned char*)ret + sizeof(struct pheap));
+	ret = (void *) ((unsigned char *) p + sizeof(_pool));
+	ret->block =
+	    (void *) ((unsigned char *) ret + sizeof(struct pheap));
 
-    ret->size = size;
-    p->size += size;
-    ret->used = 0;
+	ret->size = size;
+	p->size += size;
+	ret->used = 0;
 
-    p->heap = ret;
+	p->heap = ret;
 #else
-    p = _pool_new(zone);
-    p->heap = _pool_heap(p,size);
+	p = _pool_new(zone);
+	p->heap = _pool_heap(p, size);
 #endif
 
-    return p;
+	return p;
 }
 
-void *pmalloc(pool p, int size){
-    void *block;
+void *pmalloc(pool p, int size)
+{
+	void *block;
 
-    if(p == NULL){
-	fprintf(stderr,"Memory Leak! [pmalloc received NULL pool, unable to track allocation, exiting]\n");
-	abort();
-    }
+	if (p == NULL) {
+		fprintf(stderr,
+			"Memory Leak! [pmalloc received NULL pool, unable to track allocation, exiting]\n");
+		abort();
+	}
 
-    /* if there is no heap for this pool or it's a big request, just raw, I like how we clean this :) */
-    if(p->heap == NULL || size > p->heap->size){
+	/* if there is no heap for this pool or it's a big request, just raw, I like how we clean this :) */
+	if (p->heap == NULL || size > p->heap->size) {
 #ifdef FAST_POOL
-      while((block = _pool__malloc(size+
-				   sizeof(struct pfree))) == NULL) sleep(1);
-      p->size += size;
-      _pool_cleanup_append(p,
-						   _pool_free_fast(
-										   (struct pfree *)((unsigned char *)block+size),
-										   _pool__free, block));
+		while ((block = _pool__malloc(size +
+					      sizeof(struct pfree))) ==
+		       NULL)
+			sleep(1);
+		p->size += size;
+		_pool_cleanup_append(p,
+				     _pool_free_fast((struct pfree
+						      *) ((unsigned char *)
+							  block + size),
+						     _pool__free, block));
 #else
-      while((block = _pool__malloc(size)) == NULL) sleep(1);
-      p->size += size;
-      _pool_cleanup_append(p, _pool_free(p, _pool__free, block));
+		while ((block = _pool__malloc(size)) == NULL)
+			sleep(1);
+		p->size += size;
+		_pool_cleanup_append(p, _pool_free(p, _pool__free, block));
 #endif
-      return block;
-    }
+		return block;
+	}
 
-    /* we have to preserve boundaries, long story :) */
-    if(size >= 4)
-	while(p->heap->used&7) p->heap->used++;
+	/* we have to preserve boundaries, long story :) */
+	if (size >= 4)
+		while (p->heap->used & 7)
+			p->heap->used++;
 
-    /* if we don't fit in the old heap, replace it */
-    if(size > (p->heap->size - p->heap->used))
-	p->heap = _pool_heap(p, p->heap->size);
+	/* if we don't fit in the old heap, replace it */
+	if (size > (p->heap->size - p->heap->used))
+		p->heap = _pool_heap(p, p->heap->size);
 
-    /* the current heap has room */
-    block = (void *) ((unsigned char *)p->heap->block + p->heap->used);
-    p->heap->used += size;
-    return block;
+	/* the current heap has room */
+	block =
+	    (void *) ((unsigned char *) p->heap->block + p->heap->used);
+	p->heap->used += size;
+	return block;
 }
 
-void *pmalloc_x(pool p, int size, char c){
-   void* result = pmalloc(p, size);
-   if (result != NULL)
-	   memset(result, c, size);
-   return result;
+void *pmalloc_x(pool p, int size, char c)
+{
+	void *result = pmalloc(p, size);
+	if (result != NULL)
+		memset(result, c, size);
+	return result;
 }
 
 /* easy safety utility (for creating blank mem for structs, etc) */
-void *pmalloco(pool p, int size){
-    void *block = pmalloc(p, size);
-    memset(block, 0, size);
-    return block;
+void *pmalloco(pool p, int size)
+{
+	void *block = pmalloc(p, size);
+	memset(block, 0, size);
+	return block;
 }
 
 /* XXX efficient: move this to const char * and then loop throug the existing heaps to see if src is within a block in this pool */
-char *pstrdup(pool p, const char *src){
-    char *ret;
-    int len;
+char *pstrdup(pool p, const char *src)
+{
+	char *ret;
+	int len;
 
-    if(src == NULL)
-	return NULL;
+	if (src == NULL)
+		return NULL;
 
-    len = strlen(src)+1;
-    ret = pmalloc(p,len);
-    memcpy(ret,src,len);
+	len = strlen(src) + 1;
+	ret = pmalloc(p, len);
+	memcpy(ret, src, len);
 
-    return ret;
+	return ret;
 }
 
 /* when move above, this one would actually return a new block */
-char *pstrdupx(pool p, const char *src){
-    return pstrdup(p, src);
+char *pstrdupx(pool p, const char *src)
+{
+	return pstrdup(p, src);
 }
 
-int pool_size(pool p){
-    if(p == NULL) return 0;
+int pool_size(pool p)
+{
+	if (p == NULL)
+		return 0;
 
-    return p->size;
+	return p->size;
 }
 
-void pool_free(pool p){
-    struct pfree *cur, *stub;
+void pool_free(pool p)
+{
+	struct pfree *cur, *stub;
 
-    if(p == NULL) return;
+	if (p == NULL)
+		return;
 
-    cur = p->cleanup;
+	cur = p->cleanup;
 
-    while(cur != NULL){
-      stub = cur->next;
+	while (cur != NULL) {
+		stub = cur->next;
 
 #ifdef FAST_POOL
-      /* if pfree in memory block */
-      if (cur->heap){
-	/* free */
-	(*cur->f)(cur->arg);
-      }
-      else{
-	(*cur->f)(cur->arg);
-	_pool__free(cur);
-      }
+		/* if pfree in memory block */
+		if (cur->heap) {
+			/* free */
+			(*cur->f) (cur->arg);
+		} else {
+			(*cur->f) (cur->arg);
+			_pool__free(cur);
+		}
 #else
-      (*cur->f)(cur->arg);
-      _pool__free(cur);
+		(*cur->f) (cur->arg);
+		_pool__free(cur);
 #endif
-      cur = stub;
-    }
+		cur = stub;
+	}
 
 #ifdef POOL_DEBUG
-    ghash_remove(pool__disturbed,p->name);
+	ghash_remove(pool__disturbed, p->name);
 #endif
 
-    _pool__free(p);
+	_pool__free(p);
 
 }
 
 /* public cleanup utils, insert in a way that they are run FIFO, before mem frees */
-void pool_cleanup(pool p, pool_cleaner f, void *arg){
-    struct pfree *clean;
+void pool_cleanup(pool p, pool_cleaner f, void *arg)
+{
+	struct pfree *clean;
 
-    clean = _pool_free(p, f, arg);
-    clean->heap = NULL;
-    clean->next = p->cleanup;
-    p->cleanup = clean;
+	clean = _pool_free(p, f, arg);
+	clean->heap = NULL;
+	clean->next = p->cleanup;
+	p->cleanup = clean;
 
-	if (p->cleanup_end == NULL){
-	  p->cleanup_end = clean->next;
-	  if (p->cleanup_end == NULL)
-		p->cleanup_end = clean;
+	if (p->cleanup_end == NULL) {
+		p->cleanup_end = clean->next;
+		if (p->cleanup_end == NULL)
+			p->cleanup_end = clean;
 	}
 }
 
 #ifdef POOL_DEBUG
 void debug_log(char *zone, const char *msgfmt, ...);
-int _pool_stat(void *arg, const void *key, void *data){
-    pool p = (pool)data;
+int _pool_stat(void *arg, const void *key, void *data)
+{
+	pool p = (pool) data;
 
-    if(p->lsize == -1)
-	debug_log("leak","%s: %X is a new pool",p->zone,p->name);
-    else if(p->size > p->lsize)
-	debug_log("leak","%s: %X grew %d",p->zone,p->name, p->size - p->lsize);
-    else if((int)arg)
-	debug_log("leak","%s: %X exists %d",p->zone,p->name, p->size);
-    p->lsize = p->size;
-    return 1;
+	if (p->lsize == -1)
+		debug_log("leak", "%s: %X is a new pool", p->zone,
+			  p->name);
+	else if (p->size > p->lsize)
+		debug_log("leak", "%s: %X grew %d", p->zone, p->name,
+			  p->size - p->lsize);
+	else if ((int) arg)
+		debug_log("leak", "%s: %X exists %d", p->zone, p->name,
+			  p->size);
+	p->lsize = p->size;
+	return 1;
 }
 
-void pool_stat(int full){
-    ghash_walk(pool__disturbed,_pool_stat,(void *)full);
-    if(pool__total != pool__ltotal)
-	debug_log("leak","%d\ttotal missed mallocs",pool__total);
-    pool__ltotal = pool__total;
-    return;
+void pool_stat(int full)
+{
+	ghash_walk(pool__disturbed, _pool_stat, (void *) full);
+	if (pool__total != pool__ltotal)
+		debug_log("leak", "%d\ttotal missed mallocs", pool__total);
+	pool__ltotal = pool__total;
+	return;
 }
 #else
-void pool_stat(int full){
-    return;
+void pool_stat(int full)
+{
+	return;
 }
 #endif

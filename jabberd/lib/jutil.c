@@ -54,39 +54,41 @@
  * @param status optional status (CDATA for the <status/> element, NULL for now <status/> element)
  * @return the xmlnode containing the created presence stanza
  */
-xmlnode jutil_presnew(int type, char *to, char *status){
-    xmlnode pres;
+xmlnode jutil_presnew(int type, char *to, char *status)
+{
+	xmlnode pres;
 
-    pres = xmlnode_new_tag("presence");
-    switch(type){
-    case JPACKET__SUBSCRIBE:
-	xmlnode_put_attrib(pres,"type","subscribe");
-	break;
-    case JPACKET__UNSUBSCRIBE:
-	xmlnode_put_attrib(pres,"type","unsubscribe");
-	break;
-    case JPACKET__SUBSCRIBED:
-	xmlnode_put_attrib(pres,"type","subscribed");
-	break;
-    case JPACKET__UNSUBSCRIBED:
-	xmlnode_put_attrib(pres,"type","unsubscribed");
-	break;
-    case JPACKET__PROBE:
-	xmlnode_put_attrib(pres,"type","probe");
-	break;
-    case JPACKET__UNAVAILABLE:
-	xmlnode_put_attrib(pres,"type","unavailable");
-	break;
-    case JPACKET__INVISIBLE:
-	xmlnode_put_attrib(pres,"type","invisible");
-	break;
-    }
-    if(to != NULL)
-	xmlnode_put_attrib(pres,"to",to);
-    if(status != NULL)
-	xmlnode_insert_cdata(xmlnode_insert_tag(pres,"status"),status,strlen(status));
+	pres = xmlnode_new_tag("presence");
+	switch (type) {
+	case JPACKET__SUBSCRIBE:
+		xmlnode_put_attrib(pres, "type", "subscribe");
+		break;
+	case JPACKET__UNSUBSCRIBE:
+		xmlnode_put_attrib(pres, "type", "unsubscribe");
+		break;
+	case JPACKET__SUBSCRIBED:
+		xmlnode_put_attrib(pres, "type", "subscribed");
+		break;
+	case JPACKET__UNSUBSCRIBED:
+		xmlnode_put_attrib(pres, "type", "unsubscribed");
+		break;
+	case JPACKET__PROBE:
+		xmlnode_put_attrib(pres, "type", "probe");
+		break;
+	case JPACKET__UNAVAILABLE:
+		xmlnode_put_attrib(pres, "type", "unavailable");
+		break;
+	case JPACKET__INVISIBLE:
+		xmlnode_put_attrib(pres, "type", "invisible");
+		break;
+	}
+	if (to != NULL)
+		xmlnode_put_attrib(pres, "to", to);
+	if (status != NULL)
+		xmlnode_insert_cdata(xmlnode_insert_tag(pres, "status"),
+				     status, strlen(status));
 
-    return pres;
+	return pres;
 }
 
 /**
@@ -100,27 +102,28 @@ xmlnode jutil_presnew(int type, char *to, char *status){
  * @param ns the namespace of the <query/> element
  * @return the created xmlnode
  */
-xmlnode jutil_iqnew(int type, char *ns){
-    xmlnode iq;
+xmlnode jutil_iqnew(int type, char *ns)
+{
+	xmlnode iq;
 
-    iq = xmlnode_new_tag("iq");
-    switch(type){
-    case JPACKET__GET:
-	xmlnode_put_attrib(iq,"type","get");
-	break;
-    case JPACKET__SET:
-	xmlnode_put_attrib(iq,"type","set");
-	break;
-    case JPACKET__RESULT:
-	xmlnode_put_attrib(iq,"type","result");
-	break;
-    case JPACKET__ERROR:
-	xmlnode_put_attrib(iq,"type","error");
-	break;
-    }
-    xmlnode_put_attrib(xmlnode_insert_tag(iq,"query"),"xmlns",ns);
+	iq = xmlnode_new_tag("iq");
+	switch (type) {
+	case JPACKET__GET:
+		xmlnode_put_attrib(iq, "type", "get");
+		break;
+	case JPACKET__SET:
+		xmlnode_put_attrib(iq, "type", "set");
+		break;
+	case JPACKET__RESULT:
+		xmlnode_put_attrib(iq, "type", "result");
+		break;
+	case JPACKET__ERROR:
+		xmlnode_put_attrib(iq, "type", "error");
+		break;
+	}
+	xmlnode_put_attrib(xmlnode_insert_tag(iq, "query"), "xmlns", ns);
 
-    return iq;
+	return iq;
 }
 
 /**
@@ -132,28 +135,31 @@ xmlnode jutil_iqnew(int type, char *ns){
  * @param body the body of the message
  * @return the xmlnode containing the new message stanza
  */
-xmlnode jutil_msgnew(char *type, char *to, char *subj, char *body){
-    xmlnode msg;
+xmlnode jutil_msgnew(char *type, char *to, char *subj, char *body)
+{
+	xmlnode msg;
 
-    msg = xmlnode_new_tag("message");
+	msg = xmlnode_new_tag("message");
 
-    if (type != NULL){
-	xmlnode_put_attrib (msg, "type", type);
-    }
+	if (type != NULL) {
+		xmlnode_put_attrib(msg, "type", type);
+	}
 
-    if (to != NULL){
-	xmlnode_put_attrib (msg, "to", to);
-    }
+	if (to != NULL) {
+		xmlnode_put_attrib(msg, "to", to);
+	}
 
-    if (subj != NULL){
-	xmlnode_insert_cdata(xmlnode_insert_tag(msg, "subject"), subj, strlen(subj));
-    }
+	if (subj != NULL) {
+		xmlnode_insert_cdata(xmlnode_insert_tag(msg, "subject"),
+				     subj, strlen(subj));
+	}
 
-    if (body != NULL){
-	xmlnode_insert_cdata(xmlnode_insert_tag(msg, "body"), body, strlen(body));
-    }
+	if (body != NULL) {
+		xmlnode_insert_cdata(xmlnode_insert_tag(msg, "body"), body,
+				     strlen(body));
+	}
 
-    return msg;
+	return msg;
 }
 
 /**
@@ -163,16 +169,18 @@ xmlnode jutil_msgnew(char *type, char *to, char *subj, char *body){
  * @param server the domain of the server
  * @return the xmlnode containing the root element of the stream
  */
-xmlnode jutil_header(char* xmlns, char* server){
-     xmlnode result;
-     if ((xmlns == NULL)||(server == NULL))
-	  return NULL;
-     result = xmlnode_new_tag("stream:stream");
-     xmlnode_put_attrib(result, "xmlns:stream", "http://etherx.jabber.org/streams");
-     xmlnode_put_attrib(result, "xmlns", xmlns);
-     xmlnode_put_attrib(result, "to", server);
+xmlnode jutil_header(char *xmlns, char *server)
+{
+	xmlnode result;
+	if ((xmlns == NULL) || (server == NULL))
+		return NULL;
+	result = xmlnode_new_tag("stream:stream");
+	xmlnode_put_attrib(result, "xmlns:stream",
+			   "http://etherx.jabber.org/streams");
+	xmlnode_put_attrib(result, "xmlns", xmlns);
+	xmlnode_put_attrib(result, "to", server);
 
-     return result;
+	return result;
 }
 
 /**
@@ -181,27 +189,28 @@ xmlnode jutil_header(char* xmlns, char* server){
  * @param xmlnode the xmlnode containing the presence packet
  * @return the presence priority, -129 for unavailable presences and errors
  */
-int jutil_priority(xmlnode x){
-    char *str;
-    int p;
+int jutil_priority(xmlnode x)
+{
+	char *str;
+	int p;
 
-    if(x == NULL)
-	return -129;
+	if (x == NULL)
+		return -129;
 
-    if(xmlnode_get_attrib(x,"type") != NULL)
-	return -129;
+	if (xmlnode_get_attrib(x, "type") != NULL)
+		return -129;
 
-    x = xmlnode_get_tag(x,"priority");
-    if(x == NULL)
-	return 0;
+	x = xmlnode_get_tag(x, "priority");
+	if (x == NULL)
+		return 0;
 
-    str = xmlnode_get_data((x));
-    if(str == NULL)
-	return 0;
+	str = xmlnode_get_data((x));
+	if (str == NULL)
+		return 0;
 
-    p = atoi(str);
-    /* xmpp-im section 2.2.2.3 */
-    return p<-128 ? -128 : p>127 ? 127 : p;
+	p = atoi(str);
+	/* xmpp-im section 2.2.2.3 */
+	return p < -128 ? -128 : p > 127 ? 127 : p;
 }
 
 /**
@@ -209,13 +218,14 @@ int jutil_priority(xmlnode x){
  *
  * @param x the xmlnode where sender and receiver should be exchanged
  */
-void jutil_tofrom(xmlnode x){
-    char *to, *from;
+void jutil_tofrom(xmlnode x)
+{
+	char *to, *from;
 
-    to = xmlnode_get_attrib(x,"to");
-    from = xmlnode_get_attrib(x,"from");
-    xmlnode_put_attrib(x,"from",to);
-    xmlnode_put_attrib(x,"to",from);
+	to = xmlnode_get_attrib(x, "to");
+	from = xmlnode_get_attrib(x, "from");
+	xmlnode_put_attrib(x, "from", to);
+	xmlnode_put_attrib(x, "to", from);
 }
 
 /**
@@ -224,18 +234,20 @@ void jutil_tofrom(xmlnode x){
  * @param x the xmlnode that should become the result for itself
  * @return the result xmlnode (same as given as parameter x)
  */
-xmlnode jutil_iqresult(xmlnode x){
-    xmlnode cur;
+xmlnode jutil_iqresult(xmlnode x)
+{
+	xmlnode cur;
 
-    jutil_tofrom(x);
+	jutil_tofrom(x);
 
-    xmlnode_put_attrib(x,"type","result");
+	xmlnode_put_attrib(x, "type", "result");
 
-    /* hide all children of the iq, they go back empty */
-    for(cur = xmlnode_get_firstchild(x); cur != NULL; cur = xmlnode_get_nextsibling(cur))
-	xmlnode_hide(cur);
+	/* hide all children of the iq, they go back empty */
+	for (cur = xmlnode_get_firstchild(x); cur != NULL;
+	     cur = xmlnode_get_nextsibling(cur))
+		xmlnode_hide(cur);
 
-    return x;
+	return x;
 }
 
 /**
@@ -245,49 +257,55 @@ xmlnode jutil_iqresult(xmlnode x){
  *
  * @return pointer to a static (!) buffer containing the timestamp (or NULL on failure)
  */
-char *jutil_timestamp(void){
-    time_t t;
-    struct tm new_time;
-    static char timestamp[18];
-    int ret;
+char *jutil_timestamp(void)
+{
+	time_t t;
+	struct tm new_time;
+	static char timestamp[18];
+	int ret;
 
-    t = time(NULL);
+	t = time(NULL);
 
-    if(t == (time_t)-1)
-	return NULL;
+	if (t == (time_t) - 1)
+		return NULL;
 
-    gmtime_r(&t,&new_time);
+	gmtime_r(&t, &new_time);
 
-    ret = snprintf(timestamp, 18, "%d%02d%02dT%02d:%02d:%02d", 1900+new_time.tm_year,
-		   new_time.tm_mon+1, new_time.tm_mday, new_time.tm_hour,
-		   new_time.tm_min, new_time.tm_sec);
+	ret =
+	    snprintf(timestamp, 18, "%d%02d%02dT%02d:%02d:%02d",
+		     1900 + new_time.tm_year, new_time.tm_mon + 1,
+		     new_time.tm_mday, new_time.tm_hour, new_time.tm_min,
+		     new_time.tm_sec);
 
-    if(ret == -1)
-	return NULL;
+	if (ret == -1)
+		return NULL;
 
-    return timestamp;
+	return timestamp;
 }
 
-char *jutil_timestamplocal(void){
-    time_t t;
-    struct tm new_time;
-    static char timestamp[18];
-    int ret;
+char *jutil_timestamplocal(void)
+{
+	time_t t;
+	struct tm new_time;
+	static char timestamp[18];
+	int ret;
 
-    t = time(NULL);
+	t = time(NULL);
 
-    if(t == (time_t)-1)
-	return NULL;
-    localtime_r(&t,&new_time);
+	if (t == (time_t) - 1)
+		return NULL;
+	localtime_r(&t, &new_time);
 
-    ret = snprintf(timestamp, 18, "%d%02d%02dT%02d:%02d:%02d", 1900+new_time.tm_year,
-		   new_time.tm_mon+1, new_time.tm_mday, new_time.tm_hour,
-		   new_time.tm_min, new_time.tm_sec);
+	ret =
+	    snprintf(timestamp, 18, "%d%02d%02dT%02d:%02d:%02d",
+		     1900 + new_time.tm_year, new_time.tm_mon + 1,
+		     new_time.tm_mday, new_time.tm_hour, new_time.tm_min,
+		     new_time.tm_sec);
 
-    if(ret == -1)
-	return NULL;
+	if (ret == -1)
+		return NULL;
 
-    return timestamp;
+	return timestamp;
 }
 
 /**
@@ -302,86 +320,87 @@ char *jutil_timestamplocal(void){
  * @param old the terror struct that should be converted
  * @param mapped pointer to the xterror struct that should be filled with the converted error
  */
-void jutil_error_map(terror old, xterror *mapped){
-    mapped->code = old.code;
-    if (old.msg == NULL)
-	mapped->msg[0] = 0;
-    else
-	strncpy(mapped->msg, old.msg, sizeof(mapped->msg));
+void jutil_error_map(terror old, xterror * mapped)
+{
+	mapped->code = old.code;
+	if (old.msg == NULL)
+		mapped->msg[0] = 0;
+	else
+		strncpy(mapped->msg, old.msg, sizeof(mapped->msg));
 
-    switch (old.code){
+	switch (old.code) {
 	case 302:
-	    strcpy(mapped->type, "modify");
-	    strcpy(mapped->condition, "redirect");
-	    break;
+		strcpy(mapped->type, "modify");
+		strcpy(mapped->condition, "redirect");
+		break;
 	case 400:
-	    strcpy(mapped->type, "modify");
-	    strcpy(mapped->condition, "bad-request");
-	    break;
+		strcpy(mapped->type, "modify");
+		strcpy(mapped->condition, "bad-request");
+		break;
 	case 401:
-	    strcpy(mapped->type, "auth");
-	    strcpy(mapped->condition, "not-authorized");
-	    break;
+		strcpy(mapped->type, "auth");
+		strcpy(mapped->condition, "not-authorized");
+		break;
 	case 402:
-	    strcpy(mapped->type, "auth");
-	    strcpy(mapped->condition, "payment-required");
-	    break;
+		strcpy(mapped->type, "auth");
+		strcpy(mapped->condition, "payment-required");
+		break;
 	case 403:
-	    strcpy(mapped->type, "auth");
-	    strcpy(mapped->condition, "forbidden");
-	    break;
+		strcpy(mapped->type, "auth");
+		strcpy(mapped->condition, "forbidden");
+		break;
 	case 404:
-	    strcpy(mapped->type, "cancel");
-	    strcpy(mapped->condition, "item-not-found");
-	    break;
+		strcpy(mapped->type, "cancel");
+		strcpy(mapped->condition, "item-not-found");
+		break;
 	case 405:
-	    strcpy(mapped->type, "cancel");
-	    strcpy(mapped->condition, "not-allowed");
-	    break;
+		strcpy(mapped->type, "cancel");
+		strcpy(mapped->condition, "not-allowed");
+		break;
 	case 406:
-	    strcpy(mapped->type, "modify");
-	    strcpy(mapped->condition, "not-acceptable");
-	    break;
+		strcpy(mapped->type, "modify");
+		strcpy(mapped->condition, "not-acceptable");
+		break;
 	case 407:
-	    strcpy(mapped->type, "auth");
-	    strcpy(mapped->condition, "registration-requited");
-	    break;
+		strcpy(mapped->type, "auth");
+		strcpy(mapped->condition, "registration-requited");
+		break;
 	case 408:
-	    strcpy(mapped->type, "wait");
-	    strcpy(mapped->condition, "remote-server-timeout");
-	    break;
+		strcpy(mapped->type, "wait");
+		strcpy(mapped->condition, "remote-server-timeout");
+		break;
 	case 409:
-	    strcpy(mapped->type, "cancel");
-	    strcpy(mapped->condition, "conflict");
-	    break;
+		strcpy(mapped->type, "cancel");
+		strcpy(mapped->condition, "conflict");
+		break;
 	case 500:
-	    strcpy(mapped->type, "wait");
-	    strcpy(mapped->condition, "internal-server-error");
-	    break;
+		strcpy(mapped->type, "wait");
+		strcpy(mapped->condition, "internal-server-error");
+		break;
 	case 501:
-	    strcpy(mapped->type, "cancel");
-	    strcpy(mapped->condition, "feature-not-implemented");
-	    break;
+		strcpy(mapped->type, "cancel");
+		strcpy(mapped->condition, "feature-not-implemented");
+		break;
 	case 502:
-	    strcpy(mapped->type, "wait");
-	    strcpy(mapped->condition, "service-unavailable");
-	    break;
+		strcpy(mapped->type, "wait");
+		strcpy(mapped->condition, "service-unavailable");
+		break;
 	case 503:
-	    strcpy(mapped->type, "cancel");
-	    strcpy(mapped->condition, "service-unavailable");
-	    break;
+		strcpy(mapped->type, "cancel");
+		strcpy(mapped->condition, "service-unavailable");
+		break;
 	case 504:
-	    strcpy(mapped->type, "wait");
-	    strcpy(mapped->condition, "remote-server-timeout");
-	    break;
+		strcpy(mapped->type, "wait");
+		strcpy(mapped->condition, "remote-server-timeout");
+		break;
 	case 510:
-	    strcpy(mapped->type, "cancel");
-	    strcpy(mapped->condition, "service-unavailable");
-	    break;
+		strcpy(mapped->type, "cancel");
+		strcpy(mapped->condition, "service-unavailable");
+		break;
 	default:
-	    strcpy(mapped->type, "wait");
-	    strcpy(mapped->condition, "undefined-condition");
-    }
+		strcpy(mapped->type, "wait");
+		strcpy(mapped->condition, "undefined-condition");
+	}
 }
 
 /**
@@ -390,27 +409,29 @@ void jutil_error_map(terror old, xterror *mapped){
  * @param x the xmlnode that should become an stanza error message
  * @param E the structure that holds the error information
  */
-void jutil_error_xmpp(xmlnode x, xterror E){
-    xmlnode err;
-    char code[4];
+void jutil_error_xmpp(xmlnode x, xterror E)
+{
+	xmlnode err;
+	char code[4];
 
-    xmlnode_put_attrib(x, "type", "error");
-    err = xmlnode_insert_tag(x, "error");
+	xmlnode_put_attrib(x, "type", "error");
+	err = xmlnode_insert_tag(x, "error");
 
-    snprintf(code, sizeof(code), "%d", E.code);
-    xmlnode_put_attrib(err, "code", code);
-    if (E.type != NULL)
-	xmlnode_put_attrib(err, "type", E.type);
-    if (E.condition != NULL)
-	xmlnode_put_attrib(xmlnode_insert_tag(err, E.condition), "xmlns", NS_XMPP_STANZAS);
-    if (E.msg != NULL){
-	xmlnode text;
-	text = xmlnode_insert_tag(err, "text");
-	xmlnode_put_attrib(text, "xmlns", NS_XMPP_STANZAS);
-	xmlnode_insert_cdata(text, E.msg, strlen(E.msg));
-    }
+	snprintf(code, sizeof(code), "%d", E.code);
+	xmlnode_put_attrib(err, "code", code);
+	if (E.type != NULL)
+		xmlnode_put_attrib(err, "type", E.type);
+	if (E.condition != NULL)
+		xmlnode_put_attrib(xmlnode_insert_tag(err, E.condition),
+				   "xmlns", NS_XMPP_STANZAS);
+	if (E.msg != NULL) {
+		xmlnode text;
+		text = xmlnode_insert_tag(err, "text");
+		xmlnode_put_attrib(text, "xmlns", NS_XMPP_STANZAS);
+		xmlnode_insert_cdata(text, E.msg, strlen(E.msg));
+	}
 
-    jutil_tofrom(x);
+	jutil_tofrom(x);
 }
 
 /**
@@ -421,10 +442,11 @@ void jutil_error_xmpp(xmlnode x, xterror E){
  * @param x the xmlnode that should become an stanza error message
  * @param E the strucutre that holds the error information
  */
-void jutil_error(xmlnode x, terror E){
-    xterror xE;
-    jutil_error_map(E, &xE);
-    jutil_error_xmpp(x, xE);
+void jutil_error(xmlnode x, terror E)
+{
+	xterror xE;
+	jutil_error_map(E, &xE);
+	jutil_error_xmpp(x, xE);
 }
 
 /**
@@ -436,15 +458,16 @@ void jutil_error(xmlnode x, terror E){
  * @param msg the message where the element should be added
  * @param reason plain text information why the delayed delivery information has been added
  */
-void jutil_delay(xmlnode msg, char *reason){
-    xmlnode delay;
+void jutil_delay(xmlnode msg, char *reason)
+{
+	xmlnode delay;
 
-    delay = xmlnode_insert_tag(msg,"x");
-    xmlnode_put_attrib(delay,"xmlns",NS_DELAY);
-    xmlnode_put_attrib(delay,"from",xmlnode_get_attrib(msg,"to"));
-    xmlnode_put_attrib(delay,"stamp",jutil_timestamp());
-    if(reason != NULL)
-	xmlnode_insert_cdata(delay,reason,strlen(reason));
+	delay = xmlnode_insert_tag(msg, "x");
+	xmlnode_put_attrib(delay, "xmlns", NS_DELAY);
+	xmlnode_put_attrib(delay, "from", xmlnode_get_attrib(msg, "to"));
+	xmlnode_put_attrib(delay, "stamp", jutil_timestamp());
+	if (reason != NULL)
+		xmlnode_insert_cdata(delay, reason, strlen(reason));
 }
 
 #define KEYBUF 100
@@ -471,45 +494,47 @@ void jutil_delay(xmlnode msg, char *reason){
  * @param seed the seed for generating the key, must stay the same for the same user
  * @return the new key when created, the key if the key has been validated, NULL if the key is invalid
  */
-char *jutil_regkey(char *key, char *seed){
-    static char keydb[KEYBUF][41];
-    static char seeddb[KEYBUF][41];
-    static int last = -1;
-    char *str, strint[32];
-    int i;
+char *jutil_regkey(char *key, char *seed)
+{
+	static char keydb[KEYBUF][41];
+	static char seeddb[KEYBUF][41];
+	static int last = -1;
+	char *str, strint[32];
+	int i;
 
-    /* blanket the keydb first time */
-    if(last == -1){
-	last = 0;
-	memset(&keydb,0,KEYBUF*41);
-	memset(&seeddb,0,KEYBUF*41);
-	srand(time(NULL));
-    }
-
-    /* creation phase */
-    if(key == NULL && seed != NULL){
-	/* create a random key hash and store it */
-	sprintf(strint,"%d",rand());
-	strcpy(keydb[last],shahash(strint));
-
-	/* store a hash for the seed associated w/ this key */
-	strcpy(seeddb[last],shahash(seed));
-
-	/* return it all */
-	str = keydb[last];
-	last++;
-	if(last == KEYBUF) last = 0;
-	return str;
-    }
-
-    /* validation phase */
-    str = shahash(seed);
-    for(i=0;i<KEYBUF;i++)
-	if(j_strcmp(keydb[i],key) == 0 && j_strcmp(seeddb[i],str) == 0){
-	    seeddb[i][0] = '\0'; /* invalidate this key */
-	    return keydb[i];
+	/* blanket the keydb first time */
+	if (last == -1) {
+		last = 0;
+		memset(&keydb, 0, KEYBUF * 41);
+		memset(&seeddb, 0, KEYBUF * 41);
+		srand(time(NULL));
 	}
 
-    return NULL;
-}
+	/* creation phase */
+	if (key == NULL && seed != NULL) {
+		/* create a random key hash and store it */
+		sprintf(strint, "%d", rand());
+		strcpy(keydb[last], shahash(strint));
 
+		/* store a hash for the seed associated w/ this key */
+		strcpy(seeddb[last], shahash(seed));
+
+		/* return it all */
+		str = keydb[last];
+		last++;
+		if (last == KEYBUF)
+			last = 0;
+		return str;
+	}
+
+	/* validation phase */
+	str = shahash(seed);
+	for (i = 0; i < KEYBUF; i++)
+		if (j_strcmp(keydb[i], key) == 0
+		    && j_strcmp(seeddb[i], str) == 0) {
+			seeddb[i][0] = '\0';	/* invalidate this key */
+			return keydb[i];
+		}
+
+	return NULL;
+}

@@ -2,45 +2,43 @@
 #include <jabberd.h>
 
 /* s2s instance */
-typedef struct db_struct
-{
-  instance i;
-  HASHTABLE nscache; /* host/ip local resolution cache */
-  HASHTABLE out_connecting; /* where unvalidated in-progress connections are, key is to/from */
-  HASHTABLE out_ok_db; /* hash table of all connected dialback hosts, key is same to/from */
-  HASHTABLE in_id; /* all the incoming connections waiting to be checked, rand id attrib is key */
-  HASHTABLE in_ok_db; /* all the incoming dialback connections that are ok, ID@to/from is key  */
-  SEM_VAR nscache_sem;
-  SEM_VAR out_sem;
-  SEM_VAR in_sem;
+typedef struct db_struct {
+	instance i;
+	HASHTABLE nscache;	/* host/ip local resolution cache */
+	HASHTABLE out_connecting;	/* where unvalidated in-progress connections are, key is to/from */
+	HASHTABLE out_ok_db;	/* hash table of all connected dialback hosts, key is same to/from */
+	HASHTABLE in_id;	/* all the incoming connections waiting to be checked, rand id attrib is key */
+	HASHTABLE in_ok_db;	/* all the incoming dialback connections that are ok, ID@to/from is key  */
+	SEM_VAR nscache_sem;
+	SEM_VAR out_sem;
+	SEM_VAR in_sem;
 
-  char *secret; /* our dialback secret */
-  int timeout_packets;
-  int timeout_idle;
-  int cache_idle_timeout;
-  int cache_max_timeout;
-  time_t now;
+	char *secret;		/* our dialback secret */
+	int timeout_packets;
+	int timeout_idle;
+	int cache_idle_timeout;
+	int cache_max_timeout;
+	time_t now;
 } *db, _db;
 
 
 typedef struct db_dns_cache_struct {
-  WPHASH_BUCKET;
-  pool p;
-  char ip[16];
-  char *host;
+	WPHASH_BUCKET;
+	pool p;
+	char ip[16];
+	char *host;
 //  time_t last;
 //  time_t create;
 } *db_dns_cache, _db_dns_cache;
 
 /* wrap an mio and track the idle time of it */
-typedef struct miod_struct
-{
-    WPHASH_BUCKET;
-    pool p;
-    volatile mio m;
-    char *server;
-    db d;
-    int last, count;
+typedef struct miod_struct {
+	WPHASH_BUCKET;
+	pool p;
+	volatile mio m;
+	char *server;
+	db d;
+	int last, count;
 } *miod, _miod;
 
 void dialback_out_packet(db d, xmlnode x, char *ip);

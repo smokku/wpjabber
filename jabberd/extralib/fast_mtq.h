@@ -1,9 +1,9 @@
 
-typedef void (*fast_mtq_cb)(void *arg, void* value);
+typedef void (*fast_mtq_cb) (void *arg, void *value);
 
-typedef void *(*fast_mtq_start_cb)(void *arg);
+typedef void *(*fast_mtq_start_cb) (void *arg);
 
-typedef void *(*fast_mtq_stop_cb)(void *arg);
+typedef void *(*fast_mtq_stop_cb) (void *arg);
 
 #define FAST_MTQ_ELEMENT struct fast_mtq_elem_struct *mtq_next; \
   char mtq_data[0];
@@ -40,7 +40,8 @@ typedef struct fast_mtq_struct {
 } *fast_mtq, _fast_mtq;
 
 
-inline static int fast_mtq_queue_len(fast_mtq f_mtq){
+inline static int fast_mtq_queue_len(fast_mtq f_mtq)
+{
 	return f_mtq->queue;
 }
 
@@ -50,11 +51,11 @@ void fast_mtq_stop_fast(fast_mtq f_mtq);
 
 fast_mtq fast_mtq_init(int threads, fast_mtq_cb cb, void *arg);
 
-fast_mtq fast_mtq_start_init(int threads, fast_mtq_cb cb, void *arg ,
-							 fast_mtq_start_cb start_cb);
-fast_mtq fast_mtq_start_stop_init(int threads, fast_mtq_cb cb, void *arg ,
-								  fast_mtq_start_cb start_cb,
-								  fast_mtq_stop_cb stop_cb);
+fast_mtq fast_mtq_start_init(int threads, fast_mtq_cb cb, void *arg,
+			     fast_mtq_start_cb start_cb);
+fast_mtq fast_mtq_start_stop_init(int threads, fast_mtq_cb cb, void *arg,
+				  fast_mtq_start_cb start_cb,
+				  fast_mtq_stop_cb stop_cb);
 
 /*
  * Local variables:

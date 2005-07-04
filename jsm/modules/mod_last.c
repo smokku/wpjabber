@@ -40,120 +40,137 @@
  * --------------------------------------------------------------------------*/
 #include "jsm.h"
 
-mreturn mod_last_server(mapi m, void *arg){
-    time_t start = time(NULL) - *(time_t*)arg;
-    char str[10];
-    xmlnode last;
+mreturn mod_last_server(mapi m, void *arg)
+{
+	time_t start = time(NULL) - *(time_t *) arg;
+	char str[10];
+	xmlnode last;
 
-    /* pre-requisites */
-    if(m->packet->type != JPACKET_IQ) return M_IGNORE;
-    if(jpacket_subtype(m->packet) != JPACKET__GET || !NSCHECK(m->packet->iq,NS_LAST) || m->packet->to->resource != NULL) return M_PASS;
+	/* pre-requisites */
+	if (m->packet->type != JPACKET_IQ)
+		return M_IGNORE;
+	if (jpacket_subtype(m->packet) != JPACKET__GET
+	    || !NSCHECK(m->packet->iq, NS_LAST)
+	    || m->packet->to->resource != NULL)
+		return M_PASS;
 
-    jutil_iqresult(m->packet->x);
-    jpacket_reset(m->packet);
+	jutil_iqresult(m->packet->x);
+	jpacket_reset(m->packet);
 
-    last = xmlnode_insert_tag(m->packet->x,"query");
-    xmlnode_put_attrib(last,"xmlns",NS_LAST);
-    sprintf(str,"%d",(int)start);
-    xmlnode_put_attrib(last,"seconds",str);
+	last = xmlnode_insert_tag(m->packet->x, "query");
+	xmlnode_put_attrib(last, "xmlns", NS_LAST);
+	sprintf(str, "%d", (int) start);
+	xmlnode_put_attrib(last, "seconds", str);
 
-    js_deliver(m->si,m->packet);
+	js_deliver(m->si, m->packet);
 
-    return M_HANDLED;
+	return M_HANDLED;
 }
 
-void mod_last_set(mapi m, jid to, char *reason){
-    xmlnode last;
-    char str[10];
+void mod_last_set(mapi m, jid to, char *reason)
+{
+	xmlnode last;
+	char str[10];
 
-    log_debug("mod_last storing last for user %s",jid_full(to));
+	log_debug("mod_last storing last for user %s", jid_full(to));
 
-    /* make a generic last chunk and store it */
-    last = xmlnode_new_tag("query");
-    xmlnode_put_attrib(last,"xmlns",NS_LAST);
-    sprintf(str,"%d",(int)time(NULL));
-    xmlnode_put_attrib(last,"last",str);
-    xmlnode_insert_cdata(last,reason,-1);
-    xdb_set(m->si->xc, jid_user(to), NS_LAST, last);
-    xmlnode_free(last);
+	/* make a generic last chunk and store it */
+	last = xmlnode_new_tag("query");
+	xmlnode_put_attrib(last, "xmlns", NS_LAST);
+	sprintf(str, "%d", (int) time(NULL));
+	xmlnode_put_attrib(last, "last", str);
+	xmlnode_insert_cdata(last, reason, -1);
+	xdb_set(m->si->xc, jid_user(to), NS_LAST, last);
+	xmlnode_free(last);
 }
 
-mreturn mod_last_init(mapi m, void *arg){
-    if(jpacket_subtype(m->packet) != JPACKET__SET) return M_PASS;
+mreturn mod_last_init(mapi m, void *arg)
+{
+	if (jpacket_subtype(m->packet) != JPACKET__SET)
+		return M_PASS;
 
-    mod_last_set(m, m->packet->to, "Registered");
+	mod_last_set(m, m->packet->to, "Registered");
 
-    return M_PASS;
-}
-
-mreturn mod_last_sess_end(mapi m, void *arg){
-    if ((m->s->presence != NULL)&&(m->user->removed)) /* presence is only set if there was presence sent, and we only track logins that were available */
-	mod_last_set(m, m->user->id, xmlnode_get_tag_data(m->s->presence,"status"));
-
-    return M_PASS;
-}
-
-mreturn mod_last_sess(mapi m, void *arg){
-    js_mapi_session(es_END, m->s, mod_last_sess_end, NULL);
-
-    return M_PASS;
-}
-
-mreturn mod_last_reply(mapi m, void *arg){
-    xmlnode last;
-    int lastt;
-    char str[10];
-
-    if(m->packet->type != JPACKET_IQ) return M_IGNORE;
-    if(!NSCHECK(m->packet->iq,NS_LAST)) return M_PASS;
-
-    /* first, is this a valid request? */
-    switch(jpacket_subtype(m->packet)){
-    case JPACKET__RESULT:
-    case JPACKET__ERROR:
 	return M_PASS;
-    case JPACKET__SET:
-	js_bounce(m->si,m->packet->x,TERROR_NOTALLOWED);
+}
+
+mreturn mod_last_sess_end(mapi m, void *arg)
+{
+	if ((m->s->presence != NULL) && (m->user->removed))	/* presence is only set if there was presence sent, and we only track logins that were available */
+		mod_last_set(m, m->user->id,
+			     xmlnode_get_tag_data(m->s->presence,
+						  "status"));
+
+	return M_PASS;
+}
+
+mreturn mod_last_sess(mapi m, void *arg)
+{
+	js_mapi_session(es_END, m->s, mod_last_sess_end, NULL);
+
+	return M_PASS;
+}
+
+mreturn mod_last_reply(mapi m, void *arg)
+{
+	xmlnode last;
+	int lastt;
+	char str[10];
+
+	if (m->packet->type != JPACKET_IQ)
+		return M_IGNORE;
+	if (!NSCHECK(m->packet->iq, NS_LAST))
+		return M_PASS;
+
+	/* first, is this a valid request? */
+	switch (jpacket_subtype(m->packet)) {
+	case JPACKET__RESULT:
+	case JPACKET__ERROR:
+		return M_PASS;
+	case JPACKET__SET:
+		js_bounce(m->si, m->packet->x, TERROR_NOTALLOWED);
+		return M_HANDLED;
+	}
+
+	/* make sure they're in the roster */
+	if (!js_trust(m->user, m->packet->from)) {
+		js_bounce(m->si, m->packet->x, TERROR_FORBIDDEN);
+		return M_HANDLED;
+	}
+
+	log_debug("mod_last handling query for user %s", m->user->user);
+
+	last = xdb_get(m->si->xc, m->user->id, NS_LAST);
+
+	jutil_iqresult(m->packet->x);
+	jpacket_reset(m->packet);
+	lastt = j_atoi(xmlnode_get_attrib(last, "last"), 0);
+	if (lastt > 0) {
+		xmlnode_hide_attrib(last, "last");
+		lastt = time(NULL) - lastt;
+		sprintf(str, "%d", lastt);
+		xmlnode_put_attrib(last, "seconds", str);
+		xmlnode_insert_tag_node(m->packet->x, last);
+	}
+	js_deliver(m->si, m->packet);
+
+	xmlnode_free(last);
 	return M_HANDLED;
-    }
-
-    /* make sure they're in the roster */
-    if(!js_trust(m->user,m->packet->from)){
-	js_bounce(m->si,m->packet->x,TERROR_FORBIDDEN);
-	return M_HANDLED;
-    }
-
-    log_debug("mod_last handling query for user %s",m->user->user);
-
-    last = xdb_get(m->si->xc, m->user->id, NS_LAST);
-
-    jutil_iqresult(m->packet->x);
-    jpacket_reset(m->packet);
-    lastt = j_atoi(xmlnode_get_attrib(last,"last"),0);
-    if(lastt > 0){
-	xmlnode_hide_attrib(last,"last");
-	lastt = time(NULL) - lastt;
-	sprintf(str,"%d",lastt);
-	xmlnode_put_attrib(last,"seconds",str);
-	xmlnode_insert_tag_node(m->packet->x,last);
-    }
-    js_deliver(m->si,m->packet);
-
-    xmlnode_free(last);
-    return M_HANDLED;
 }
 
 
-JSM_FUNC void mod_last(jsmi si){
-    time_t *ttmp;
-    log_debug("mod_last initing");
+JSM_FUNC void mod_last(jsmi si)
+{
+	time_t *ttmp;
+	log_debug("mod_last initing");
 
-    if (js_config(si,"register") != NULL) js_mapi_register(si, e_REGISTER, mod_last_init, NULL);
-    js_mapi_register(si, e_SESSION, mod_last_sess, NULL);
-    js_mapi_register(si, e_OFFLINE, mod_last_reply, NULL);
+	if (js_config(si, "register") != NULL)
+		js_mapi_register(si, e_REGISTER, mod_last_init, NULL);
+	js_mapi_register(si, e_SESSION, mod_last_sess, NULL);
+	js_mapi_register(si, e_OFFLINE, mod_last_reply, NULL);
 
-    /* set up the server responce, giving the startup time :) */
-    ttmp = pmalloc(si->p, sizeof(time_t));
-    time(ttmp);
-    js_mapi_register(si, e_SERVER, mod_last_server, (void *)ttmp);
+	/* set up the server responce, giving the startup time :) */
+	ttmp = pmalloc(si->p, sizeof(time_t));
+	time(ttmp);
+	js_mapi_register(si, e_SERVER, mod_last_server, (void *) ttmp);
 }

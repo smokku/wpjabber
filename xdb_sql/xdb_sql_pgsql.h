@@ -19,7 +19,6 @@
 #include <xdb_sql_backend.h>
 #include <libpq-fe.h>
 
-XdbSqlBackend *xdbpgsql_backend_new (void);
+XdbSqlBackend *xdbpgsql_backend_new(void);
 
-#endif /* XDB_SQL_PGSQL_H_INCLUDED */
-
+#endif				/* XDB_SQL_PGSQL_H_INCLUDED */

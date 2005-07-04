@@ -40,45 +40,50 @@
  * --------------------------------------------------------------------------*/
 #include <jsm.h>
 
-mreturn mod_auth_digest_yum(mapi m, void *arg){
-    spool s;
-    char *sid;
-    char *digest;
-    char *mydigest;
+mreturn mod_auth_digest_yum(mapi m, void *arg)
+{
+	spool s;
+	char *sid;
+	char *digest;
+	char *mydigest;
 
-    log_debug("checking");
+	log_debug("checking");
 
-    if(jpacket_subtype(m->packet) == JPACKET__GET){
-      xmlnode_insert_tag(m->packet->iq,"digest");
-      return M_PASS;
-    }
+	if (jpacket_subtype(m->packet) == JPACKET__GET) {
+		xmlnode_insert_tag(m->packet->iq, "digest");
+		return M_PASS;
+	}
 
-    if((digest = xmlnode_get_tag_data(m->packet->iq,"digest")) == NULL)
-	return M_PASS;
+	if ((digest =
+	     xmlnode_get_tag_data(m->packet->iq, "digest")) == NULL)
+		return M_PASS;
 
-    sid = xmlnode_get_attrib(xmlnode_get_tag(m->packet->iq,"digest"), "sid");
+	sid =
+	    xmlnode_get_attrib(xmlnode_get_tag(m->packet->iq, "digest"),
+			       "sid");
 
-    /* Concat the stream id and password */
-    /* SHA it up */
-    log_debug("Got SID: %s", sid);
-    s = spool_new(m->packet->p);
-    spooler(s,sid,m->user->pass,s);
+	/* Concat the stream id and password */
+	/* SHA it up */
+	log_debug("Got SID: %s", sid);
+	s = spool_new(m->packet->p);
+	spooler(s, sid, m->user->pass, s);
 
-    mydigest = shahash(spool_print(s));
+	mydigest = shahash(spool_print(s));
 
-    log_debug("comparing %s %s",digest,mydigest);
+	log_debug("comparing %s %s", digest, mydigest);
 
-    if(m->user->pass == NULL || sid == NULL || mydigest == NULL)
-	jutil_error(m->packet->x, TERROR_NOTIMPL);
-    else if(j_strcasecmp(digest, mydigest) != 0)
-	jutil_error(m->packet->x, TERROR_AUTH);
-    else
-	jutil_iqresult(m->packet->x);
+	if (m->user->pass == NULL || sid == NULL || mydigest == NULL)
+		jutil_error(m->packet->x, TERROR_NOTIMPL);
+	else if (j_strcasecmp(digest, mydigest) != 0)
+		jutil_error(m->packet->x, TERROR_AUTH);
+	else
+		jutil_iqresult(m->packet->x);
 
-    return M_HANDLED;
+	return M_HANDLED;
 }
 
-void mod_auth_digest(jsmi si){
-    log_debug("init");
-    js_mapi_register(si,e_AUTH, mod_auth_digest_yum, NULL);
+void mod_auth_digest(jsmi si)
+{
+	log_debug("init");
+	js_mapi_register(si, e_AUTH, mod_auth_digest_yum, NULL);
 }

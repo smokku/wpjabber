@@ -40,103 +40,123 @@
  * --------------------------------------------------------------------------*/
 #include "jsm.h"
 
-mreturn mod_auth_plain_jane(mapi m, void *arg){
-    char *pass;
+mreturn mod_auth_plain_jane(mapi m, void *arg)
+{
+	char *pass;
 
-    log_debug("checking");
+	log_debug("checking");
 
-    if(jpacket_subtype(m->packet) == JPACKET__GET){ /* type=get means we flag that the server can do plain-text auth */
-	xmlnode_insert_tag(m->packet->iq,"password");
-	return M_PASS;
-    }
+	if (jpacket_subtype(m->packet) == JPACKET__GET) {	/* type=get means we flag that the server can do plain-text auth */
+		xmlnode_insert_tag(m->packet->iq, "password");
+		return M_PASS;
+	}
 
-    if((pass = xmlnode_get_tag_data(m->packet->iq, "password")) == NULL)
-	return M_PASS;
+	if ((pass =
+	     xmlnode_get_tag_data(m->packet->iq, "password")) == NULL)
+		return M_PASS;
 
 
-    /* if there is a password avail, always handle */
-    if(m->user->pass != NULL){
-	if(strcmp(pass, m->user->pass) != 0)
-	    jutil_error(m->packet->x, TERROR_AUTH);
-	else
-	    jutil_iqresult(m->packet->x);
+	/* if there is a password avail, always handle */
+	if (m->user->pass != NULL) {
+		if (strcmp(pass, m->user->pass) != 0)
+			jutil_error(m->packet->x, TERROR_AUTH);
+		else
+			jutil_iqresult(m->packet->x);
+		return M_HANDLED;
+	}
+
+	log_debug("trying xdb act check");
+	/* if the act "check" fails, PASS so that 0k could use the password to try and auth w/ it's data */
+	if (xdb_act
+	    (m->si->xc, m->user->id, NS_AUTH, "check", NULL,
+	     xmlnode_get_tag(m->packet->iq, "password"))) {
+		jutil_error(m->packet->x, TERROR_AUTH);
+		return M_HANDLED;
+	}
+
+	jutil_iqresult(m->packet->x);
 	return M_HANDLED;
-    }
-
-    log_debug("trying xdb act check");
-    /* if the act "check" fails, PASS so that 0k could use the password to try and auth w/ it's data */
-    if(xdb_act(m->si->xc, m->user->id, NS_AUTH, "check", NULL, xmlnode_get_tag(m->packet->iq,"password"))){
-	jutil_error(m->packet->x, TERROR_AUTH);
-	return M_HANDLED;
-    }
-
-    jutil_iqresult(m->packet->x);
-    return M_HANDLED;
 }
 
-int mod_auth_plain_reset(mapi m, jid id, xmlnode pass){
-    log_debug("resetting password");
+int mod_auth_plain_reset(mapi m, jid id, xmlnode pass)
+{
+	log_debug("resetting password");
 
-    xmlnode_put_attrib(pass,"xmlns",NS_AUTH);
-    return xdb_set(m->si->xc, id, NS_AUTH, pass);
+	xmlnode_put_attrib(pass, "xmlns", NS_AUTH);
+	return xdb_set(m->si->xc, id, NS_AUTH, pass);
 }
 
 /* handle saving the password for registration */
-mreturn mod_auth_plain_reg(mapi m, void *arg){
-    jid id;
-    xmlnode pass;
+mreturn mod_auth_plain_reg(mapi m, void *arg)
+{
+	jid id;
+	xmlnode pass;
 
-    if(jpacket_subtype(m->packet) == JPACKET__GET){ /* type=get means we flag that the server can do plain-text regs */
-	xmlnode_insert_tag(m->packet->iq,"password");
+	if (jpacket_subtype(m->packet) == JPACKET__GET) {	/* type=get means we flag that the server can do plain-text regs */
+		xmlnode_insert_tag(m->packet->iq, "password");
+		return M_PASS;
+	}
+
+	if (jpacket_subtype(m->packet) != JPACKET__SET
+	    || (pass = xmlnode_get_tag(m->packet->iq, "password")) == NULL)
+		return M_PASS;
+
+	/* get the jid of the user, depending on how we were called */
+	if (m->user == NULL)
+		id = jid_user(m->packet->to);
+	else
+		id = m->user->id;
+
+	/* tuck away for a rainy day */
+	if (mod_auth_plain_reset(m, id, pass)) {
+		jutil_error(m->packet->x, (terror) {
+			    500, "Password Storage Failed"}
+		);
+		return M_HANDLED;
+	}
+
 	return M_PASS;
-    }
-
-    if(jpacket_subtype(m->packet) != JPACKET__SET || (pass = xmlnode_get_tag(m->packet->iq,"password")) == NULL) return M_PASS;
-
-    /* get the jid of the user, depending on how we were called */
-    if(m->user == NULL)
-	id = jid_user(m->packet->to);
-    else
-	id = m->user->id;
-
-    /* tuck away for a rainy day */
-    if(mod_auth_plain_reset(m,id,pass)){
-	jutil_error(m->packet->x,(terror){500,"Password Storage Failed"});
-	return M_HANDLED;
-    }
-
-    return M_PASS;
 }
 
-mreturn mod_auth_plain_reg_new(mapi m, void *arg){
-    xmlnode reg;
+mreturn mod_auth_plain_reg_new(mapi m, void *arg)
+{
+	xmlnode reg;
 
-    if((reg = js_config(m->si, "register")) == NULL) return M_PASS;
-    if(xmlnode_get_attrib(reg,"deny_new") != NULL) return M_PASS;
-    return mod_auth_plain_reg(m,arg);
+	if ((reg = js_config(m->si, "register")) == NULL)
+		return M_PASS;
+	if (xmlnode_get_attrib(reg, "deny_new") != NULL)
+		return M_PASS;
+	return mod_auth_plain_reg(m, arg);
 }
 
 /* handle password change requests from a session */
-mreturn mod_auth_plain_server(mapi m, void *arg){
-    mreturn ret;
+mreturn mod_auth_plain_server(mapi m, void *arg)
+{
+	mreturn ret;
 
-    /* pre-requisites */
-    if(m->packet->type != JPACKET_IQ) return M_IGNORE;
-    if(m->user == NULL) return M_PASS;
-    if(!NSCHECK(m->packet->iq,NS_REGISTER)) return M_PASS;
+	/* pre-requisites */
+	if (m->packet->type != JPACKET_IQ)
+		return M_IGNORE;
+	if (m->user == NULL)
+		return M_PASS;
+	if (!NSCHECK(m->packet->iq, NS_REGISTER))
+		return M_PASS;
 
-    /* just do normal reg process, but deliver afterwards */
-    ret = mod_auth_plain_reg_new(m,arg);
-    if(ret == M_HANDLED)
-	js_deliver(m->si, jpacket_reset(m->packet));
+	/* just do normal reg process, but deliver afterwards */
+	ret = mod_auth_plain_reg_new(m, arg);
+	if (ret == M_HANDLED)
+		js_deliver(m->si, jpacket_reset(m->packet));
 
-    return ret;
+	return ret;
 }
 
-void mod_auth_plain(jsmi si){
-    log_debug("init");
+void mod_auth_plain(jsmi si)
+{
+	log_debug("init");
 
-    js_mapi_register(si, e_AUTH, mod_auth_plain_jane, NULL);
-    js_mapi_register(si, e_SERVER, mod_auth_plain_server, NULL);
-    if (js_config(si,"register") != NULL) js_mapi_register(si, e_REGISTER, mod_auth_plain_reg_new, NULL);
+	js_mapi_register(si, e_AUTH, mod_auth_plain_jane, NULL);
+	js_mapi_register(si, e_SERVER, mod_auth_plain_server, NULL);
+	if (js_config(si, "register") != NULL)
+		js_mapi_register(si, e_REGISTER, mod_auth_plain_reg_new,
+				 NULL);
 }

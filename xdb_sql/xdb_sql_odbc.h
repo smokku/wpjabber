@@ -18,7 +18,6 @@
 
 #include "xdb_sql_backend.h"
 
-XdbSqlBackend *xdbodbc_backend_new (void);
+XdbSqlBackend *xdbodbc_backend_new(void);
 
-#endif /* XDB_SQL_ODBC_H_INCLUDED */
-
+#endif				/* XDB_SQL_ODBC_H_INCLUDED */
