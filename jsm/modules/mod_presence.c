@@ -72,7 +72,7 @@
  *   intersection of T and A (of the trusted jids, only the ones
  *   we've sent availability to can poll, and we return a generic
  *   available presence)
- * - individual avail presence: forward, add to A, remove from I 
+ * - individual avail presence: forward, add to A, remove from I
  * - individual unavail presence: forward and remove from A, remove from I
  * - individual invisible presence: add to I, remove from A
  * - first avail: populate A with T and broadcast
@@ -271,7 +271,7 @@ void mod_presence_roster(mapi m, jid notify){
  *
  * @param m the mapi struct
  */
-void mod_presence_store(mapi m) {
+void mod_presence_store(mapi m){
     /* get the top session */
     session top = js_session_primary(m->user);
 
@@ -328,11 +328,11 @@ mreturn mod_presence_out(mapi m, void *arg){
 
     /* check that the priority is in the valid range */
     priority = xmlnode_get_tag_data(m->packet->x, "priority");
-    if (priority == NULL) {
+    if (priority == NULL){
 	newpri = 0;
-    } else {
+    } else{
 	newpri = j_atoi(priority, 0);
-	if (newpri < -128 || newpri > 127) {
+	if (newpri < -128 || newpri > 127){
 	    log_notice("mod_presence", "got presence with invalid priority value from %s", jid_full(m->s->id));
 	    xmlnode_free(m->packet->x);
 	    return M_HANDLED;
@@ -356,14 +356,14 @@ mreturn mod_presence_out(mapi m, void *arg){
 	/* (this is the handling of the reinjected invisible presence
 	 * or an initial invisible presence) */
 	mp->invisible = 1;
-        mod_presence_roster(m, NULL); /* send out probes to users we are subscribed to */
-        m->s->priority = newpri;
+	mod_presence_roster(m, NULL); /* send out probes to users we are subscribed to */
+	m->s->priority = newpri;
 
 	/* store presence in xdb? */
 	if (mp->conf->pres_to_xdb > 0)
 	    mod_presence_store(m);
 
-        xmlnode_free(m->packet->x); /* we do not broadcast invisible presences without a to attribute */
+	xmlnode_free(m->packet->x); /* we do not broadcast invisible presences without a to attribute */
 
 	return M_HANDLED;
     }
@@ -389,10 +389,10 @@ mreturn mod_presence_out(mapi m, void *arg){
     log_debug("presence oldp %d newp %d",oldpri,m->s->priority);
 
     /* if we're going offline now, let everyone know */
-    if(m->s->priority < -128) {
-        /* jutil_priority returns -129 in case the "type" attribute is missing */
+    if(m->s->priority < -128){
+	/* jutil_priority returns -129 in case the "type" attribute is missing */
 	if(!mp->invisible) /* bcc's don't get told if we were invisible */
-        _mod_presence_broadcast(m->s,mp->conf->bcc,m->packet->x,NULL);
+	_mod_presence_broadcast(m->s,mp->conf->bcc,m->packet->x,NULL);
 	_mod_presence_broadcast(m->s,mp->A,m->packet->x,NULL);
 	_mod_presence_broadcast(m->s,mp->I,m->packet->x,NULL);
 
@@ -407,7 +407,7 @@ mreturn mod_presence_out(mapi m, void *arg){
     }
 
     /* available presence updates, intersection of A and T */
-    if(oldpri >= -128 && !mp->invisible) {
+    if(oldpri >= -128 && !mp->invisible){
 	_mod_presence_broadcast_trusted(m->s,mp->A,m->packet->x);
 	xmlnode_free(m->packet->x);
 		xmlnode_free(pold);
@@ -429,13 +429,13 @@ mreturn mod_presence_out(mapi m, void *arg){
     /* XXX: I think this should be okay as well: */
 
     /* send us all presences of our other resources */
-    for (cur = m->user->sessions; cur != NULL; cur=cur->next) {
+    for (cur = m->user->sessions; cur != NULL; cur=cur->next){
 	pool pool_for_existing_presence = NULL;
 	xmlnode duplicated_presence = NULL;
 	jpacket packet = NULL;
-	
+
 	/* skip our own session (and sanity check) */
-	if (cur == m->s || cur->presence == NULL) {
+	if (cur == m->s || cur->presence == NULL){
 	    continue;
 	}
 
@@ -592,7 +592,7 @@ mreturn mod_presence_deliver(mapi m, void *arg){
 
 	/* broadcast */
 	for(cur = m->user->sessions; cur != NULL; cur = cur->next){
-            if(cur->priority < -128) continue;
+	    if(cur->priority < -128) continue;
 	    js_session_to(cur, jpacket_new(xmlnode_dup(m->packet->x)));
 	}
 	SEM_UNLOCK(m->user->sem);
@@ -627,16 +627,16 @@ JSM_FUNC void mod_presence(jsmi si){
     for(cfg = xmlnode_get_firstchild(cfg); cfg != NULL; cfg = xmlnode_get_nextsibling(cfg)){
 	char *element_name = NULL;
 
-        if(xmlnode_get_type(cfg) != NTYPE_TAG)
+	if(xmlnode_get_type(cfg) != NTYPE_TAG)
 	    continue;
 
 	element_name = xmlnode_get_name(cfg);
-	if (j_strcmp(element_name, "bcc") == 0) {
+	if (j_strcmp(element_name, "bcc") == 0){
 	    if(conf->bcc == NULL)
 		conf->bcc = jid_new(si->p,xmlnode_get_data(cfg));
 	    else
 		jid_append(conf->bcc,jid_new(si->p,xmlnode_get_data(cfg)));
-	} else if (j_strcmp(element_name, "presence2xdb") == 0) {
+	} else if (j_strcmp(element_name, "presence2xdb") == 0){
 	    conf->pres_to_xdb++;
 	}
     }

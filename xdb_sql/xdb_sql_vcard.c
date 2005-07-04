@@ -208,7 +208,7 @@ xmlnode xdbsql_vcard_get(XdbSqlDatas *self, const char *user){
 
 	/* begin photo node */
 	sptr = sqldb_get_value(result, ndx_photo_t);
-	if (sptr && *sptr) {
+	if (sptr && *sptr){
 	  x = xmlnode_insert_tag(rc,"PHOTO");
 	  xmlnode_insert_cdata(xmlnode_insert_tag(x,"TYPE"),sptr,-1);
 	  sptr = sqldb_get_value(result, ndx_photo_b);
@@ -376,7 +376,7 @@ int xdbsql_vcard_set(XdbSqlDatas *self, const char *user, xmlnode data){
 	for (x2=xmlnode_get_firstchild(x);x2;x2=xmlnode_get_nextsibling(x2)){
 	  name = xmlnode_get_name(x2);
 	  if (j_strcmp(name,"USERID")==0)
-	    data_email      = GET_CHILD_DATA(x2);
+	    data_email	    = GET_CHILD_DATA(x2);
 	}
       }
       else if (j_strcmp(name,"ORG")==0){

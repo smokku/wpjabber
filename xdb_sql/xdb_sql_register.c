@@ -70,12 +70,12 @@ xmlnode xdbsql_register_get(XdbSqlDatas *self, const char *user){
 	if (first){ /* figure out all the indexes for our columns */
 
 	    map = xdbsql_colmap_init(query);
-	    ndx_login    = xdbsql_colmap_index(map,"login"	);
+	    ndx_login	 = xdbsql_colmap_index(map,"login"	);
 	    ndx_password = xdbsql_colmap_index(map,"password"	);
-	    ndx_email    = xdbsql_colmap_index(map,"email"	);
-	    ndx_name     = xdbsql_colmap_index(map,"name"	);
-	    ndx_stamp    = xdbsql_colmap_index(map,"stamp"	);
-	    ndx_type     = xdbsql_colmap_index(map,"type"	);
+	    ndx_email	 = xdbsql_colmap_index(map,"email"	);
+	    ndx_name	 = xdbsql_colmap_index(map,"name"	);
+	    ndx_stamp	 = xdbsql_colmap_index(map,"stamp"	);
+	    ndx_type	 = xdbsql_colmap_index(map,"type"	);
 
 	    xdbsql_colmap_free(map);
 	    first = 0;
@@ -172,12 +172,12 @@ int xdbsql_register_set(XdbSqlDatas *self, const char *user, xmlnode data){
     xmlnode tmp;	    /* for cycling through data children */
     query_def qd;	    /* query definition */
     XdbSqlResult *result;   /* return from query */
-    char *data_login    = NULL;
+    char *data_login	= NULL;
     char *data_password = NULL;
-    char *data_email    = NULL;
-    char *data_name     = NULL;
-    char *data_stamp    = NULL;
-    char *data_type     = NULL;
+    char *data_email	= NULL;
+    char *data_name	= NULL;
+    char *data_stamp	= NULL;
+    char *data_type	= NULL;
     char *name;
 
     if (!user){ /* the user was not specified - we have to bug off */

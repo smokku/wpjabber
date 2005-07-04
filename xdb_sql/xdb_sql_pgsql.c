@@ -165,7 +165,7 @@ XdbPgsqlResult *xdbpgsql_query (XdbPgsqlBackend *self, const char *query){
 
     /* let's see wat the actual query is */
     log_debug("PSQL query: %s", query);
-    
+
     if (!self->async_mode){
 	/* synchronous mode */
 	r = PQexec(self->connection, query);

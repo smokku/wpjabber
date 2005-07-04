@@ -52,7 +52,7 @@
  *
  * Requests are only handled if the requests are neither in a namespace starting with "jabber:"
  * nor in the "vcard-temp" namespace (which have to be implemented by other modules.
- * 
+ *
  * @todo Can we really rely on the namespace prefix to see if we should handle a request? New protocols don't use jabber: namespaces
  */
 
@@ -84,7 +84,7 @@ mreturn mod_xml_set(mapi m, void *arg){
 	private = 1;
 	inx = xmlnode_get_tag(m->packet->iq,"?xmlns");
 	ns = xmlnode_get_attrib(inx,"xmlns");
-        if(ns == NULL || strncmp(ns,"jabber:",7) == 0 || strcmp(ns,"vcard-temp") == 0 || strcmp(ns, NS_JABBERD_STOREDPRESENCE) == 0) {
+	if(ns == NULL || strncmp(ns,"jabber:",7) == 0 || strcmp(ns,"vcard-temp") == 0 || strcmp(ns, NS_JABBERD_STOREDPRESENCE) == 0){
 	    /* uhoh, can't use jabber: namespaces inside iq:private! */
 	    jutil_error(m->packet->x,TERROR_NOTACCEPTABLE);
 	    js_session_to(m->s,m->packet);
@@ -95,12 +95,12 @@ mreturn mod_xml_set(mapi m, void *arg){
     }
 
     /* if its to someone other than ourselves */
-    if(to != NULL) {
+    if(to != NULL){
 	return M_PASS;
-    } else {
+    } else{
 	/* no to implies to ourselves */
 	log_debug("handling user request %s",xmlnode2str(m->packet->iq));
-        to = m->user->id;
+	to = m->user->id;
     }
 
     switch(jpacket_subtype(m->packet)){

@@ -178,7 +178,7 @@ xmlnode xdbsql_roster_get(XdbSqlDatas *self, const char *user){
 	    x1 = xmlnode_insert_tag_node(rc, node);
 	    xmlnode_free(node);
 	}
-	else { /* just create a new item or conference under the result. */
+	else{ /* just create a new item or conference under the result. */
 	       /* depending on the type of the record */
 	    x1 = xmlnode_insert_tag(rc,tmp_attr);
 	}
@@ -423,15 +423,15 @@ int xdbsql_roster_set(XdbSqlDatas *self, const char *user, xmlnode roster){
 	} else{
 	    xdbsql_querydef_setvar(qd,"type","item");
 	}
-	
+
 	/* get the "eXtension"'s nodes */
 	data_ext = spool_new(xmlnode_pool(roster));
-        for (x2 = xmlnode_get_firstchild(x1); x2; x2 = xmlnode_get_nextsibling(x2)){ /* handle all the child nodes of the item */
+	for (x2 = xmlnode_get_firstchild(x1); x2; x2 = xmlnode_get_nextsibling(x2)){ /* handle all the child nodes of the item */
 	    if (j_strcmp("x", xmlnode_get_name(x2)))
 		continue;
 	    spool_add(data_ext,xmlnode2str(x2));
 	}
-        xdbsql_querydef_setvar(qd,"x",spool_print(data_ext));
+	xdbsql_querydef_setvar(qd,"x",spool_print(data_ext));
 
 	/* Execute the query! */
 	querystr = xdbsql_querydef_finalize(qd);

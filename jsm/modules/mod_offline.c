@@ -170,7 +170,7 @@ void mod_offline_out_available(mapi m){
     int expire, stored, diff;
     char str[11];
 
-    if (j_atoi(xmlnode_get_tag_data(m->packet->x, "priority"), 0) < 0) {
+    if (j_atoi(xmlnode_get_tag_data(m->packet->x, "priority"), 0) < 0){
 	log_debug("negative priority, not delivering offline messages");
 	return;
     }
@@ -181,7 +181,7 @@ void mod_offline_out_available(mapi m){
 	return;
 
     /* check for msgs */
-    for(cur = xmlnode_get_firstchild(opts); cur != NULL; cur = xmlnode_get_nextsibling(cur)) {
+    for(cur = xmlnode_get_firstchild(opts); cur != NULL; cur = xmlnode_get_nextsibling(cur)){
 	/* ignore CDATA between <message/> elements */
 	if (xmlnode_get_type(cur) != NTYPE_TAG)
 	    continue;

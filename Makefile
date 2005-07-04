@@ -31,5 +31,8 @@ cl-stamp: .svn/entries
 	touch cl-stamp
 
 cosmetics:
-	./aux/cosmetics.sh
+	./aux/cosmetics.sh cosmetics
+
+reindent:
+	./aux/cosmetics.sh indent
 
