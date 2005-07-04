@@ -193,7 +193,7 @@ session js_session_new(jsmi si, dpacket dp){
     /* default settings */
     s->exit_flag = 0;
     s->roster = 0;
-    s->priority = -1;
+    s->priority = -129;
     s->presence = jutil_presnew(JPACKET__UNAVAILABLE,NULL,NULL);
     xmlnode_put_attrib(s->presence,"from",jid_full(s->id));
     s->c_in = s->c_out = 0;
@@ -260,9 +260,9 @@ void js_session_end_nosem(session s, char *reason){
     s->exit_flag = 1;
 
     /* make sure we're not the primary session */
-    s->priority = -1;
+    s->priority = -129;
 
-	/* presence will be updated in _js_session_end to be shore that
+    /* presence will be updated in _js_session_end to be shore that
        only session thread is changing this value  */
 
     /*
@@ -322,7 +322,7 @@ void js_session_end(session s, char *reason){
     s->exit_flag = 1;
 
     /* make sure we're not the primary session */
-    s->priority = -1;
+    s->priority = -129;
 
     /* presence will be updated in _js_session_end to be shore that
        only session thread is changing this value  */
@@ -573,7 +573,7 @@ session js_session_get(udata user, char *res){
  *	user -- user data for the user in question
  *
  *  returns
- *	a pointer to the primary session if the user is logged in
+ *	a pointer to the primary session if the user is logged in with at least priority 0
  *	NULL if there are no active sessions
  */
 session js_session_primary(udata user){

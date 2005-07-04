@@ -55,7 +55,7 @@ mreturn mod_offline_message(mapi m){
     session top;
 #endif
     xmlnode cur = NULL, cur2;
-    char str[10];
+    char str[11];
 	char *id;
 
     /* if there's an existing session, just give it to them */
@@ -168,7 +168,12 @@ void mod_offline_out_available(mapi m){
     xmlnode opts, cur, x;
     int now = time(NULL);
     int expire, stored, diff;
-    char str[10];
+    char str[11];
+
+    if (j_atoi(xmlnode_get_tag_data(m->packet->x, "priority"), 0) < 0) {
+	log_debug("negative priority, not delivering offline messages");
+	return;
+    }
 
     log_debug("mod_offline avability established, check for messages");
 
@@ -176,7 +181,11 @@ void mod_offline_out_available(mapi m){
 	return;
 
     /* check for msgs */
-    for(cur = xmlnode_get_firstchild(opts); cur != NULL; cur = xmlnode_get_nextsibling(cur)){
+    for(cur = xmlnode_get_firstchild(opts); cur != NULL; cur = xmlnode_get_nextsibling(cur)) {
+	/* ignore CDATA between <message/> elements */
+	if (xmlnode_get_type(cur) != NTYPE_TAG)
+	    continue;
+
 	/* check for expired stuff */
 	if((x = xmlnode_get_tag(cur,"x?xmlns=" NS_EXPIRE)) != NULL){
 	    expire = j_atoi(xmlnode_get_attrib(x,"seconds"),0);

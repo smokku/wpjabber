@@ -702,12 +702,17 @@ typedef struct xterror_struct
 #define NS_DISCO_INFO "http://jabber.org/protocol/disco#info"
 #define NS_DISCO_ITEMS "http://jabber.org/protocol/disco#items"
 #define NS_IQ_AUTH    "http://jabber.org/features/iq-auth"
+#define NS_REGISTER_FEATURE "http://jabber.org/features/iq-register"
 
 #define NS_XDBGINSERT "jabber:xdb:ginsert"
 #define NS_XDBNSLIST  "jabber:xdb:nslist"
 
 #define NS_XMPP_STANZAS "urn:ietf:params:xml:ns:xmpp-stanzas"
 #define NS_XMPP_TLS  "urn:ietf:params:xml:ns:xmpp-tls"
+#define NS_XMPP_STREAMS "urn:ietf:params:xml:ns:xmpp-streams"
+
+#define NS_JABBERD_STOREDPRESENCE "http://jabberd.org/ns/storedpresence"
+#define NS_JABBERD_HISTORY "http://jabberd.org/ns/history"
 
 
 /* --------------------------------------------------------- */
