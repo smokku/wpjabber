@@ -444,32 +444,6 @@ $Id: xdb_sql.xml,v 1.8 2003/04/07 20:10:55 bobeal Exp $
 	<bindcol tag="pass" offset="1"/> 
       </querydef>
 
-      <!-- MSN set query -->
-      <querydef name="msn-set" dtd="2" type="set" namespace="msntrans:data">
-	<text>INSERT INTO msn VALUES ('$$user$$', '$$id$$', '$$pass$$')</text>
-	<user>$$user$$</user>
-        <bindvar attrib="id">$$id$$</bindvar>
-        <bindvar attrib="pass">$$pass$$</bindvar>
-	<purge>msn-remove</purge>
-      </querydef>
-
-      <!-- MSN removal query -->
-      <querydef name="msn-remove" dtd="2" type="remove" namespace="msntrans:data">
-        <text>DELETE FROM msn where username='$$user$$'</text>
-        <user>$$user$$</user>
-      </querydef>
-
-      <!-- MSN get query -->
-      <querydef name="msn-get" dtd="2" type="get" namespace="msntrans:data">
-	<text>SELECT id, pass  FROM msn WHERE username = '$$user$$'</text>
-	<user>$$user$$</user>
-        <top-result>
-           <logon/>
-        </top-result>
-        <bindcol tag="id" offset="0"/>
-	<bindcol tag="pass" offset="1"/> 
-      </querydef>
-
     <!-- ****************** muc:room:list ********************** -->
 
       <!-- 'user' maintains file name info for xdb_file -will be util- -->

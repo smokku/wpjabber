@@ -127,12 +127,6 @@ CREATE TABLE aim (
   pass       VARCHAR(32) NOT NULL
 );
 
-CREATE TABLE msn (
-  username   VARCHAR(128) PRIMARY KEY,
-  id         VARCHAR(100) NOT NULL,
-  pass       VARCHAR(32) NOT NULL
-);
-
 /* muc tables */
 create table rooms (
   room varchar(64) not null,
