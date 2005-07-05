@@ -312,7 +312,7 @@ $Id: xdb_sql.xml,v 1.8 2003/04/07 20:10:55 bobeal Exp $
 
       <!-- vcard get query -->
       <querydef name="vcard-get">
-        <text>SELECT full_name, first_name, last_name, nick_name, url, address1, address2, locality, region, pcode, country, telephone, email, orgname, orgunit, title, role, b_day, descr FROM vcard WHERE username = '$$u$$'</text>
+        <text>SELECT full_name, first_name, last_name, nick_name, url, address1, address2, locality, region, pcode, country, telephone, email, orgname, orgunit, title, role, b_day, descr, photo_type, photo_bin FROM vcard WHERE username = '$$u$$'</text>
         <bindvar name="user">$$u$$</bindvar>
         <bindcol name="full_name" offset="0"/>
         <bindcol name="first_name" offset="1"/>
@@ -333,11 +333,13 @@ $Id: xdb_sql.xml,v 1.8 2003/04/07 20:10:55 bobeal Exp $
         <bindcol name="role" offset="16"/>
         <bindcol name="b_day" offset="17"/>
         <bindcol name="descr" offset="18"/>
+        <bindcol name="photo_type" offset="19"/>
+        <bindcol name="photo_bin" offset="20"/>
       </querydef>
 
       <!-- vcard set query -->
       <querydef name="vcard-set">
-        <text>INSERT INTO vcard (username, full_name, first_name, last_name, nick_name, url, address1, address2, locality, region, pcode, country, telephone, email, orgname, orgunit, title, role, b_day, descr) VALUES ('$$user$$', '$$full_name$$', '$$first_name$$', '$$last_name$$', '$$nick_name$$', '$$url$$', '$$address1$$', '$$address2$$', '$$locality$$', '$$region$$', '$$pcode$$', '$$country$$', '$$telephone$$', '$$email$$', '$$orgname$$', '$$orgunit$$', '$$title$$', '$$role$$', '$$b_day$$', '$$descr$$')</text>
+        <text>INSERT INTO vcard (username, full_name, first_name, last_name, nick_name, url, address1, address2, locality, region, pcode, country, telephone, email, orgname, orgunit, title, role, b_day, descr, photo_type, photo_bin) VALUES ('$$user$$', '$$full_name$$', '$$first_name$$', '$$last_name$$', '$$nick_name$$', '$$url$$', '$$address1$$', '$$address2$$', '$$locality$$', '$$region$$', '$$pcode$$', '$$country$$', '$$telephone$$', '$$email$$', '$$orgname$$', '$$orgunit$$', '$$title$$', '$$role$$', '$$b_day$$', '$$descr$$', '$$photo_type$$', '$$photo_bin$$')</text>
         <bindvar name="user">$$user$$</bindvar>
         <bindvar name="full_name">$$full_name$$</bindvar>
         <bindvar name="first_name">$$first_name$$</bindvar>
@@ -358,6 +360,8 @@ $Id: xdb_sql.xml,v 1.8 2003/04/07 20:10:55 bobeal Exp $
         <bindvar name="role">$$role$$</bindvar>
         <bindvar name="b_day">$$b_day$$</bindvar>
         <bindvar name="descr">$$descr$$</bindvar>
+        <bindvar name="photo_type">$$photo_type$$</bindvar>
+        <bindvar name="photo_bin">$$photo_bin$$</bindvar>
       </querydef>
 
       <!-- vcard removal query -->
@@ -503,7 +507,8 @@ $Id: xdb_sql.xml,v 1.8 2003/04/07 20:10:55 bobeal Exp $
       </querydef>
 
       <querydef name="roomconfig-set">
-        <text>insert into roomconfig (roomid, owner, name, secret, private, leave, "join", rename, "public", persistant, subjectlock, maxusers, moderated, defaultype, privmsg, invitation, invites, legacy, visible, logformat, logging, description) values ( '$$room$$', '$$owner$$', '$$name$$', '$$secret$$', '$$private$$', '$$leave$$', '$$join$$', '$$rename$$', '$$public$$', '$$persistant$$', '$$subjectlock$$', '$$maxusers$$', '$$moderated$$', '$$defaultype$$', '$$privmsg$$', '$$invitation$$', '$$invites$$', '$$legacy$$', '$$visible$$', '$$logformat$$', '$$logging$$', '$$description$$')</text>
+        <text>insert into roomconfig (roomid, owner, name, secret, private, leave, "join", rename, "public", persistant, subjectlock, maxusers, moderated, defaultype, privmsg, invitation, invites, legacy, visible, logformat, logging, description) values ( '$$room$$', '$$owner$$', '$$name$$', '$$secret$$', '$$private$$', '$$leave$$', '$$join$$', '$$rename$$', '$$public$$', '$$persistant$$', '$$subjectlock$$', '$$maxusers$$', '$$moderated$$', '$$defaultype$$', '$$privmsg$$', '$$invitation$$', '$$invites$$', '$$legacy$$', '$$visible$$', '$$logformat$$', '$$logging$$', '$$description$$')
+</text>
         <bindvar name="room">$$room$$</bindvar>
         <bindvar name="owner">$$owner$$</bindvar>
         <bindvar name="name">$$name$$</bindvar>
