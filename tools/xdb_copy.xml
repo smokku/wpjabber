@@ -1,0 +1,39 @@
+<?xml version='1.0' encoding='utf-8'?>
+<xdbcopy>
+
+<!--
+  Settings for connection with the Jabber servers.
+  
+  For jabberd2 this should match <local/> section of router.xml.
+  
+  For jabberd 1.4 a <service/> section should be added to jabber.xml
+-->
+<source>
+	<jid>xdb</jid>
+	<host>source.jabber</host>
+	<port>0123</port>
+	<secret>secret</secret>
+</source>
+<destination>
+	<jid>xdb</jid>
+	<host>dest.jabber</host>
+	<port>0123</port>
+	<secret>secret</secret>
+</destination>
+
+<!-- 
+  XDB namespaces to replicate
+  -->
+<xdbns>
+	<ns>jabber:iq:auth</ns>
+	<ns>jabber:iq:auth:crypt</ns>
+	<ns>jabber:iq:auth:0k</ns>
+	<ns>jabber:iq:register</ns>
+	<ns>jabber:iq:roster</ns>
+	<ns>jabber:x:offline</ns>
+	<ns>jabber:iq:filter</ns>
+	<ns>jabber:iq:last</ns>
+	<ns>vcard-temp</ns>
+</xdbns>
+
+</xdbcopy>
