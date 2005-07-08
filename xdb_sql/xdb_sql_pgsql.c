@@ -23,7 +23,6 @@ typedef struct XdbPgsqlBackend {
 	XdbSqlBackend base;
 	/* datas */
 	PGconn *connection;
-	int async_mode;
 	int debug;		/* FIXME: should move into the parent struct */
 	SEM_VAR sem;
 } XdbPgsqlBackend;
@@ -96,8 +95,7 @@ XdbSqlBackend *xdbpgsql_backend_new(void)
 	/* init datas */
 	back->connection = NULL;
 
-	/* asynchronous operation mode by default */
-	back->async_mode = 1;
+	/* xdb is multithreaded - we have to lock the connection */
 	SEM_INIT(back->sem);
 
 	/* no debug unless otherwise stated */
@@ -126,9 +124,6 @@ int xdbpgsql_connect(XdbPgsqlBackend * self, const char *host,
 		port = NULL;
 	self->connection = PQsetdbLogin(host, port, NULL, NULL,
 					db, user, pass);
-
-	if (self->async_mode)
-		PQsetnonblocking(self->connection, 1);
 
 	if (!xdbpgsql_is_connected(self))
 		return 0;
@@ -172,36 +167,12 @@ XdbPgsqlResult *xdbpgsql_query(XdbPgsqlBackend * self, const char *query)
 	/* let's see wat the actual query is */
 	log_debug("PSQL query: %s", query);
 
-	if (!self->async_mode) {
-		/* synchronous mode */
-		r = PQexec(self->connection, query);
-		if (!r)
-			return NULL;
+	SEM_LOCK(self->sem);
+	r = PQexec(self->connection, query);
+	SEM_UNLOCK(self->sem);
 
-	} else {
-		/* async mode */
-		SEM_LOCK(self->sem);
-		i = PQsendQuery(self->connection, query);
-
-		if (i == 0)
-			log_error(ZONE, "xdbpgsql_query: ERROR %s\n",
-				  PQerrorMessage(self->connection));
-
-		while (1) {
-			i = PQconsumeInput(self->connection);
-			if (PQisBusy(self->connection))
-				usleep(15);
-			else
-				break;
-		}
-
-		r = PQgetResult(self->connection);
-		if (!r)
-			return NULL;
-
-		while (PQgetResult(self->connection) != NULL)
-			usleep(15);
-	}
+	if (!r)
+		return NULL;
 
 	st = PQresultStatus(r);
 
@@ -209,21 +180,15 @@ XdbPgsqlResult *xdbpgsql_query(XdbPgsqlBackend * self, const char *query)
 		log_error(ZONE, "error: r=%p [%s]\n", r,
 			  PQresultErrorMessage(r));
 		PQclear(r);
-		if (self->async_mode)
-			SEM_UNLOCK(self->sem);
 		return NULL;
 	}
 
 	res = result_new(self, r);
 	if (!res) {
 		PQclear(r);
-		if (self->async_mode)
-			SEM_UNLOCK(self->sem);
 		return NULL;
 	}
 
-	if (self->async_mode)
-		SEM_UNLOCK(self->sem);
 	return res;
 }
 
