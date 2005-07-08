@@ -169,9 +169,8 @@ xmlnode xdbsql_roster_get(XdbSqlDatas * self, const char *user)
 			xdbsql_colmap_free(map);
 			first = 0;
 
-		}
+		}	/* end if */
 
-		/* end if */
 		/* first let's see what type of rosteritem it is */
 		tmp_attr = sqldb_get_value(result, ndx_type);
 		if (!tmp_attr) {
@@ -181,6 +180,11 @@ xmlnode xdbsql_roster_get(XdbSqlDatas * self, const char *user)
 		}
 		if (strcmp(tmp_attr, "item") != 0)
 			tmp_attr = "conference";
+		
+		/*now let's see if it has any jid associated */
+		tmp_str = sqldb_get_value(result, ndx_jid);
+		if (!tmp_str || strlen(tmp_str) == 0)
+			continue; /* move to the next item */
 
 		/* get the extensions and start building the item tree */
 		tmp_str = sqldb_get_value(result, ndx_ext);

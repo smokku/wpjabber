@@ -43,6 +43,7 @@ CREATE TABLE rosterusers (
   extension TEXT
 );
 CREATE INDEX I_rosteru_username ON rosterusers (username);
+CREATE UNIQUE INDEX PK_rosteru ON rostergroups (username, jid);
 
 CREATE TABLE rostergroups
 (
@@ -50,6 +51,7 @@ CREATE TABLE rostergroups
   jid VARCHAR(2048) NOT NULL,
   grp VARCHAR(1024) NOT NULL
 );
+CREATE UNIQUE INDEX PK_rosterg ON rostergroups (username, jid, grp);
 
 /* Spooled offline messages */
 CREATE TABLE spool (
