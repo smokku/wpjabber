@@ -105,10 +105,10 @@ xmlnode xdbsql_auth_get(XdbSqlDatas * self, const char *user)
 	else {			/* we didn't get back the exact row count we wanted */
 		if (rowcount == 0)
 			log_error(NULL,
-				  "[xdbsql_auth_get] no results, user not found");
+				  "[xdbsql_auth_get] no results, user %s not found", user);
 		else
 			log_error(NULL,
-				  "[xdbsql_auth_get] user not unique");
+				  "[xdbsql_auth_get] user %s not unique", user);
 
 	}			/* end else */
 #else
@@ -128,14 +128,14 @@ xmlnode xdbsql_auth_get(XdbSqlDatas * self, const char *user)
 		row = sqldb_next_tuple(result);
 		if (row) {	/* User is not unique... */
 			log_error(NULL,
-				  "[xdbsql_auth_get] user not unique");
+				  "[xdbsql_auth_get] user %s not unique", user);
 			free(data);
 			data = NULL;
 		}
 	} /* end if */
 	else
 		log_error(NULL,
-			  "[xdbsql_auth_get] no results, user not found");
+			  "[xdbsql_auth_get] no results, user %s not found", user);
 #endif
 
 	sqldb_free_result(result);
@@ -229,10 +229,10 @@ xmlnode xdbsql_authhash_get(XdbSqlDatas * self, const char *user)
 	else {			/* we didn't get back the exact row count we wanted */
 		if (rowcount == 0)
 			log_error(NULL,
-				  "[xdbsql_authhash_get] no results, user not found");
+				  "[xdbsql_authhash_get] no results, user %s not found", user);
 		else
 			log_error(NULL,
-				  "[xdbsql_authhash_get] user not unique");
+				  "[xdbsql_authhash_get] user %s not unique", user);
 
 	}			/* end else */
 #else
@@ -252,14 +252,14 @@ xmlnode xdbsql_authhash_get(XdbSqlDatas * self, const char *user)
 		row = sqldb_next_tuple(result);
 		if (row) {	/* User is not unique... */
 			log_error(NULL,
-				  "[xdbsql_authhash_get] user not unique");
+				  "[xdbsql_authhash_get] user %s not unique", user);
 			free(data);
 			data = NULL;
 		}
 	} /* end if */
 	else
 		log_error(NULL,
-			  "[xdbsql_authhash_get] no results, user not found");
+			  "[xdbsql_authhash_get] no results, user %s not found", user);
 #endif
 
 	sqldb_free_result(result);
