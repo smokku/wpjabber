@@ -292,61 +292,58 @@ xmlnode xdbsql_roster_get(XdbSqlDatas * self, const char *user)
     /***** Pass 2: Load roster groups *****/
 
 	first = 1;
-	for (x1 = xmlnode_get_firstchild(rc); x1; x1 = xmlnode_get_nextsibling(x1)) {	/* Build the query string. */
-		const char *querystring;
-		qd = xdbsql_querydef_init(self, query2);
-		xdbsql_querydef_setvar(qd, "user", user);
-		xdbsql_querydef_setvar(qd, "jid",
-				       xmlnode_get_attrib(x1, "jid"));
+	/* Build the query string. */
+	const char *querystring;
+	qd = xdbsql_querydef_init(self, query2);
+	xdbsql_querydef_setvar(qd, "user", user);
 
-		/* Execute the query! */
-		querystring = xdbsql_querydef_finalize(qd);
-		result = sqldb_query(self, querystring);
-		xdbsql_querydef_free(qd);
-		if (!result) {	/* the query failed - bail out! */
-			log_warn(ZONE,
-				 "[xdbsql_roster_get] groups query for %s/%s failed : %s",
-				 user, xmlnode_get_attrib(x1, "jid"),
-				 sqldb_error(self));
-			continue;
+	/* Execute the query! */
+	querystring = xdbsql_querydef_finalize(qd);
+	result = sqldb_query(self, querystring);
+	xdbsql_querydef_free(qd);
+	if (!result) {	/* the query failed - bail out! */
+		log_warn(ZONE,
+			 "[xdbsql_roster_get] groups query for %s failed : %s",
+			 user, sqldb_error(self));
+		return rc;
+	}
 
+	/* get the results from the query */
+	if (!sqldb_use_result(result)) {	/* unable to retrieve the result */
+		log_warn(ZONE,
+			 "[xdbsql_roster_get] groups result get for %s "
+			 "failed, unable to retrieve results : %s",
+			 user, sqldb_error(self));
+		return rc;
+	}
+
+	while (sqldb_next_tuple(result) != 0) {	/* look for all group entries and add them to our output tree */
+		if (first) {	/* initialize the column mapping indexes */
+			col_map map = xdbsql_colmap_init(query2);
+			ndx_group =
+			    xdbsql_colmap_index(map, "grp");
+			ndx_jid = 
+			    xdbsql_colmap_index(map, "jid");
+			xdbsql_colmap_free(map);
+			first = 0;
 		}
 
-		/* end if */
-		/* get the results from the query */
-		if (!sqldb_use_result(result)) {	/* unable to retrieve the result */
-			log_warn(ZONE,
-				 "[xdbsql_roster_get] groups result get for %s/%s "
-				 "failed, unable to retrieve results : %s",
-				 user, xmlnode_get_attrib(x1, "jid"),
-				 sqldb_error(self));
-			continue;
-
-		}
-		/* end if */
-		while (sqldb_next_tuple(result) != 0) {	/* look for all group entries and add them to our output tree */
-			if (first) {	/* initialize the column mapping indexes */
-				col_map map = xdbsql_colmap_init(query2);
-				ndx_group =
-				    xdbsql_colmap_index(map, "grp");
-				xdbsql_colmap_free(map);
-				first = 0;
-
-			}
-
-			/* end if */
+		tmp_str = sqldb_get_value(result, ndx_jid);
+		
+		for (x1 = xmlnode_get_firstchild(rc); x1; x1 = xmlnode_get_nextsibling(x1)) {
+			if (strcmp(tmp_str, xmlnode_get_attrib(x1, "jid")) == 0) {
 			/* add a <group> tag under the <item> one for this group */
 			x2 = xmlnode_insert_tag(x1, "group");
 			xmlnode_insert_cdata(x2,
 					     sqldb_get_value(result,
 							     ndx_group),
 					     -1);
+			}
+		}
 
-		}		/* end while */
+	}		/* end while */
 
-		sqldb_free_result(result);	/* done with this result */
-
-	}			/* end for */
+	sqldb_free_result(result);	/* done with this result */
 
 	return rc;		/* all done with this operation! */
 

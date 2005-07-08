@@ -150,10 +150,10 @@ $Id: xdb_sql.xml,v 1.8 2003/04/07 20:10:55 bobeal Exp $
 
       <!-- loads individual groups for each user -->
       <querydef name="roster-load-2">
-        <text>SELECT grp FROM rostergroups WHERE username = '$$user$$' AND jid = '$$jid$$'</text>
+        <text>SELECT grp, jid FROM rostergroups WHERE username = '$$user$$'</text>
         <bindvar name="user">$$user$$</bindvar>
-        <bindvar name="jid">$$jid$$</bindvar>
         <bindcol name="grp" offset="0"/>
+        <bindcol name="jid" offset="1"/>
       </querydef>
 
       <!-- erases all roster user data -->

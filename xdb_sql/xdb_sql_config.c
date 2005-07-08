@@ -298,14 +298,14 @@ static int validate_load_roster_2(xmlnode q_root)
 			attr = xmlnode_get_attrib(tmp, name_attr_name);
 			if (j_strcmp(attr, "user") == 0)
 				user_spec = 1;
-			else if (j_strcmp(attr, "jid") == 0)
-				jid_spec = 1;
 
 		} /* end if */
 		else if (j_strcmp(xmlnode_get_name(tmp), bindcol_name) == 0) {	/* get the column name and check it */
 			attr = xmlnode_get_attrib(tmp, name_attr_name);
 			if (j_strcmp(attr, "grp") == 0)
 				group_spec = 1;
+			else if (j_strcmp(attr, "jid") == 0)
+				jid_spec = 1;
 
 		}
 		/* end else if */
