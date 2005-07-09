@@ -342,6 +342,7 @@ xmlnode xdbsql_roster_get(XdbSqlDatas * self, const char *user)
 					     sqldb_get_value(result,
 							     ndx_group),
 					     -1);
+			continue; /* skip to the next item */
 			}
 		}
 
