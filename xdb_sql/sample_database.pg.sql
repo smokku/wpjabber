@@ -43,7 +43,7 @@ CREATE TABLE rosterusers (
   extension TEXT
 );
 CREATE INDEX I_rosteru_username ON rosterusers (username);
-CREATE UNIQUE INDEX PK_rosteru ON rostergroups (username, jid);
+CREATE UNIQUE INDEX PK_rosteru ON rosterusers (username, jid);
 
 CREATE TABLE rostergroups
 (
