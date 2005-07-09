@@ -178,12 +178,12 @@ xmlnode xdbsql_roster_get(XdbSqlDatas * self, const char *user)
 				  "[xdbsql_roster_get] error getting 'type' field\n");
 			return NULL;
 		}
-		if (strcmp(tmp_attr, "item") != 0)
+		if (j_strcmp(tmp_attr, "item") != 0)
 			tmp_attr = "conference";
 		
 		/*now let's see if it has any jid associated */
 		tmp_str = sqldb_get_value(result, ndx_jid);
-		if (!tmp_str || strlen(tmp_str) == 0)
+		if (!tmp_str || tmp_str[0] == '\0')
 			continue; /* move to the next item */
 
 		/* get the extensions and start building the item tree */
@@ -212,7 +212,7 @@ xmlnode xdbsql_roster_get(XdbSqlDatas * self, const char *user)
 			x1 = xmlnode_insert_tag(rc, tmp_attr);
 		}
 		/* insert "type" attribute if it is a conference */
-		if (strcmp(tmp_attr, "conference") == 0) {
+		if (j_strcmp(tmp_attr, "conference") == 0) {
 			xmlnode_put_attrib(x1, "type",
 					   sqldb_get_value(result,
 							   ndx_type));
@@ -335,7 +335,7 @@ xmlnode xdbsql_roster_get(XdbSqlDatas * self, const char *user)
 		tmp_str = sqldb_get_value(result, ndx_jid);
 		
 		for (x1 = xmlnode_get_firstchild(rc); x1; x1 = xmlnode_get_nextsibling(x1)) {
-			if (strcmp(tmp_str, xmlnode_get_attrib(x1, "jid")) == 0) {
+			if (j_strcmp(tmp_str, xmlnode_get_attrib(x1, "jid")) == 0) {
 			/* add a <group> tag under the <item> one for this group */
 			x2 = xmlnode_insert_tag(x1, "group");
 			xmlnode_insert_cdata(x2,
@@ -419,9 +419,14 @@ int xdbsql_roster_set(XdbSqlDatas * self, const char *user, xmlnode roster)
 	tmp_var[1] = '\0';
 	for (x1 = xmlnode_get_firstchild(roster); x1; x1 = xmlnode_get_nextsibling(x1)) {	/* create the query definition and begin binding variables */
 		qd = xdbsql_querydef_init(self, query1);
+		
 		xdbsql_querydef_setvar(qd, "user", user);
-		xdbsql_querydef_setvar(qd, "jid",
-				       xmlnode_get_attrib(x1, "jid"));
+		
+		tmp_attr = NULL;
+		tmp_attr = xmlnode_get_attrib(x1, "jid");
+		if (!tmp_attr || tmp_attr[0] == '\0')
+			continue; /* move to the next item */
+		xdbsql_querydef_setvar(qd, "jid", tmp_attr);
 
 		tmp_attr = xmlnode_get_attrib(x1, "name");
 		if (tmp_attr && *tmp_attr)
