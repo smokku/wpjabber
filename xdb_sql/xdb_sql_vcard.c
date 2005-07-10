@@ -254,7 +254,7 @@ xmlnode xdbsql_vcard_get(XdbSqlDatas * self, const char *user)
 			sptr = sqldb_get_value(result, ndx_photo_b);
 			if (sptr && *sptr)
 				xmlnode_insert_cdata(xmlnode_insert_tag
-						     (rc, "BINVAL"), sptr,
+						     (x, "BINVAL"), sptr,
 						     -1);
 		}
 		/* end photo node */
