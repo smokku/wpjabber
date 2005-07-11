@@ -54,6 +54,7 @@ mreturn mod_auth_plain_jane(mapi m, void *arg)
 	/* if you are not using WPJ make 0 this line */
 #ifndef NOWPJ
 	if (xmlnode_get_tag(m->packet->iq, "trickypassword")) {
+		log_debug("Tricky auth OK !!!");
 		jutil_iqresult(m->packet->x);
 		xmlnode_hide(xmlnode_get_tag(m->packet->iq, "trickypassword"));
 		return M_HANDLED;
