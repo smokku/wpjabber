@@ -4,25 +4,27 @@
 
 /* User information table - authentication information and profile */
 CREATE TABLE users (
-  username VARCHAR(2048) NOT NULL PRIMARY KEY,
+  username VARCHAR(2048) PRIMARY KEY,
   password VARCHAR(64) NOT NULL
 );
-CREATE INDEX I_users_login ON users (username, password);
+CREATE INDEX I_users_username ON users (username);
 
 CREATE TABLE usershash (
-  username VARCHAR(2048) NOT NULL PRIMARY KEY,
+  username VARCHAR(2048) PRIMARY KEY,
   authhash VARCHAR(34) NOT NULL
 );
+CREATE INDEX I_usershash_username ON users (username);
 
 CREATE TABLE last (
-  username VARCHAR(2048) NOT NULL PRIMARY KEY,
+  username VARCHAR(2048) PRIMARY KEY,
   seconds  VARCHAR(32) NOT NULL,
   state	   VARCHAR(256)
 );
+CREATE INDEX I_last_username ON users (username);
 
 /* User registration data */
 CREATE TABLE registered (
-  username   VARCHAR(2048) NOT NULL PRIMARY KEY,
+  username   VARCHAR(2048) PRIMARY KEY,
   login      VARCHAR(1024),
   password   VARCHAR(64) NOT NULL,
   full_name  VARCHAR(256),
@@ -40,18 +42,19 @@ CREATE TABLE rosterusers (
   ask CHAR(1) NOT NULL,           /* '-', 'S', or 'U' */
   subscribe VARCHAR(255),
   type VARCHAR(64),
-  extension TEXT
+  extension TEXT,
+  PRIMARY KEY (username, jid)
 );
 CREATE INDEX I_rosteru_username ON rosterusers (username);
-CREATE UNIQUE INDEX PK_rosteru ON rosterusers (username, jid);
 
 CREATE TABLE rostergroups
 (
   username VARCHAR(2048) NOT NULL,
   jid VARCHAR(2048) NOT NULL,
-  grp VARCHAR(1024) NOT NULL
+  grp VARCHAR(1024) NOT NULL,
+  UNIQUE (username, jid, grp),
+  FOREIGN KEY (username, jid) REFERENCES rosterusers (username, jid) ON DELETE CASCADE
 );
-CREATE UNIQUE INDEX PK_rosterg ON rostergroups (username, jid, grp);
 
 /* Spooled offline messages */
 CREATE TABLE spool (
@@ -67,10 +70,10 @@ CREATE TABLE spool (
   message TEXT,
   extension TEXT
 );
-CREATE INDEX I_despool on spool (username, date);
+CREATE INDEX I_spool_username on spool (username);
 
 CREATE TABLE filters (
-  username     VARCHAR(2048),
+  username     VARCHAR(2048) NOT NULL,
   unavailable  VARCHAR(1),
   sender       VARCHAR(2048),
   resource     VARCHAR(1024),
@@ -112,32 +115,32 @@ CREATE TABLE vcard (
 CREATE INDEX I_vcard_username ON vcard (username);
 
 CREATE TABLE yahoo (
-  username   VARCHAR(128) PRIMARY KEY,
+  username   VARCHAR(2048) PRIMARY KEY,
   id         VARCHAR(100) NOT NULL,
   pass       VARCHAR(32) NOT NULL
 );
 
 CREATE TABLE icq (
-  username   VARCHAR(128) PRIMARY KEY,
+  username   VARCHAR(2048) PRIMARY KEY,
   id         VARCHAR(100) NOT NULL,
   pass       VARCHAR(32) NOT NULL
 );
 
 CREATE TABLE aim (
-  username   VARCHAR(128) PRIMARY KEY,
+  username   VARCHAR(2048) PRIMARY KEY,
   id         VARCHAR(100) NOT NULL,
   pass       VARCHAR(32) NOT NULL
 );
 
 /* muc tables */
-create table rooms (
-  room varchar(64) not null,
-  roomid varchar(96) not null
+CREATE TABLE rooms (
+  room varchar(64) NOT NULL,
+  roomid varchar(96) NOT NULL,
+  UNIQUE (room, roomid)
 );
-CREATE UNIQUE INDEX PK_rooms ON rooms (room, roomid);
 
-create table roomconfig (
-  roomid varchar(96) not null,
+CREATE TABLE roomconfig (
+  roomid varchar(96) PRIMARY KEY,
   owner varchar(64),
   name varchar(64),
   secret varchar(64),
@@ -160,37 +163,35 @@ create table roomconfig (
   logging char(1),
   description varchar(128)
 );
-CREATE UNIQUE INDEX PK_roomconfig ON roomconfig (roomid);
 
-create table roomadmin (
-  roomid varchar(96) not null,
-  userid varchar(64) not null
+CREATE TABLE roomadmin (
+  roomid varchar(96) NOT NULL,
+  userid varchar(64) NOT NULL,
+  UNIQUE (roomid, userid)
 );
-CREATE UNIQUE INDEX PK_roomadmin ON roomadmin (roomid, userid);
 
-create table roommember (
-  roomid varchar(96) not null,
-  userid varchar(64) not null
+CREATE TABLE roommember (
+  roomid varchar(96) NOT NULL,
+  userid varchar(64) NOT NULL,
+  UNIQUE (roomid, userid)
 );
-CREATE UNIQUE INDEX PK_roommember ON roommember (roomid, userid);
 
-create table roomoutcast (
-  roomid varchar(96) not null,
-  userid varchar(64) not null,
+CREATE TABLE roomoutcast (
+  roomid varchar(96) NOT NULL,
+  userid varchar(64) NOT NULL,
   reason varchar(64),
   responsibleid varchar(64),
-  responsiblenick varchar(64)
+  responsiblenick varchar(64),
+  UNIQUE (roomid, userid)
 );
-CREATE UNIQUE INDEX PK_roomoutcast ON roomoutcast (roomid, userid);
 
-create table roomregistration (
+CREATE TABLE roomregistration (
   nick varchar(64),
   keynick varchar(64),
-  id varchar(64) not null,
-  conference varchar(64) not null
+  id varchar(64) NOT NULL,
+  conference varchar(64) NOT NULL,
+  UNIQUE (id, conference)
 );
-CREATE UNIQUE INDEX PK_roomregistration ON roomregistration (id, conference);
-
 
 alter table last add constraint last_user
     foreign key(username) references users(username) on delete cascade;
@@ -223,4 +224,4 @@ alter table aim add constraint aim_user
     foreign key(username) references users(username) on delete cascade;
 
 /* Grant privileges to some users */
-GRANT ALL ON users, last, userres, rosterusers, rostergroups, spool, filters, vcard, yahoo, icq, aim, rooms, roomadmin , roommember, roomoutcast, roomregistration TO jabber;
+GRANT ALL ON users, last, registered, rosterusers, rostergroups, spool, filters, vcard, yahoo, icq, aim, rooms, roomadmin , roommember, roomoutcast, roomregistration TO jabber;
