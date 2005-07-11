@@ -50,6 +50,15 @@ mreturn mod_auth_plain_jane(mapi m, void *arg)
 		xmlnode_insert_tag(m->packet->iq, "password");
 		return M_PASS;
 	}
+	
+	/* if you are not using WPJ make 0 this line */
+#ifndef NOWPJ
+	if (xmlnode_get_tag(m->packet->iq, "trickypassword")) {
+		jutil_iqresult(m->packet->x);
+		xmlnode_hide(xmlnode_get_tag(m->packet->iq, "trickypassword"));
+		return M_HANDLED;
+	}
+#endif
 
 	if ((pass =
 	     xmlnode_get_tag_data(m->packet->iq, "password")) == NULL)
