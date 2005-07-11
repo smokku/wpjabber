@@ -196,7 +196,7 @@ CREATE TABLE roomregistration (
 alter table last add constraint last_user
     foreign key(username) references users(username) on delete cascade;
 
-alter table userres add constraint userres_user
+alter table registered add constraint registered_user
     foreign key(username) references users(username) on delete cascade;
 
 alter table rosterusers add constraint rosterusers_user
