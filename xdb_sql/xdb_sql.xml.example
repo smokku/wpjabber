@@ -98,7 +98,6 @@ $Id: xdb_sql.xml,v 1.8 2003/04/07 20:10:55 bobeal Exp $
 	<text>SELECT username FROM usershash WHERE username = '$$user$$'</text>
 	<bindvar name="user">$$user$$</bindvar>
       </querydef>
-
       <!-- Authentication set query for new user -->
       <querydef name="authhash-set-new">
 	<text>INSERT INTO usershash (username, authhash) VALUES ('$$jid$$', '$$pass$$')</text>
