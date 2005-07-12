@@ -96,7 +96,8 @@ mreturn mod_last_init(mapi m, void *arg)
 
 mreturn mod_last_sess_end(mapi m, void *arg)
 {
-	if ((m->s->presence != NULL) && (m->user->removed))	/* presence is only set if there was presence sent, and we only track logins that were available */
+	if ((m->s->presence != NULL) && (m->user->removed))
+		/* presence is only set if there was presence sent, and we only track logins that were available */
 		mod_last_set(m, m->user->id,
 			     xmlnode_get_tag_data(m->s->presence,
 						  "status"));

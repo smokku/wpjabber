@@ -95,9 +95,10 @@ mreturn mod_status_offline_out(mapi m, void *arg)
 
 		sb = (status_bucket) wpxhash_get(so->hash, m->user->user);
 
+		/* it's a BROKEN! implementation
 		if (strlen(status) > MAX_STATUS_LEN) {
 			*(status + MAX_STATUS_LEN) = 0;
-		}
+		} */
 		p = pool_heap(strlen(status) + strlen(m->user->user) +
 			      sizeof(_status_bucket) + 10);
 		sbnew = pmalloco(p, sizeof(_status_bucket));
@@ -161,17 +162,15 @@ mreturn mod_status_offline_offline(mapi m, void *arg)
 		SEM_LOCK(m->user->sem);
 
 		for (cur = m->user->sessions; cur != NULL; cur = cur->next) {
-			if (cur->priority < 0)
+			if (cur->priority < -128)
 				continue;
 
-			if (j_strcmp
-			    (xmlnode_get_attrib(cur->presence, "type"),
-			     "unavailable") != 0) {
+			if (j_strcmp(xmlnode_get_attrib(cur->presence, "type"), "unavailable") != 0) {
 				/* if any available session, PASS */
 				inv = 1;
 				break;
 			}
-			/* if priority >= 0 and unavailable presence -> invisible */
+			/* if priority >= -128 and unavailable presence -> invisible */
 		}
 		SEM_UNLOCK(m->user->sem);
 
