@@ -130,17 +130,18 @@ static result xdb_sql_phandler(instance i, dpacket p, void *args)
 	/* find module to dispatch according to resource/namespace */
 	for (mod = self->modules; mod->namespace != NULL; mod++) {
 		if (strcmp(namespace, mod->namespace) == 0) {
+			SEM_LOCK(mod->sem);
 			return module_call(self, mod, p, user);
+			SEM_UNLOCK(mod->sem);
 		}
 	}
 
 	for (qn = self->queries_v2; qn != NULL; qn = qn->next) {
-		if ((strcmp
-		     (namespace,
-		      xdbsql_querydef_get_namespace(qn->qd)) == 0)
-		    && (strcmp(type, xdbsql_querydef_get_type(qn->qd)) ==
-			0)) {
+		if ((strcmp(namespace, xdbsql_querydef_get_namespace(qn->qd)) == 0)
+		    && (strcmp(type, xdbsql_querydef_get_type(qn->qd)) == 0)) {
+			xdbsql_querydef_lock(qn->qd);
 			return handle_query_v2(self, qn->qd, p, user);
+			xdbsql_querydef_unlock(qn->qd);
 		}
 	}
 

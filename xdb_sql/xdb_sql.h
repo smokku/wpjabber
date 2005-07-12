@@ -45,6 +45,7 @@ typedef struct XdbSqlModule {
 	const char *namespace;
 	XdbSqlSetFunc set;
 	XdbSqlGetFunc get;
+	SEM_VAR sem;
 } XdbSqlModule;
 
 typedef struct query_node_struct *query_node;

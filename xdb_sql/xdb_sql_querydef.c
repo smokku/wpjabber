@@ -58,6 +58,7 @@ struct query_def_struct {
 	col_map_entry first_col;	/* for get, the first col entry */
 	xmlnode resnode;	/* for get, node in which insert the result */
 	xmlnode tuplenode;	/* for get, node to create for each tuple */
+	SEM_VAR sem;
 };
 
 /* Handle query data for the time of a request.
@@ -457,8 +458,7 @@ static col_map_entry process_col(xmlnode x, pool p)
  * (get only) at least one <bindcol>
  * (get only) <bindcol> has (tag or attrib), and offset
  */
-query_def xdbsql_querydef_init_v2(XdbSqlDatas * self, pool p,
-				  xmlnode qd_root)
+query_def xdbsql_querydef_init_v2(XdbSqlDatas * self, pool p, xmlnode qd_root)
 {
 	query_def qd;		/* querydef pointer */
 	query_def_bind_var var;	/* new bind variable structure */
@@ -472,6 +472,7 @@ query_def xdbsql_querydef_init_v2(XdbSqlDatas * self, pool p,
 	qd->first_var = qd->last_var = qd->user_var = NULL;
 	qd->first_col = NULL;
 	qd->datas = self;
+	SEM_INIT(qd->sem);
 
 	qd->namespace = xmlnode_get_attrib(qd_root, "namespace");
 	if (!qd->namespace || !*qd->namespace) {
@@ -781,4 +782,18 @@ int xdbsql_var_is_attrib(query_def_bind_var var)
 	if (!var)
 		return 0;
 	return var->is_attrib;
+}
+
+void xdbsql_querydef_lock(query_def qd)
+{
+	if (!qd)
+		return;
+	SEM_LOCK(qd->sem);
+}
+
+void xdbsql_querydef_unlock(query_def qd)
+{
+	if (!qd)
+		return;
+	SEM_UNLOCK(qd->sem);
 }

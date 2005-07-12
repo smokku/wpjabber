@@ -104,18 +104,17 @@ static const struct query_table s_query_table[] = {
  * Bind a namespace to set/get functions.
  */
 static const XdbSqlModule static_modules[] = {
-	{NS_AUTH, xdbsql_auth_set, xdbsql_auth_get},
-	{NS_AUTH_CRYPT, xdbsql_authhash_set, xdbsql_authhash_get},
-	{NS_LAST, xdbsql_last_set, xdbsql_last_get},
-	{NS_ROSTER, xdbsql_roster_set, xdbsql_roster_get},
-	{NS_OFFLINE, xdbsql_offline_set, xdbsql_offline_get},
-	{NS_REGISTER, xdbsql_register_set, xdbsql_register_get},
-	{NS_VCARD, xdbsql_vcard_set, xdbsql_vcard_get},
-	{NS_FILTER, xdbsql_filter_set, xdbsql_filter_get},
-	{"muc:room:config", xdbsql_roomconfig_set, xdbsql_roomconfig_get},
-	{"muc:list:outcast", xdbsql_roomoutcast_set,
-	 xdbsql_roomoutcast_get},
-	{NULL, NULL, NULL}
+	{NS_AUTH, xdbsql_auth_set, xdbsql_auth_get, 0},
+	{NS_AUTH_CRYPT, xdbsql_authhash_set, xdbsql_authhash_get, 0},
+	{NS_LAST, xdbsql_last_set, xdbsql_last_get, 0},
+	{NS_ROSTER, xdbsql_roster_set, xdbsql_roster_get, 0},
+	{NS_OFFLINE, xdbsql_offline_set, xdbsql_offline_get, 0},
+	{NS_REGISTER, xdbsql_register_set, xdbsql_register_get, 0},
+	{NS_VCARD, xdbsql_vcard_set, xdbsql_vcard_get, 0},
+	{NS_FILTER, xdbsql_filter_set, xdbsql_filter_get, 0},
+	{"muc:room:config", xdbsql_roomconfig_set, xdbsql_roomconfig_get, 0},
+	{"muc:list:outcast", xdbsql_roomoutcast_set, xdbsql_roomoutcast_get, 0},
+	{NULL, NULL, NULL, 0}
 };
 
 
@@ -944,6 +943,7 @@ int xdbsql_config_init(XdbSqlDatas * self, xmlnode cfgroot)
 	const char *user = NULL;	/* SQL username */
 	const char *password = NULL;	/* SQL password */
 	const char *database = NULL;	/* SQL database name */
+	XdbSqlModule *mod;
 
 	if (!cfgroot)
 		return 0;	/* configuration not present */
@@ -1021,32 +1021,28 @@ int xdbsql_config_init(XdbSqlDatas * self, xmlnode cfgroot)
 	if (!database)
 		database = def_user_db;
 
-	self->modules = (struct XdbSqlModule *) pmalloc(self->poolref,
-							sizeof
-							(static_modules));
+	self->modules = (struct XdbSqlModule *) pmalloc(self->poolref, sizeof(static_modules));
 	memcpy(self->modules, static_modules, sizeof(static_modules));
+	for (mod = self->modules; mod->namespace != NULL; mod++) {
+		SEM_INIT(mod->sem);
+	}
 
-
-	self->query_table = (struct query_table *) pmalloc(self->poolref,
-							   sizeof
-							   (s_query_table));
+	self->query_table = (struct query_table *) pmalloc(self->poolref, sizeof(s_query_table));
 	memcpy(self->query_table, s_query_table, sizeof(s_query_table));
 
 	/* look at the queries and load them into our query table */
 	query_base = xmlnode_get_tag(cfgroot, "queries");
-	if (query_base) {	/* begin probing for queries in the query base section */
+	if (query_base) {
+		/* begin probing for queries in the query base section */
 		for (tmp = xmlnode_get_firstchild(query_base); tmp;
 		     tmp = xmlnode_get_nextsibling(tmp)) {
-			if ((j_strcmp(xmlnode_get_name(tmp), "querydef") ==
-			     0)
+			if ((j_strcmp(xmlnode_get_name(tmp), "querydef") == 0)
 			    && xmlnode_get_tag(tmp, "text")) {
 				if (!xmlnode_get_attrib(tmp, "dtd")) {
 					if (!handle_query_v1(self, tmp))
 						return 0;
 				} else
-				    if (j_strcmp
-					(xmlnode_get_attrib(tmp, "dtd"),
-					 "2") == 0) {
+				    if (j_strcmp(xmlnode_get_attrib(tmp, "dtd"), "2") == 0) {
 					if (!handle_query_v2(self, tmp))
 						return 0;
 				} else {
@@ -1059,7 +1055,8 @@ int xdbsql_config_init(XdbSqlDatas * self, xmlnode cfgroot)
 		}
 	}
 	/* end if */
-	if (!sqldb_connect(self, hostname, portstr, user, password, database)) {	/* the database is unavailable - we are probably f**ked no matter what we do */
+	if (!sqldb_connect(self, hostname, portstr, user, password, database)) {
+		/* the database is unavailable - we are probably f**ked no matter what we do */
 		log_error(NULL,
 			  "[xdbsql_config_init] cannot connect database : %s\n",
 			  sqldb_error(self));
