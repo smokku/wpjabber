@@ -45,10 +45,17 @@ typedef struct XdbSqlModule {
 	const char *namespace;
 	XdbSqlSetFunc set;
 	XdbSqlGetFunc get;
-	SEM_VAR sem;
 } XdbSqlModule;
 
 typedef struct query_node_struct *query_node;
+
+//default value for hash
+#define HASH_PRIME 509
+
+typedef struct XdbSqlRef {
+	WPHASH_BUCKET;
+	volatile int ref;	//number of references to user/namespace
+} *XdbSqlRef, _XdbSqlRef;
 
 /* passed to request handler */
 /* query_table currently allocated in poolref - see config.c */
@@ -60,6 +67,8 @@ typedef struct XdbSqlDatas {
 	struct query_table *query_table;	/* for query validation */
 	int sleep_debug;	/* how much sleep before processing */
 	query_node queries_v2;	/* queries with dtd v2 */
+	HASHTABLE hash;
+	SEM_VAR hash_sem;
 } XdbSqlDatas;
 
 /* Query definition */

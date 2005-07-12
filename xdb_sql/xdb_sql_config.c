@@ -104,17 +104,17 @@ static const struct query_table s_query_table[] = {
  * Bind a namespace to set/get functions.
  */
 static const XdbSqlModule static_modules[] = {
-	{NS_AUTH, xdbsql_auth_set, xdbsql_auth_get, 0},
-	{NS_AUTH_CRYPT, xdbsql_authhash_set, xdbsql_authhash_get, 0},
-	{NS_LAST, xdbsql_last_set, xdbsql_last_get, 0},
-	{NS_ROSTER, xdbsql_roster_set, xdbsql_roster_get, 0},
-	{NS_OFFLINE, xdbsql_offline_set, xdbsql_offline_get, 0},
-	{NS_REGISTER, xdbsql_register_set, xdbsql_register_get, 0},
-	{NS_VCARD, xdbsql_vcard_set, xdbsql_vcard_get, 0},
-	{NS_FILTER, xdbsql_filter_set, xdbsql_filter_get, 0},
-	{"muc:room:config", xdbsql_roomconfig_set, xdbsql_roomconfig_get, 0},
-	{"muc:list:outcast", xdbsql_roomoutcast_set, xdbsql_roomoutcast_get, 0},
-	{NULL, NULL, NULL, 0}
+	{NS_AUTH, xdbsql_auth_set, xdbsql_auth_get},
+	{NS_AUTH_CRYPT, xdbsql_authhash_set, xdbsql_authhash_get},
+	{NS_LAST, xdbsql_last_set, xdbsql_last_get},
+	{NS_ROSTER, xdbsql_roster_set, xdbsql_roster_get},
+	{NS_OFFLINE, xdbsql_offline_set, xdbsql_offline_get},
+	{NS_REGISTER, xdbsql_register_set, xdbsql_register_get},
+	{NS_VCARD, xdbsql_vcard_set, xdbsql_vcard_get},
+	{NS_FILTER, xdbsql_filter_set, xdbsql_filter_get},
+	{"muc:room:config", xdbsql_roomconfig_set, xdbsql_roomconfig_get},
+	{"muc:list:outcast", xdbsql_roomoutcast_set, xdbsql_roomoutcast_get},
+	{NULL, NULL, NULL}
 };
 
 
@@ -943,7 +943,6 @@ int xdbsql_config_init(XdbSqlDatas * self, xmlnode cfgroot)
 	const char *user = NULL;	/* SQL username */
 	const char *password = NULL;	/* SQL password */
 	const char *database = NULL;	/* SQL database name */
-	XdbSqlModule *mod;
 
 	if (!cfgroot)
 		return 0;	/* configuration not present */
@@ -1023,9 +1022,6 @@ int xdbsql_config_init(XdbSqlDatas * self, xmlnode cfgroot)
 
 	self->modules = (struct XdbSqlModule *) pmalloc(self->poolref, sizeof(static_modules));
 	memcpy(self->modules, static_modules, sizeof(static_modules));
-	for (mod = self->modules; mod->namespace != NULL; mod++) {
-		SEM_INIT(mod->sem);
-	}
 
 	self->query_table = (struct query_table *) pmalloc(self->poolref, sizeof(s_query_table));
 	memcpy(self->query_table, s_query_table, sizeof(s_query_table));

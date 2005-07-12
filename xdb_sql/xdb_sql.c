@@ -48,6 +48,9 @@ void xdb_sql(instance i, xmlnode x)
 	}
 	self->poolref = i->p;
 
+	SEM_INIT(self->hash_sem);
+	self->hash = wpxhash_new(HASH_PRIME);
+	
 	/* Load config from xdb */
 	xc = xdb_cache(i);
 	self->config =
@@ -86,6 +89,9 @@ static result xdb_sql_phandler(instance i, dpacket p, void *args)
 	XdbSqlDatas *self = (XdbSqlDatas *) args;
 	XdbSqlModule *mod;
 	query_node qn;
+	char *hashkey;
+	XdbSqlRef nsref;
+	int result;
 
 	if (!initialized) {
 		log_error(p->id->server,
@@ -127,29 +133,62 @@ static result xdb_sql_phandler(instance i, dpacket p, void *args)
 
 	log_debug("modules = %p", self->modules);
 
+	/* lock the username/namespace */
+	hashkey = spools(p->p, user, "/", namespace, p->p);
+	SEM_LOCK(self->hash_sem);
+	if ((nsref = wpxhash_get(self->hash, hashkey)) != NULL) {
+		nsref->ref++;
+		log_debug("ref++ (%d) on hash-lock for %s", nsref->ref, hashkey);
+		/* wait for data, I don't like this :( */
+		SEM_UNLOCK(self->hash_sem);
+		while (1) {
+			usleep(15);
+			SEM_LOCK(self->hash_sem);
+			if (nsref->ref == 1)
+				break;
+			SEM_UNLOCK(self->hash_sem);
+		}
+	} else {
+		nsref = pmalloco(self->poolref, sizeof(_XdbSqlRef));
+		nsref->ref = 1;
+		wpxhash_put(self->hash, pstrdup(self->poolref, hashkey), nsref);
+		log_debug("new hash-lock for %s", hashkey);
+	}
+	SEM_UNLOCK(self->hash_sem);
+
 	/* find module to dispatch according to resource/namespace */
 	for (mod = self->modules; mod->namespace != NULL; mod++) {
 		if (strcmp(namespace, mod->namespace) == 0) {
-			SEM_LOCK(mod->sem);
-			return module_call(self, mod, p, user);
-			SEM_UNLOCK(mod->sem);
+			result = module_call(self, mod, p, user);
+			goto phandler_end;
 		}
 	}
 
 	for (qn = self->queries_v2; qn != NULL; qn = qn->next) {
 		if ((strcmp(namespace, xdbsql_querydef_get_namespace(qn->qd)) == 0)
 		    && (strcmp(type, xdbsql_querydef_get_type(qn->qd)) == 0)) {
-			xdbsql_querydef_lock(qn->qd);
-			return handle_query_v2(self, qn->qd, p, user);
-			xdbsql_querydef_unlock(qn->qd);
+			result = handle_query_v2(self, qn->qd, p, user);
+			goto phandler_end;
 		}
 	}
 
-	return handle_unknown_namespace(p, user, namespace);
+	result = handle_unknown_namespace(p, user, namespace);
+	
+	phandler_end:
+	SEM_LOCK(self->hash_sem);
+	/* our ref-- */
+	nsref->ref--;
+
+	if (nsref->ref == 0) {
+		log_debug("removing hash-lock for %s", hashkey);
+		wpxhash_zap(self->hash, hashkey);
+	}
+	SEM_UNLOCK(self->hash_sem);
+
+	return result;
 }
 
-static int
-module_call(XdbSqlDatas * self, XdbSqlModule * mod, dpacket p, char *user)
+static int module_call(XdbSqlDatas * self, XdbSqlModule * mod, dpacket p, char *user)
 {
 	short is_set;
 	xmlnode data = NULL;
@@ -210,9 +249,7 @@ static short check_attr_value(xmlnode node, char *attr_name, char *value)
 		return 0;
 }
 
-static result
-handle_unknown_namespace(dpacket p, const char *user,
-			 const char *namespace)
+static result handle_unknown_namespace(dpacket p, const char *user, const char *namespace)
 {
 	dpacket dp;
 
@@ -255,8 +292,7 @@ handle_unknown_namespace(dpacket p, const char *user,
 #endif				/* HIDE_BUG */
 }
 
-static int
-handle_query_v2(XdbSqlDatas * self, query_def qd, dpacket p, char *user)
+static int handle_query_v2(XdbSqlDatas * self, query_def qd, dpacket p, char *user)
 {
 	xmlnode data = NULL;
 	dpacket dp;
