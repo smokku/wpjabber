@@ -50,12 +50,16 @@ typedef struct XdbSqlModule {
 typedef struct query_node_struct *query_node;
 
 //default value for hash
-#define HASH_PRIME 509
+#define CACHE_PRIME 509
 
-typedef struct XdbSqlRef {
+typedef struct XdqSqlCacher_struct {
 	WPHASH_BUCKET;
-	volatile int ref;	//number of references to user/namespace
-} *XdbSqlRef, _XdbSqlRef;
+	volatile xmlnode data;
+	volatile int dirty;	//need to write-back on purge?
+	unsigned long lasttime;	//last access time
+	struct cacher_struct *anext, *aprev;
+	volatile int ref;	//number of references to hash element
+} *cacher, _cacher;
 
 /* passed to request handler */
 /* query_table currently allocated in poolref - see config.c */
@@ -69,7 +73,19 @@ typedef struct XdbSqlDatas {
 	query_node queries_v2;	/* queries with dtd v2 */
 	HASHTABLE hash;
 	SEM_VAR hash_sem;
+	int timeout;		//hash elements timeout
+	HASHTABLE hash;
+	int sizelimit;		//sizelimit for set
+	SEM_VAR hash_sem;
+	volatile cacher last;	//oldest element
+	volatile cacher first;	//latest element
+	volatile unsigned long actualtime;
 } XdbSqlDatas;
+/*
+	  | aprev    c	anext |   | aprev   c  anext |
+	   xf->first ^			    ^  xf->last
+*/
+
 
 /* Query definition */
 typedef struct query_def_struct *query_def;
