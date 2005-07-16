@@ -1,0 +1,13 @@
+$ createdb -U postgres -E UNICODE jabber
+CREATE DATABASE
+
+$ createuser -P -U postgres jabber
+Enter password for new user:
+Enter it again:
+Shall the new user be allowed to create databases? (y/n) n
+Shall the new user be allowed to create more new users? (y/n) n
+CREATE USER
+
+$ psql -U jabber jabber
+jabber=> \i sample_database.pg.sql
+
