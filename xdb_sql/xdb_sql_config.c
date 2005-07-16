@@ -971,11 +971,12 @@ int xdbsql_config_init(XdbSqlDatas * self, xmlnode cfgroot)
 	}
 
 	/* Find sleep */
-	self->sleep_debug =
-	    j_atoi(xmlnode_get_tag_data(cfgroot, "sleep-debug"), 0);
+	self->sleep_debug = j_atoi(xmlnode_get_tag_data(cfgroot, "sleep-debug"), 0);
 	if (self->sleep_debug < 0)
 		self->sleep_debug = -self->sleep_debug;
 
+	self->timeout = j_atoi(xmlnode_get_tag_data(cfgroot, "timeout"), 10);
+	
 	/* Have a look in the XML configuration data for connection information. */
 	conn_base = xmlnode_get_tag(cfgroot, "connection");
 	if (conn_base) {	/* get the database connection parameters from the <connection> block */

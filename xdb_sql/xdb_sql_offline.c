@@ -271,11 +271,9 @@ static int load_query(query_def qd, xmlnode x, pool p)
 }
 
 
-int xdbsql_offline_set(XdbSqlDatas * self, const char *user,
-		       xmlnode xdb_request_node)
+int xdbsql_offline_set(XdbSqlDatas * self, const char *user, xmlnode data)
 {
 	xmlnode x;
-	xmlnode data;
 	xmlnode query;		/* the query for this function */
 	query_def qd;		/* the query definition */
 	XdbSqlResult *result;	/* return from query */
@@ -283,8 +281,6 @@ int xdbsql_offline_set(XdbSqlDatas * self, const char *user,
 	const char *querystring;
 	const char *action;
 	int insert_mode = 0;
-
-	data = xmlnode_get_firstchild(xdb_request_node);
 
 	if (!user) {		/* the user was not specified - we have to bug off */
 		log_error(NULL, "[xdbsql_offline_set] user not specified");
@@ -295,7 +291,7 @@ int xdbsql_offline_set(XdbSqlDatas * self, const char *user,
 	if (!data)
 		return purge_offline(self, user);
 
-	action = xmlnode_get_attrib(xdb_request_node, "action");
+	action = xmlnode_get_attrib(data, "action");
 	if (action) {
 		if (j_strcmp("insert", action) != 0) {
 			log_error(ZONE,

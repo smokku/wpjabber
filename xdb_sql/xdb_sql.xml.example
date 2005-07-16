@@ -43,6 +43,16 @@ $Id: xdb_sql.xml,v 1.8 2003/04/07 20:10:55 bobeal Exp $
     <sleep-debug>1</sleep-debug>
     -->
 
+    <!-- Cache settings: -->
+    <!-- cache data timeout
+         -1: cache forever
+	  0: remove immediately
+	 >0: cache time in seconds
+    -->
+    <timeout>10</timeout>
+    <!-- maximum cached items - have to be a prime number! -->
+    <maxcache>7963</maxcache>
+
     <!-- This section defines the queries we make into the database.  The -->
     <!-- querydef mechanism allows us to change the underlying database layout -->
     <!--  without recompiling the source. -->

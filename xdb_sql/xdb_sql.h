@@ -57,7 +57,7 @@ typedef struct XdqSqlCacher_struct {
 	volatile xmlnode data;
 	volatile int dirty;	//need to write-back on purge?
 	unsigned long lasttime;	//last access time
-	struct cacher_struct *anext, *aprev;
+	struct XdqSqlCacher_struct *anext, *aprev;
 	volatile int ref;	//number of references to hash element
 } *cacher, _cacher;
 
@@ -71,12 +71,11 @@ typedef struct XdbSqlDatas {
 	struct query_table *query_table;	/* for query validation */
 	int sleep_debug;	/* how much sleep before processing */
 	query_node queries_v2;	/* queries with dtd v2 */
+	int initialized;
+	volatile int shutdown;
 	HASHTABLE hash;
 	SEM_VAR hash_sem;
 	int timeout;		//hash elements timeout
-	HASHTABLE hash;
-	int sizelimit;		//sizelimit for set
-	SEM_VAR hash_sem;
 	volatile cacher last;	//oldest element
 	volatile cacher first;	//latest element
 	volatile unsigned long actualtime;
