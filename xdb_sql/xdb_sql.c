@@ -298,9 +298,10 @@ static result xdb_sql_phandler(instance i, dpacket p, void *args)
 			SEM_UNLOCK(self->hash_sem);
 		}
 	} else {
-		c = pmalloco(self->poolref, sizeof(_cacher));
+		pool p = pool_heap(1024);
+		c = pmalloco(p, sizeof(_cacher));
 		c->ref = 1;
-		wpxhash_put(self->hash, pstrdup(self->poolref, hashkey), c);
+		wpxhash_put(self->hash, pstrdup(p, hashkey), c);
 		log_debug("xqb_sql new cache for %s", hashkey);
 	}
 
@@ -312,17 +313,20 @@ static result xdb_sql_phandler(instance i, dpacket p, void *args)
 		c->dirty = 1;
 	} else {
 		if (c->data == NULL) {
-			xmlnode res;
+			xmlnode x;
 			int ret;
 			
 			SEM_UNLOCK(self->hash_sem);
-			if ((ret = namespace_call(self, namespace, type, &res, user)) != r_DONE)
+			if ((ret = namespace_call(self, namespace, type, &x, user)) != r_DONE)
 				return ret;
-			if (res == NULL)
+			if (x == NULL)
 				/* put dummy node if null query-result */
-				res = xmlnode_new_tag_pool(self->poolref, "xdb");
+				c->data = xmlnode_new_tag("xdb");
+			else {
+				c->data = xmlnode_dup(x);
+				xmlnode_free(x);
+			}
 			SEM_LOCK(self->hash_sem);
-			c->data = res;
 		}
 	}
 
