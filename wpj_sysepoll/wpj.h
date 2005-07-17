@@ -86,7 +86,7 @@ extern "C" {
 #ifdef __cplusplus
 }
 #endif
-#define VERSION "WPJ v 1.1. Socket multiplexer by Lukas Karwacki"
+#define VERSION "WPJ v 1.1"
 #define MAX_MEM_LOG_MESSAGES 100
 #define MAX_MEM_LOG_MSG_SIZE 3000
 #define ut(t) ((long long)((t).tv_sec)*1000000 + (t).tv_usec)

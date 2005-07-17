@@ -63,7 +63,7 @@
 extern "C" {
 #endif
 
-#define VERSION "Jabberd 1.1.3	stable / with real threads / by Lukas Karwacki"
+#define VERSION "WPJabberd 1.1.3svn"
 
 /* packet types */
 	typedef enum { p_NONE, p_NORM, p_XDB, p_LOG, p_ROUTE } ptype;
