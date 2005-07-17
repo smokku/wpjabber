@@ -313,7 +313,7 @@ mreturn mod_roster_out_s10n(mapi m, roster_cfg roster_config)
 mreturn mod_roster_out_iq(mapi m, roster_cfg roster_config)
 {
 	xmlnode roster, cur, pres, item;
-	int newflag, count;
+	int newflag = 0, count;
 	jid id;
 
 	if (!NSCHECK(m->packet->iq, NS_ROSTER))
