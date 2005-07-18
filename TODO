@@ -11,3 +11,13 @@
 inbound streams (c2s, s2s, l2s):
  - MAX_STANZA_SIZE - drop stream with relevant errormessage
   (prevents possible OOM DOS)
+
+ - fix jabber:iq:last to store every presence/status change and real time in DB
+ - implement web-indicator based on jabber:iq:last
+ - implement offline_status via jabber:iq:last
+
+ - fix privacy-lists implementation
+ - remove <presence type="invisible"/> support
+
+ - mod_acl
+
