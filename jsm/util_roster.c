@@ -168,8 +168,7 @@ js_roster add_roster_cache_item(udata u, jid id, int subscription)
 }
 
 /* adds groups to roster, also	*/
-void add_roster_item_group(udata u, js_roster cur, js_roster_group old_gr,
-			   char *name)
+void add_roster_item_group(udata u, js_roster cur, js_roster_group old_gr, char *name)
 {
 	js_roster_group temp_gr, cur_gr;
 
