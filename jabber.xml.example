@@ -53,11 +53,30 @@
         <URL>http://wpjabber.jabberstudio.org/</URL>
       </vCard>
       
-      <register>
+      <!-- 
+      Registration instructions and required fields. The 
+      notify attribute will send the server administrator(s)
+      a message after each valid registration if the notify
+      attribute is present.
+      -->
+      <!-- to disable new registrations use:
+           <register deny_new="yes"> -->
+
+      <register notify="yes">
         <instructions>Choose a username and password to register with this server.</instructions>
         <name/>
         <email/>
       </register>
+
+      <!-- 
+      A welcome note that is sent to every new user who registers 
+      with your server. Comment it out to disable this function.
+      -->
+
+      <welcome>
+        <subject>Welcome!</subject>
+        <body>Welcome to the Jabber server at localhost -- we hope you enjoy this service! For information about how to use Jabber, visit the Jabber User's Guide at http://jabbermanual.jabberstudio.org/</body>
+      </welcome>
 
       <admin>
         <read></read>
