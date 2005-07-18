@@ -288,16 +288,21 @@ static result xdb_sql_phandler(instance i, dpacket p, void *args)
 		xmlnode_hide_attrib(data, "action");
 		xmlnode_put_attrib(data, "action", action);
 
-		/* if the action is insert we need to dump pending xdb-set */
-		SEM_LOCK(self->hash_sem);
-		if(j_strcmp(action, "insert") == 0
-		   && (c = wpxhash_get(self->hash, hashkey)) != NULL
-		   && c->dirty) {
-			xdb_sql_cacher_dump(self, c);
+		/* if the action is insert we need to dump pending xdb-set
+		 * and the request immediately to maintain consistency */
+		if(j_strcmp(action, "insert") == 0) {
+			SEM_LOCK(self->hash_sem);
+			if ((c = wpxhash_get(self->hash, hashkey)) != NULL
+			   && c->dirty) {
+				xdb_sql_cacher_dump(self, c);
+				cacher_remove_element(self, c);
+				wpxhash_zap(self->hash, c->wpkey);
+			}
+			namespace_call(self, namespace, "set", &data, user);
+			SEM_UNLOCK(self->hash_sem);
+			goto reply;
 		}
-		SEM_UNLOCK(self->hash_sem);
 	}
-	
 
 	SEM_LOCK(self->hash_sem);
 	if (c != NULL || (c = wpxhash_get(self->hash, hashkey)) != NULL) {
@@ -366,8 +371,9 @@ static result xdb_sql_phandler(instance i, dpacket p, void *args)
 	}
 
 	SEM_UNLOCK(self->hash_sem);
-		
+	
 	/* and reply */
+	reply:
 	xmlnode_put_attrib(p->x, "type", "result");
 	xmlnode_put_attrib(p->x, "to", xmlnode_get_attrib(p->x, "from"));
 	xmlnode_put_attrib(p->x, "from", jid_full(p->id));
