@@ -225,36 +225,30 @@ mreturn mod_presence_in(mapi m, void *arg)
 
 	log_debug("incoming filter for %s", jid_full(m->s->id));
 
-	if (jpacket_subtype(m->packet) == JPACKET__PROBE) {	/* reply with our presence */
+	if (jpacket_subtype(m->packet) == JPACKET__PROBE) {
+		/* reply with our presence */
 		if (m->s->presence == NULL) {
-			log_debug
-			    ("probe from %s and no presence to return",
-			     jid_full(m->packet->from));
-		} else if (!mp->invisible && js_trust(m->user, m->packet->from) && !_mod_presence_search(m->packet->from, mp->I)) {	/* compliment of I in T */
-			log_debug("got a probe, responding to %s",
-				  jid_full(m->packet->from));
+			log_debug("probe from %s and no presence to return", jid_full(m->packet->from));
+		} else if (!mp->invisible && js_trust(m->user, m->packet->from) && !_mod_presence_search(m->packet->from, mp->I)) {
+			/* compliment of I in T */
+			log_debug("got a probe, responding to %s", jid_full(m->packet->from));
 			pres = xmlnode_dup(m->s->presence);
-			xmlnode_put_attrib(pres, "to",
-					   jid_full(m->packet->from));
+			xmlnode_put_attrib(pres, "to", jid_full(m->packet->from));
 			js_session_from(m->s, jpacket_new(pres));
-		} else if (mp->invisible && js_trust(m->user, m->packet->from) && _mod_presence_search(m->packet->from, mp->A)) {	/* when invisible, intersection of A and T */
-			log_debug
-			    ("got a probe when invisible, responding to %s",
-			     jid_full(m->packet->from));
-			pres =
-			    jutil_presnew(JPACKET__AVAILABLE,
-					  jid_full(m->packet->from), NULL);
+		} else if (mp->invisible && js_trust(m->user, m->packet->from) && _mod_presence_search(m->packet->from, mp->A)) {
+			/* when invisible, intersection of A and T */
+			log_debug("got a probe when invisible, responding to %s", jid_full(m->packet->from));
+			pres = jutil_presnew(JPACKET__AVAILABLE, jid_full(m->packet->from), NULL);
 			js_session_from(m->s, jpacket_new(pres));
 		} else {
-			log_debug
-			    ("%s attempted to probe by someone not qualified",
-			     jid_full(m->packet->from));
+			log_debug("%s attempted to probe by someone not qualified", jid_full(m->packet->from));
 		}
 		xmlnode_free(m->packet->x);
 		return M_HANDLED;
 	}
 
-	if (jid_cmp(m->packet->from, m->s->id) == 0) {	/* this is our presence, don't send to ourselves */
+	if (jid_cmp(m->packet->from, m->s->id) == 0) {
+		/* this is our presence, don't send to ourselves */
 		xmlnode_free(m->packet->x);
 		return M_HANDLED;
 	}
@@ -301,8 +295,7 @@ void mod_presence_store(mapi m)
 	session top = js_session_primary(m->user);
 
 	/* store to xdb */
-	xdb_set(m->si->xc, m->user->id, NS_JABBERD_STOREDPRESENCE,
-		top ? top->presence : NULL);
+	xdb_set(m->si->xc, m->user->id, NS_JABBERD_STOREDPRESENCE, top ? top->presence : NULL);
 }
 
 /**
@@ -352,8 +345,7 @@ mreturn mod_presence_out(mapi m, void *arg)
 	    || jpacket_subtype(m->packet) == JPACKET__ERROR)
 		return M_PASS;
 
-	log_debug("new presence from %s of	%s", jid_full(m->s->id),
-		  xmlnode2str(m->packet->x));
+	log_debug("new presence from %s of %s", jid_full(m->s->id), xmlnode2str(m->packet->x));
 
 	/* pre-existing conditions (no, we are not an insurance company) */
 	oldpri = m->s->priority;
@@ -365,9 +357,7 @@ mreturn mod_presence_out(mapi m, void *arg)
 	} else {
 		newpri = j_atoi(priority, 0);
 		if (newpri < -128 || newpri > 127) {
-			log_notice("mod_presence",
-				   "got presence with invalid priority value from %s",
-				   jid_full(m->s->id));
+			log_notice("mod_presence", "got presence with invalid priority value from %s", jid_full(m->s->id));
 			xmlnode_free(m->packet->x);
 			return M_HANDLED;
 		}
@@ -383,9 +373,7 @@ mreturn mod_presence_out(mapi m, void *arg)
 					jpacket_new(jutil_presnew
 						    (JPACKET__UNAVAILABLE,
 						     NULL,
-						     xmlnode_get_tag_data
-						     (m->packet->x,
-						      "status")
+						     xmlnode_get_tag_data(m->packet->x,"status")
 						    )));
 			js_session_from(m->s, m->packet);
 			return M_HANDLED;
@@ -430,9 +418,9 @@ mreturn mod_presence_out(mapi m, void *arg)
 	/* if we're going offline now, let everyone know */
 	if (m->s->priority < -128) {
 		/* jutil_priority returns -129 in case the "type" attribute is missing */
-		if (!mp->invisible)	/* bcc's don't get told if we were invisible */
-			_mod_presence_broadcast(m->s, mp->conf->bcc,
-						m->packet->x, NULL);
+		if (!mp->invisible)
+			/* bcc's don't get told if we were invisible */
+			_mod_presence_broadcast(m->s, mp->conf->bcc, m->packet->x, NULL);
 		_mod_presence_broadcast(m->s, mp->A, m->packet->x, NULL);
 		_mod_presence_broadcast(m->s, mp->I, m->packet->x, NULL);
 
@@ -636,22 +624,20 @@ mreturn mod_presence_deliver(mapi m, void *arg)
 
 	log_debug("deliver phase");
 
-	/* only if we HAVE a user, and it was sent to ONLY the user@server, and there is at least one session available */
-	if (m->user != NULL && m->packet->to->resource == NULL
-	    && js_session_primary_sem(m->user) != NULL) {
+	/* only if we HAVE a user, and it was sent to ONLY the user@server */
+	if (m->user != NULL && m->packet->to->resource == NULL) {
 		log_debug("broadcasting to %s", m->user->user);
 
 		/* broadcast */
 		for (cur = m->user->sessions; cur != NULL; cur = cur->next) {
 			if (cur->priority < -128)
 				continue;
-			js_session_to(cur,
-				      jpacket_new(xmlnode_dup
-						  (m->packet->x)));
+			js_session_to(cur, jpacket_new(xmlnode_dup(m->packet->x)));
 		}
 		SEM_UNLOCK(m->user->sem);
 
-		if (jpacket_subtype(m->packet) != JPACKET__PROBE) {	/* probes get handled by the offline thread as well? */
+		if (jpacket_subtype(m->packet) != JPACKET__PROBE) {
+			/* probes get handled by the offline thread as well? */
 			xmlnode_free(m->packet->x);
 			return M_HANDLED;
 		}
