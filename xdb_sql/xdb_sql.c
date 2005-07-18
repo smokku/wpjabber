@@ -74,6 +74,8 @@ void xdb_sql(instance i, xmlnode x)
 		register_beat(10, xdb_sql_purge, (void *) self);
 }	/* end xdb_sql */
 
+/* dump a cached item to DB
+ * need to be called with locked cache hash */
 inline void xdb_sql_cacher_dump(XdbSqlDatas *self, cacher c)
 {
 	char *namespace, *user, *skip;
@@ -83,13 +85,11 @@ inline void xdb_sql_cacher_dump(XdbSqlDatas *self, cacher c)
 	if (skip != NULL) {
 		*(skip++) = '\0';
 		namespace = pstrdup(self->poolref, skip);
-		skip = strchr(namespace, '@');
-		if (skip != NULL)
-			*skip = '\0';
 		log_debug("xdb_sql dumping cached data %s/%s: %s", user, namespace, xmlnode2str(c->data));
 		namespace_call(self, namespace, "set", &(c->data), user);
 		/* don't check return value - errors are already reported
 		   and we coldn't do much here though */
+		c->dirty = 0;
 	}
 }
 
@@ -227,7 +227,7 @@ static result xdb_sql_phandler(instance i, dpacket p, void *args)
 	XdbSqlDatas *self = (XdbSqlDatas *) args;
 	short is_set;
 	char *hashkey;
-	cacher c;
+	cacher c = NULL;
 	xmlnode data, t;
 	dpacket dp;
 
@@ -273,29 +273,34 @@ static result xdb_sql_phandler(instance i, dpacket p, void *args)
 		return r_DONE;
 	}
 	
+	/* cache hash key is: user@server/namespace */
+	hashkey = spools(p->p, user, "/", namespace, p->p);	
+
 	is_set = check_attr_value(p->x, "type", "set");
 
 	/* The xml node is surrounded by an xdb element. Get rid of it,
 	 * by taking the first child. */
 	data = xmlnode_get_firstchild(p->x);
 	
-	/* HACK! move action= to the child subnode */
 	action = xmlnode_get_attrib(p->x, "action");
 	if (action != NULL) {
+		/* HACK! move action= to the child subnode */
 		xmlnode_hide_attrib(data, "action");
 		xmlnode_put_attrib(data, "action", action);
+
+		/* if the action is insert we need to dump pending xdb-set */
+		SEM_LOCK(self->hash_sem);
+		if(j_strcmp(action, "insert") == 0
+		   && (c = wpxhash_get(self->hash, hashkey)) != NULL
+		   && c->dirty) {
+			xdb_sql_cacher_dump(self, c);
+		}
+		SEM_UNLOCK(self->hash_sem);
 	}
 	
-	/* need to differentiate action="insert" set's in the hash to not overwrite previous
-	   so let's use the message-id */
-	if(j_strcmp(action, "insert") == 0) {
-		hashkey = spools(p->p, user, "/", namespace, "@", xmlnode_get_attrib(data, "id"), p->p);
-	} else {
-		hashkey = spools(p->p, user, "/", namespace, p->p);	
-	}
 
 	SEM_LOCK(self->hash_sem);
-	if ((c = wpxhash_get(self->hash, hashkey)) != NULL) {
+	if (c != NULL || (c = wpxhash_get(self->hash, hashkey)) != NULL) {
 		c->ref++;
 		log_debug("xdb_sql using cached data ref=%d for %s", c->ref, hashkey);
 		/* wait for data, I don't like this :( */
