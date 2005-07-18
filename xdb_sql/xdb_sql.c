@@ -336,7 +336,8 @@ static result xdb_sql_phandler(instance i, dpacket p, void *args)
 	c->ref--;
 
 	/* put data to result */
-	if (!is_set)
+	/* if not set request and not dummy node */
+	if (!is_set && j_strcmp(xmlnode2str(c->data), "<xdb/>"))
 		xmlnode_insert_tag_node(p->x, c->data);
 
 	if ((self->timeout == 0) && (c->ref == 0)) {
