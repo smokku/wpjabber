@@ -83,6 +83,9 @@ inline void xdb_sql_cacher_dump(XdbSqlDatas *self, cacher c)
 	if (skip != NULL) {
 		*(skip++) = '\0';
 		namespace = pstrdup(self->poolref, skip);
+		skip = strchr(namespace, '@');
+		if (skip != NULL)
+			*skip = '\0';
 		log_debug("xdb_sql dumping cached data %s/%s: %s", user, namespace, xmlnode2str(c->data));
 		namespace_call(self, namespace, "set", &(c->data), user);
 		/* don't check return value - errors are already reported
@@ -270,8 +273,6 @@ static result xdb_sql_phandler(instance i, dpacket p, void *args)
 		return r_DONE;
 	}
 	
-	hashkey = spools(p->p, user, "/", namespace, p->p);
-
 	is_set = check_attr_value(p->x, "type", "set");
 
 	/* The xml node is surrounded by an xdb element. Get rid of it,
@@ -281,7 +282,16 @@ static result xdb_sql_phandler(instance i, dpacket p, void *args)
 	/* HACK! move action= to the child subnode */
 	action = xmlnode_get_attrib(p->x, "action");
 	if (action != NULL) {
+		xmlnode_hide_attrib(data, "action");
 		xmlnode_put_attrib(data, "action", action);
+	}
+	
+	/* need to differentiate action="insert" set's in the hash to not overwrite previous
+	   so let's use the message-id */
+	if(j_strcmp(action, "insert") == 0) {
+		hashkey = spools(p->p, user, "/", namespace, "@", xmlnode_get_attrib(data, "id"), p->p);
+	} else {
+		hashkey = spools(p->p, user, "/", namespace, p->p);	
 	}
 
 	SEM_LOCK(self->hash_sem);
