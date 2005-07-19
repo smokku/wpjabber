@@ -112,14 +112,10 @@ mreturn mod_offline_message(mapi m)
 	jutil_delay(m->packet->x, "Offline Storage");
 
 	/* try to put */
-	if (xdb_act
-	    (m->si->xc, m->user->id, NS_OFFLINE, "insert", NULL,
-	     m->packet->x)) {
+	if (xdb_act(m->si->xc, m->user->id, NS_OFFLINE, "insert", NULL, m->packet->x)) {
 
 		/* free messages from us */
-		if (jid_cmpx
-		    (m->packet->from, m->user->id,
-		     JID_USER | JID_SERVER) == 0) {
+		if (jid_cmpx(m->packet->from, m->user->id, JID_USER | JID_SERVER) == 0) {
 			log_alert("offline_error",
 				  "Offline message from own user %s generated offline storage error",
 				  m->user->user);
@@ -130,28 +126,23 @@ mreturn mod_offline_message(mapi m)
 		/* replay message */
 		jutil_tofrom(m->packet->x);
 
-		/* hide everythink */
-		for (cur = xmlnode_get_firstchild(m->packet->x);
-		     cur != NULL; cur = xmlnode_get_nextsibling(cur))
-			xmlnode_hide(cur);
-
-		/* build message */
+		/* replace subject */
 		{
-			char *body;
+			char *subject;
 #ifdef FORWP
-			body =
-			    "System: Wiadomosci nie dostarczono. Skrzynka wiadomosci jest pelna.";
+			subject = "System: Wiadomosci nie dostarczono. Skrzynka wiadomosci jest pelna.";
 #else
-			body =
-			    "System: Message wasn't delivered. Offline storage size was exceeded.";
+			subject = "System: Message wasn't delivered. Offline storage size was exceeded.";
 #endif
-			xmlnode_insert_cdata(xmlnode_insert_tag
-					     (m->packet->x, "body"), body,
-					     -1);
+			xmlnode_hide(xmlnode_get_tag(m->packet->x, "subject");
+			xmlnode_insert_cdata(xmlnode_insert_tag(m->packet->x, "subject"), subject, -1);
 		}
 		log_alert("offline_error",
 			  "Offline message not delivered from user %s",
 			  jid_full(m->packet->from));
+
+		/* generate error */
+		jutil_error_xmpp(m->packet->x, XTERROR_RESCONSTRAINT);
 
 		js_deliver(m->si, jpacket_reset(m->packet));
 
@@ -163,8 +154,7 @@ mreturn mod_offline_message(mapi m)
 
 		cur = util_offline_event(m->packet->x,
 					 jid_full(m->user->id),
-					 xmlnode_get_attrib(m->packet->x,
-							    "from"), id);
+					 xmlnode_get_attrib(m->packet->x, "from"), id);
 		js_deliver(m->si, jpacket_new(cur));
 	} else {
 		xmlnode_free(m->packet->x);
