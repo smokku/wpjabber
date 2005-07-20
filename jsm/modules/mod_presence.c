@@ -92,15 +92,13 @@ typedef struct modpres_conf_struct {
  * @brief hold all data belonging to this module and a single (online) user
  *
  * This structure holds the A and I (see description of mod_presence.c) list for a user,
- * a flag if a user is invisible, and a list of JIDs we have to send a blind carbon copy
- * of each presence
+ * a flag if a user is invisible, and a mod_presence config structure
  */
 typedef struct modpres_struct {
 	int invisible;
 	jid A;
 	jid I;
-	modpres_conf conf;
-			/**< configuration of this module's instance */
+	modpres_conf conf;	/**< configuration of this module's instance */
 } *modpres, _modpres;
 
 
@@ -163,15 +161,13 @@ jid _mod_presence_whack(jid id, jid ids)
  * @param x the presence that should be broadcasted
  * @param intersect if non-NULL only send presence to the intersection of notify and intersect
  */
-void _mod_presence_broadcast(session s, jid notify, xmlnode x,
-			     jid intersect)
+void _mod_presence_broadcast(session s, jid notify, xmlnode x, jid intersect)
 {
 	jid cur;
 	xmlnode pres;
 
 	for (cur = notify; cur != NULL; cur = cur->next) {
-		if (intersect != NULL
-		    && !_mod_presence_search(cur, intersect))
+		if (intersect != NULL && !_mod_presence_search(cur, intersect))
 			continue;	/* perform insersection search, must be in both */
 		s->c_out++;
 		pres = xmlnode_dup(x);
@@ -624,8 +620,8 @@ mreturn mod_presence_deliver(mapi m, void *arg)
 
 	log_debug("deliver phase");
 
-	/* only if we HAVE a user, and it was sent to ONLY the user@server */
-	if (m->user != NULL && m->packet->to->resource == NULL) {
+	/* only if we HAVE a user, and it was sent to ONLY the user@server, and there is at least one session available */
+	if (m->user != NULL && m->packet->to->resource == NULL && js_session_primary_all_sem(m->user) != NULL) {
 		log_debug("broadcasting to %s", m->user->user);
 
 		/* broadcast */

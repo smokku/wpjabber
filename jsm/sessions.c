@@ -582,7 +582,7 @@ session js_session_get(udata user, char *res)
 }
 
 /*
- *  js_session_primary -- find the primary session for the user
+ *  js_session_primary -- find the primary active (priority >=0 ) session for the user
  *
  *  Scan through a user's sessions to find the session with the
  *  highest priority and return a pointer to it.
@@ -650,6 +650,84 @@ session js_session_primary_sem(udata user)
 
 	/* return it if it's active */
 	if (top->priority >= 0)
+		return top;
+
+	else {			/* otherwise there's no active session */
+		SEM_UNLOCK(user->sem);
+		return NULL;
+	}
+
+}
+
+/*
+ *  js_session_primary_all -- find the primary session for the user
+ *
+ *  Scan through a user's sessions to find the session with the
+ *  highest priority and return a pointer to it.
+ *
+ *  parameters
+ *	user -- user data for the user in question
+ *
+ *  returns
+ *	a pointer to the primary session if the user is logged in with at least priority 0
+ *	NULL if there are no active sessions
+ */
+session js_session_primary_all(udata user)
+{
+	session cur, top;
+
+	/* ignore illeagal calls, or users with no sessions */
+	if (user == NULL || user->sessions == NULL)
+		return NULL;
+
+	/* find primary session */
+	SEM_LOCK(user->sem);
+
+	if (user->sessions == NULL) {
+		SEM_UNLOCK(user->sem);
+		return NULL;
+	}
+
+	top = user->sessions;
+	for (cur = top; cur != NULL; cur = cur->next)
+		if (cur->priority > top->priority)
+			top = cur;
+
+	/* return it if it's active */
+	SEM_UNLOCK(user->sem);
+
+	if (top->priority > -128)
+		return top;
+
+	else			/* otherwise there's no active session */
+		return NULL;
+
+}
+
+/* do not free sem at the end if session was found */
+session js_session_primary_all_sem(udata user)
+{
+	session cur, top;
+
+	/* ignore illeagal calls, or users with no sessions */
+	if (user == NULL || user->sessions == NULL)
+		return NULL;
+
+	/* find primary session */
+	SEM_LOCK(user->sem);
+
+	if (user->sessions == NULL) {
+		SEM_UNLOCK(user->sem);
+		return NULL;
+	}
+
+	top = user->sessions;
+	for (cur = top; cur != NULL; cur = cur->next)
+		if (cur->priority > top->priority)
+			top = cur;
+
+	/* return it if it's active */
+	if (top->priority > -128)
 		return top;
 
 	else {			/* otherwise there's no active session */
