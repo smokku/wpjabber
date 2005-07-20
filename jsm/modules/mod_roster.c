@@ -133,39 +133,32 @@ void mod_roster_push(udata user, xmlnode item)
 
 void mod_roster_set_s10n(int set, xmlnode item)
 {
-	switch (set) {		/* LAZY ALERT, yeah, redundant code, gak! */
+	switch (set) {
+	/* LAZY ALERT, yeah, redundant code, gak! */
 	case S10N_ADD_FROM:
-		if (j_strcmp
-		    (xmlnode_get_attrib(item, "subscription"), "to") == 0
-		    || j_strcmp(xmlnode_get_attrib(item, "subscription"),
-				"both") == 0)
+		if (j_strcmp(xmlnode_get_attrib(item, "subscription"), "to") == 0
+		    || j_strcmp(xmlnode_get_attrib(item, "subscription"), "both") == 0)
 			xmlnode_put_attrib(item, "subscription", "both");
 		else
 			xmlnode_put_attrib(item, "subscription", "from");
 		break;
 	case S10N_ADD_TO:
-		if (j_strcmp
-		    (xmlnode_get_attrib(item, "subscription"), "from") == 0
-		    || j_strcmp(xmlnode_get_attrib(item, "subscription"),
-				"both") == 0)
+		if (j_strcmp(xmlnode_get_attrib(item, "subscription"), "from") == 0
+		    || j_strcmp(xmlnode_get_attrib(item, "subscription"), "both") == 0)
 			xmlnode_put_attrib(item, "subscription", "both");
 		else
 			xmlnode_put_attrib(item, "subscription", "to");
 		break;
 	case S10N_REM_FROM:
-		if (j_strcmp
-		    (xmlnode_get_attrib(item, "subscription"), "both") == 0
-		    || j_strcmp(xmlnode_get_attrib(item, "subscription"),
-				"to") == 0)
+		if (j_strcmp(xmlnode_get_attrib(item, "subscription"), "both") == 0
+		    || j_strcmp(xmlnode_get_attrib(item, "subscription"), "to") == 0)
 			xmlnode_put_attrib(item, "subscription", "to");
 		else
 			xmlnode_put_attrib(item, "subscription", "none");
 		break;
 	case S10N_REM_TO:
-		if (j_strcmp
-		    (xmlnode_get_attrib(item, "subscription"), "both") == 0
-		    || j_strcmp(xmlnode_get_attrib(item, "subscription"),
-				"from") == 0)
+		if (j_strcmp(xmlnode_get_attrib(item, "subscription"), "both") == 0
+		    || j_strcmp(xmlnode_get_attrib(item, "subscription"), "from") == 0)
 			xmlnode_put_attrib(item, "subscription", "from");
 		else
 			xmlnode_put_attrib(item, "subscription", "none");
@@ -235,9 +228,7 @@ mreturn mod_roster_out_s10n(mapi m, roster_cfg roster_config)
 				if (xmlnode_get_attrib(cur, "jid") == NULL)
 					continue;
 #ifdef FORWP
-				if (strstr
-				    (xmlnode_get_attrib(cur, "jid"),
-				     "@gg.jabber.wp.pl") != NULL)
+				if (strstr(xmlnode_get_attrib(cur, "jid"), "@gg.jabber.wp.pl") != NULL)
 					continue;
 #endif
 				count++;
@@ -522,8 +513,7 @@ mreturn mod_roster_out(mapi m, void *arg)
 mreturn mod_roster_session(mapi m, void *arg)
 {
 	roster_cfg roster_config = (roster_cfg) arg;
-	js_mapi_session(es_OUT, m->s, mod_roster_out,
-			(void *) roster_config);
+	js_mapi_session(es_OUT, m->s, mod_roster_out, (void *) roster_config);
 	return M_PASS;
 }
 
@@ -542,8 +532,7 @@ mreturn mod_roster_s10n(mapi m, void *arg)
 
 	if (m->user == NULL)
 		return M_PASS;
-	if (jid_cmpx(m->packet->from, m->packet->to, JID_USER | JID_SERVER)
-	    == 0)
+	if (jid_cmpx(m->packet->from, m->packet->to, JID_USER | JID_SERVER) == 0)
 		return M_PASS;	/* vanity complex */
 
 	/* now we can get to work and handle this user's incoming subscription crap */
@@ -570,37 +559,33 @@ mreturn mod_roster_s10n(mapi m, void *arg)
 	case JPACKET__SUBSCRIBE:
 		if (from) {
 			/* already subscribed, respond automatically */
-			reply =
-			    jutil_presnew(JPACKET__SUBSCRIBED,
-					  jid_full(m->packet->from),
-					  "Already Subscribed");
+			reply = jutil_presnew(JPACKET__SUBSCRIBED,
+					      jid_full(m->packet->from),
+					      "Already Subscribed");
 			jid_set(m->packet->to, NULL, JID_RESOURCE);
-			xmlnode_put_attrib(reply, "from",
-					   jid_full(m->packet->to));
+			xmlnode_put_attrib(reply, "from", jid_full(m->packet->to));
 			drop = 1;
 
 			/* the other person obviously is re-adding them to their roster, and should be told of the current presence */
-			reply2 =
-			    jutil_presnew(JPACKET__PROBE,
-					  jid_full(m->packet->to), NULL);
-			xmlnode_put_attrib(reply2, "from",
-					   jid_full(m->packet->from));
+			reply2 = jutil_presnew(JPACKET__PROBE, jid_full(m->packet->to), NULL);
+			xmlnode_put_attrib(reply2, "from", jid_full(m->packet->from));
 
 		} else {
 			/* tuck request in the roster */
-			status =
-			    xmlnode_get_tag_data(m->packet->x, "status");
+			status = xmlnode_get_tag_data(m->packet->x, "status");
 			if (status == NULL)
 				xmlnode_put_attrib(item, "subscribe", "");
 			else
-				xmlnode_put_attrib(item, "subscribe",
-						   status);
+				xmlnode_put_attrib(item, "subscribe", status);
 			if (newflag)	/* SPECIAL CASE: special flag so that we can hide these incoming subscribe requests */
 				xmlnode_put_attrib(item, "hidden", "");
 		}
 		break;
 	case JPACKET__SUBSCRIBED:
-		if (to) {	/* already subscribed, drop */
+		if (to || xmlnode_get_attrib(item, "ask") == NULL) {
+			/* already subscribed or not asked, drop */
+			if (newflag)
+				xmlnode_hide(item);
 			drop = 1;
 		} else {
 			/* cancel any ask, s10n=to */
@@ -684,9 +669,7 @@ JSM_FUNC void mod_roster(jsmi si)
 	temp = xmlnode_get_tag(si->config, "mod_roster");
 	if (temp) {
 		roster_config->max_roster_size =
-		    j_atoi(xmlnode_get_data
-			   (xmlnode_get_tag(temp, "maxsize")
-			   ), 100);
+		    j_atoi(xmlnode_get_data(xmlnode_get_tag(temp, "maxsize")), 100);
 		roster_config->error_msg =
 		    pstrdup(si->p, xmlnode_get_tag_data(temp, "message"));
 		roster_config->error_from =
@@ -694,13 +677,11 @@ JSM_FUNC void mod_roster(jsmi si)
 	} else {
 		roster_config->max_roster_size = 100;
 		roster_config->error_msg =
-		    pstrdup(si->p, "Your roster is too big !");
+		    pstrdup(si->p, "Your roster is too big!");
 		roster_config->error_from = pstrdup(si->p, si->host);
 	}
 
 	/* we just register for new sessions */
-	js_mapi_register(si, e_SESSION, mod_roster_session,
-			 (void *) roster_config);
-	js_mapi_register(si, e_DELIVER, mod_roster_s10n,
-			 (void *) roster_config);
+	js_mapi_register(si, e_SESSION, mod_roster_session, (void *) roster_config);
+	js_mapi_register(si, e_DELIVER, mod_roster_s10n, (void *) roster_config);
 }
