@@ -52,6 +52,10 @@ $Id: xdb_sql.xml,v 1.8 2003/04/07 20:10:55 bobeal Exp $
     <timeout>10</timeout>
     <!-- maximum cached items - have to be a prime number! -->
     <maxcache>7963</maxcache>
+    <!-- maximum flushed cache items at one time; unset or 0 for all timeouted -->
+    <!--
+    <maxflush>16</maxflush>
+    -->
 
     <!-- This section defines the queries we make into the database.  The -->
     <!-- querydef mechanism allows us to change the underlying database layout -->

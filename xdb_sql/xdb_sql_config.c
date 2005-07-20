@@ -977,6 +977,8 @@ int xdbsql_config_init(XdbSqlDatas * self, xmlnode cfgroot)
 
 	self->timeout = j_atoi(xmlnode_get_tag_data(cfgroot, "timeout"), 10);
 	
+	self->maxflush = j_atoi(xmlnode_get_tag_data(cfgroot, "maxflush"), 0);
+	
 	/* Have a look in the XML configuration data for connection information. */
 	conn_base = xmlnode_get_tag(cfgroot, "connection");
 	if (conn_base) {	/* get the database connection parameters from the <connection> block */

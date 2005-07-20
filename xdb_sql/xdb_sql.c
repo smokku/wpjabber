@@ -159,6 +159,7 @@ result xdb_sql_purge(void *arg)
 	XdbSqlDatas * self = (XdbSqlDatas *) arg;
 	cacher c;
 	cacher t;
+	int i;
 
 	SEM_LOCK(self->hash_sem);
 	self->actualtime = time(NULL);
@@ -171,7 +172,10 @@ result xdb_sql_purge(void *arg)
 	t = NULL;
 
 	/* loop till c and data are valid */
-	for (c = self->last; c != NULL;) {
+	for (i = 0, c = self->last; c != NULL; i++) {
+		/* if maxflush defined and count reached */
+		if (self->maxflush > 0 && i > self->maxflush)
+			break;
 
 		/* if someone is using this */
 		if (c->ref)

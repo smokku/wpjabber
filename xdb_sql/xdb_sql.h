@@ -76,6 +76,7 @@ typedef struct XdbSqlDatas {
 	HASHTABLE hash;
 	SEM_VAR hash_sem;
 	int timeout;		//hash elements timeout
+	int maxflush;		//maximum hash elements flushed one time
 	volatile cacher last;	//oldest element
 	volatile cacher first;	//latest element
 	volatile unsigned long actualtime;
