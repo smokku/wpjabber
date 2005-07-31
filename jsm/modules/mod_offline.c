@@ -134,7 +134,7 @@ mreturn mod_offline_message(mapi m)
 #else
 			subject = "System: Message wasn't delivered. Offline storage size was exceeded.";
 #endif
-			xmlnode_hide(xmlnode_get_tag(m->packet->x, "subject");
+			xmlnode_hide(xmlnode_get_tag(m->packet->x, "subject"));
 			xmlnode_insert_cdata(xmlnode_insert_tag(m->packet->x, "subject"), subject, -1);
 		}
 		log_alert("offline_error",
