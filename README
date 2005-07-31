@@ -14,9 +14,8 @@ In WPJabber package you can find these modules:
  - JSM - Session Manager
  - WPJ - Connection Manager ( c2s module )
  - dialback and dnsrv - modules needed to connect with other servers
- - conference module
  - xdb_file
- - wpphp - module that allows running PHP scripts
+ - xdb_sql - SQL storage module
 
 Source includes example files for each module.
 More docs and FAQ can be found in doc/ dir.
