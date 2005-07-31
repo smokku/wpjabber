@@ -1,3 +1,431 @@
+2005-07-20 14:01 +0000 [r57]  Tomasz Sterna <smoku//chrome.pl>
+
+	* jsm/modules/mod_roster.c: dropping s10n SUBSCRIBED packet if not
+	  asked for s10n
+
+2005-07-20 13:37 +0000 [r56]  Tomasz Sterna <smoku//chrome.pl>
+
+	* jsm/modules/mod_presence.c, jsm/sessions.c: better fix for
+	  presences and negative priority
+
+2005-07-20 13:06 +0000 [r55]  Tomasz Sterna <smoku//chrome.pl>
+
+	* xdb_sql/xdb_sql.xml.example, xdb_sql/xdb_sql.c,
+	  xdb_sql/xdb_sql.h, xdb_sql/xdb_sql_config.c: maxflush config
+	  option
+	  - maximum cache items flushed at one time
+
+2005-07-19 08:02 +0000 [r54]  Tomasz Sterna <smoku//chrome.pl>
+
+	* jsm/modules/mod_offline.c: fixed wrong offline_storage exceeded
+	  error message
+
+2005-07-18 23:05 +0000 [r53]  Tomasz Sterna <smoku//chrome.pl>
+
+	* xdb_sql/xdb_sql.c: another take on <xdb action="insert"/> fix
+
+2005-07-18 21:51 +0000 [r51-52]  Tomasz Sterna <smoku//chrome.pl>
+
+	* xdb_sql/xdb_sql.c: this time really fixed <xdb action="insert">
+	  handling
+
+	* TODO: more TODO ideas
+
+2005-07-18 18:44 +0000 [r50]  Tomasz Sterna <smoku//chrome.pl>
+
+	* xdb_sql/xdb_sql.c: fixed <xdb action="insert"/> handling
+
+2005-07-18 18:41 +0000 [r49]  Tomasz Sterna <smoku//chrome.pl>
+
+	* jsm/util_roster.c: cosmetics
+
+2005-07-18 17:58 +0000 [r48]  Tomasz Sterna <smoku//chrome.pl>
+
+	* jsm/modules/mod_presence.c: sending presence to <0 priority
+	  resources
+
+2005-07-18 17:05 +0000 [r46-47]  Tomasz Sterna <smoku//chrome.pl>
+
+	* jabber.xml.example: added config options for registration welcome
+	  and notify messages
+
+	* xdb_sql/xdb_sql.c: fix for empty xdb answer
+
+2005-07-17 08:03 +0000 [r43-45]  Tomasz Sterna <smoku//chrome.pl>
+
+	* jabberd/jabberd.h, jsm/jsm.h, wpj_sysepoll/wpj.h: added 'svn'
+	  VERSION suffix
+
+	* jsm/modules/mod_roster.c: purities for valgrind not to complain
+
+	* xdb_sql/xdb_sql.c: mempool corruption fixes
+
+2005-07-16 22:17 +0000 [r41-42]  Tomasz Sterna <smoku//chrome.pl>
+
+	* xdb_sql/xdb_sql.xml.example, xdb_sql/xdb_sql.c,
+	  xdb_sql/xdb_sql_offline.c, xdb_sql/xdb_sql.h,
+	  xdb_sql/xdb_sql_config.c: implemented xdb caching on-top xdb_sql
+
+	* xdb_sql/HOWTO.psql (added): simple psql startup HOWTO
+
+2005-07-15 13:54 +0000 [r40]  Tomasz Sterna <smoku//chrome.pl>
+
+	* xdb_sql/xdb_sql.h: xdb cache implementation
+
+2005-07-12 22:59 +0000 [r39]  Tomasz Sterna <smoku//chrome.pl>
+
+	* xdb_sql/xdb_sql.c, xdb_sql/xdb_sql_querydef.c, xdb_sql/xdb_sql.h,
+	  xdb_sql/xdb_sql_config.c: username/namespace based transaction
+	  locking
+
+2005-07-12 14:11 +0000 [r38]  Tomasz Sterna <smoku//chrome.pl>
+
+	* jsm/modules/mod_last.c, jsm/modules/mod_status_offline.c:
+	  status_offline fixes
+
+2005-07-12 10:36 +0000 [r37]  Tomasz Sterna <smoku//chrome.pl>
+
+	* xdb_sql/xdb_sql.c, xdb_sql/xdb_sql_querydef.c, xdb_sql/xdb_sql.h,
+	  xdb_sql/xdb_sql_config.c: fixed race in modules
+
+2005-07-12 09:32 +0000 [r36]  Tomasz Sterna <smoku//chrome.pl>
+
+	* xdb_sql/xdb_sql.xml.example: cosmetics
+
+2005-07-11 22:52 +0000 [r35]  Tomasz Sterna <smoku//chrome.pl>
+
+	* xdb_sql/sample_database.pg.sql: more fixes
+
+2005-07-11 14:42 +0000 [r34]  Tomasz Sterna <smoku//chrome.pl>
+
+	* xdb_sql/xdb_sql.xml.example, xdb_sql/sample_database.pg.sql:
+	  database schema cleanup
+
+2005-07-11 08:56 +0000 [r33]  Tomasz Sterna <smoku//chrome.pl>
+
+	* jsm/modules/mod_auth_plain.c: cosmetics
+
+2005-07-11 08:24 +0000 [r32]  Tomasz Sterna <smoku//chrome.pl>
+
+	* jsm/modules/mod_auth_plain.c: restored wpj connection recreating
+	  handling in auth
+
+2005-07-10 10:10 +0000 [r31]  Tomasz Sterna <smoku//chrome.pl>
+
+	* xdb_sql/xdb_sql_vcard.c: avatar image fixup
+
+2005-07-09 22:43 +0000 [r30]  Tomasz Sterna <smoku//chrome.pl>
+
+	* xdb_sql/xdb_sql_roster.c: roster handling optimisation
+
+2005-07-09 22:26 +0000 [r29]  Tomasz Sterna <smoku//chrome.pl>
+
+	* xdb_sql/sample_database.pg.sql: fixed db constraints
+
+2005-07-09 17:48 +0000 [r28]  Tomasz Sterna <smoku//chrome.pl>
+
+	* xdb_sql/xdb_sql_roster.c: more sanity checks on rosteritems
+
+2005-07-08 22:49 +0000 [r27]  Tomasz Sterna <smoku//chrome.pl>
+
+	* xdb_sql/xdb_sql_pgsql.c: removed broken async connection handling
+
+2005-07-08 22:44 +0000 [r26]  Tomasz Sterna <smoku//chrome.pl>
+
+	* xdb_sql/sample_database.pg.sql, xdb_sql/xdb_sql_roster.c:
+	  additional constraints on rosteritems/rostergroups duplicates and
+	  empty items
+
+2005-07-08 18:13 +0000 [r25]  Tomasz Sterna <smoku//chrome.pl>
+
+	* xdb_sql/xdb_sql.xml.example, xdb_sql/xdb_sql_roster.c,
+	  xdb_sql/xdb_sql_config.c: roster handling optimisation
+
+2005-07-08 17:42 +0000 [r24]  Tomasz Sterna <smoku//chrome.pl>
+
+	* xdb_sql/xdb_sql_auth.c: more debuging info
+
+2005-07-05 22:11 +0000 [r23]  Tomasz Sterna <smoku//chrome.pl>
+
+	* jabberd/lib/jid.c: reverted unfinished libidn changes
+
+2005-07-05 21:49 +0000 [r22]  Tomasz Sterna <smoku//chrome.pl>
+
+	* xdb_sql/xdb_sql.xml.example: vCard-avatar fix
+
+2005-07-05 21:11 +0000 [r21]  Tomasz Sterna <smoku//chrome.pl>
+
+	* tools/xdb_copy.xml (added), tools/xdb_copy_parts.sh (added),
+	  tools/xdb_copy.py (added), tools (added): xdb_copy utility added
+
+2005-07-04 17:57 +0000 [r20]  Tomasz Sterna <smoku//chrome.pl>
+
+	* xdb_sql/xdb_sql.xml.example, xdb_sql/sample_database.pg.sql:
+	  removed msn-transport support (broken anyway)
+
+2005-07-04 17:28 +0000 [r19]  Tomasz Sterna <smoku//chrome.pl>
+
+	* dialback/dialback.c, jsm/modules/mod_packet_stats.c,
+	  jsm/modules/mod_version.c, dialback/dialback.h,
+	  wpj_sysepoll/connection.c, jabberd/lib/karma.c,
+	  xdb_sql/xdb_sql_register.c, xdb_file/xdb_hash.c,
+	  xdb_sql/xdb_sql_backend.c, xdb_sql/xdb_sql_backend.h,
+	  wpj_sysepoll/masters.c, xdb_sql/xdb_sql_roomconfig.c,
+	  wpj_sysepoll/log.c, xdb_sql/xdb_sql_last.c,
+	  jabberd/lib/jpacket.c, xdb_file/xdb_copy.c,
+	  jsm/modules/mod_auth_plain.c, jsm/modules/mod_register.c,
+	  jabberd/base/base_format.c, jabberd/lib/jutil.c,
+	  jabberd/mio_raw.c, xdb_sql/xdb_sql_roomoutcast.c,
+	  xdb_sql/xdb_sql_filter.c, jabberd/extralib/wphash.c,
+	  jsm/modules/mod_time.c, jsm/modules/mod_disco.c,
+	  jabberd/extralib/wphash.h, jsm/modules/mod_last.c, jsm/util.c,
+	  jabberd/lib/pool.c, wpj_sysepoll/debug.c, jabberd/lib/expat.c,
+	  jsm/modules/mod_log.c, jabberd/lib/xstream.c, jabberd/jabberd.c,
+	  wpj_sysepoll/debug.h, jabberd/base/base_connect.c,
+	  jabberd/jabberd.h, jabberd/lib/socket.c, xdb_sql/xdb_sql.c,
+	  xdb_sql/xdb_sql.h, jsm/server.c, jsm/sessions.c,
+	  jabberd/lib/pproxy.c, jabberd/lib/jid.c, jabberd/xdb.c,
+	  jsm/modules/mod_echo.c, wpj_sysepoll/iossl.c,
+	  jabberd/extralib/wptypes.h, xdb_file/xdb_file.c,
+	  xdb_sql/xdb_sql_pgsql.c, jabberd/base/base_stderr.c,
+	  dnsrv/srv_resolv.c, jsm/modules.c, wpj_sysepoll/io.c,
+	  xdb_sql/xdb_sql_pgsql.h, dnsrv/srv_resolv.h, xdb_file/xdb_path.c,
+	  xdb_sql/xdb_sql_mysql.c, jsm/modules/mod_event.c,
+	  jabberd/extralib/fast_mtq.c, xdb_sql/xdb_sql_mysql.h,
+	  xdb_sql/xdb_sql_generic.c, jabberd/extralib/fast_mtq.h,
+	  jabberd/heartbeat.c, jsm/authreg.c, jabberd/extralib/debug.c,
+	  jabberd/lib/rate.c, jsm/modules/mod_offline_count.c,
+	  jabberd/extralib/debug.h, jabberd/extralib/wpqueue.h,
+	  jabberd/lib/xmlnode.c, jsm/modules/mod_roster_auto.c,
+	  jabberd/lib/str.c, xdb_sql/xdb_sql_auth.c, jabberd/lib/genhash.c,
+	  jabberd/base/base_to.c, jabberd/static.c, wpj_sysepoll/ioxml.c,
+	  wpj_sysepoll/rate.c, xdb_sql/xdb_sql_roster.c, jabberd/mtq.c,
+	  xdb_sql/xdb_sql_offline.c, jsm/users.c,
+	  xdb_sql/xdb_sql_querydef.c, jabberd/mio_ssl.c, dnsrv/wpdnsrv.c,
+	  xdb_sql/xdb_sql_vcard.c, dialback/dialback_in.c,
+	  jabberd/lib/sha.c, jabberd/log.c, jabberd/lib/xhash.c,
+	  jsm/offline.c, jsm/modules/mod_privacy.c,
+	  xdb_sql/xdb_sql_oracle.c, jsm/modules/mod_roster.c,
+	  xdb_sql/xdb_sql_odbc.c, jsm/modules/mod_offline.c, jsm/jsm.c,
+	  xdb_sql/xdb_sql_oracle.h, xdb_sql/xdb_sql_odbc.h,
+	  jsm/modules/mod_status_offline.c, jsm/jsm.h,
+	  jsm/modules/mod_admin.c, wpj_sysepoll/wpj.c,
+	  jsm/modules/mod_stats.c, wpj_sysepoll/wpj.h,
+	  jsm/modules/mod_vcard.c, jsm/modules/mod_auth_digest.c,
+	  jsm/modules/mod_xml.c, jabberd/lib/snprintf.c, jsm/util_roster.c,
+	  jsm/modules/mod_presence.c, jsm/modules/mod_announce.c,
+	  xdb_file/xdb_utils.c, jabberd/lib/lib.h, wpj_sysepoll/ioraw.c,
+	  jabberd/base/base_file.c, jsm/modules/mod_agents.c,
+	  jsm/deliver.c, jabberd/deliver.c, jabberd/base/base_accept.c,
+	  jabberd/mio_xml.c, jabberd/config.c, jsm/modules/mod_browse.c,
+	  jsm/postout.c, jabberd/load.c, dialback/dialback_out.c,
+	  xdb_sql/xdb_sql_config.c, jabberd/mio.c: reindented the code
+	  according to K&R style
+
+2005-07-04 17:24 +0000 [r18]  Tomasz Sterna <smoku//chrome.pl>
+
+	* jsm/modules/mod_xml.c, jsm/modules/mod_offline.c,
+	  jabberd/deliver.c, jsm/modules/mod_presence.c,
+	  xdb_sql/xdb_sql_roster.c, xdb_sql/xdb_sql_vcard.c, Makefile,
+	  xdb_sql/xdb_sql_register.c, xdb_sql/xdb_sql_config.c,
+	  aux/cosmetics.sh, xdb_sql/xdb_sql_pgsql.c: cosmetics
+
+2005-07-04 13:46 +0000 [r17]  Tomasz Sterna <smoku//chrome.pl>
+
+	* jsm/modules/mod_xml.c, jsm/modules/mod_offline.c,
+	  jsm/modules/mod_presence.c, jsm/modules/mod_announce.c,
+	  jsm/util.c, jabberd/lib/lib.h, jabber.xml.example,
+	  jsm/sessions.c: ported negative presence handling and storing
+	  presence information in XDB
+
+2005-07-01 22:31 +0000 [r16]  Tomasz Sterna <smoku//chrome.pl>
+
+	* xdb_sql/xdb_sql.xml.example, xdb_sql/sample_database.pg.sql,
+	  xdb_sql/xdb_sql_auth0k.c (removed),
+	  xdb_sql/database_documentation.txt, xdb_sql/Makefile,
+	  xdb_sql/README, xdb_sql/tests.txt, xdb_sql/FILES,
+	  xdb_sql/xdb_sql.h, xdb_sql/xdb_sql_config.c: auth0k officially
+	  removed in JEP-0078
+
+2005-07-01 21:13 +0000 [r15]  Tomasz Sterna <smoku//chrome.pl>
+
+	* xdb_sql/xdb_sql_vcard.c: JEP-0054: vcard-temp conformance fixes
+
+2005-07-01 19:56 +0000 [r14]  Tomasz Sterna <smoku//chrome.pl>
+
+	* xdb_sql/sample_database.pg.sql, xdb_sql/xdb_sql_vcard.c,
+	  xdb_sql/README, xdb_sql/xdb_sql_config.c: JEP-0153: vCard-Based
+	  Avatars support
+
+2005-06-27 05:07 +0000 [r13]  Tomasz Sterna <smoku//chrome.pl>
+
+	* xdb_sql/xdb_sql_offline.c: fixed to conform with wpjabber
+	  mod_offline behavior
+
+2005-06-26 23:49 +0000 [r12]  Tomasz Sterna <smoku//chrome.pl>
+
+	* configure: system epoll library linking fix
+
+2005-06-26 23:30 +0000 [r6-11]  Tomasz Sterna <smoku//chrome.pl>
+
+	* xdb_sql/xdb_sql.xml.example, xdb_sql/xdb_sql_config.c: updated
+	  for database design and namespace handlers changes
+
+	* xdb_sql/xdb_sql_vcard.c: implemented proper birthdate (ISO-8601
+	  format) handling
+
+	* xdb_sql/xdb_sql_offline.c: cosmetics
+
+	* xdb_sql/xdb_sql_roster.c: removed proprietrary extensions
+	  handling implemented common <x> elements in rosteritems handling
+
+	* xdb_sql/xdb_sql_last.c: cosmetics
+
+	* xdb_sql/xdb_sql_register.c: implemented jabber:iq:register
+	  namespace handling
+
+2005-06-26 23:19 +0000 [r4-5]  Tomasz Sterna <smoku//chrome.pl>
+
+	* xdb_sql/sample_database.pg.sql,
+	  xdb_sql/database_documentation.txt, xdb_sql/xdb_sql.h: removed
+	  legacy/proprietary extensions support and database redesign
+
+	* xdb_sql/sample_database.oracle.sql (removed),
+	  xdb_sql/xdb_sql.oracle.xml (removed), xdb_sql/sample_database.sql
+	  (removed): removed untested/unsupported backend configs
+
+2005-06-26 23:12 +0000 [r3]  Tomasz Sterna <smoku//chrome.pl>
+
+	* xdb_sql/xdb_sql_pgsql.c: fixed deadlock after query error
+
+2005-06-23 20:57 +0000 [r2]  Tomasz Sterna <smoku//chrome.pl>
+
+	* aux/mkrelease (added), Makefile.am, Makefile, aux/tagversion
+	  (added): release automation fixes
+
+2005-06-23 20:19 +0000 [r1]  Tomasz Sterna <smoku//chrome.pl>
+
+	* dialback/dialback.c (added), jabberd/Makefile (added),
+	  jsm/modules/mod_version.c (added), jsm/modules/mod_packet_stats.c
+	  (added), jsm/Makefile (added), wpj_sysepoll/connection.c (added),
+	  dialback/dialback.h (added), jabberd/lib/karma.c (added),
+	  xdb_sql/xdb_sql_register.c (added), xdb_file/xdb_hash.c (added),
+	  xdb_sql/xdb_sql_backend.c (added), aux/cosmetics.vim (added),
+	  wpj_sysepoll/epoll-lib/bin (added), xdb_sql/xdb_sql.xml.example
+	  (added), wpj_sysepoll/epoll-lib/man/mkpages.sh (added),
+	  xdb_sql/xdb_sql_backend.h (added), AUTHORS (added),
+	  wpj_sysepoll/epoll-lib/examples (added), wpj_sysepoll/wpj.xml
+	  (added), wpj_sysepoll/masters.c (added),
+	  xdb_sql/xdb_sql_roomconfig.c (added), xdb_sql/xdb_sql_last.c
+	  (added), wpj_sysepoll/log.c (added), aux/users (added),
+	  jsm/modules (added), jabberd/lib/jpacket.c (added),
+	  wpj_sysepoll/epoll-lib/man/epoll.4 (added),
+	  wpj_sysepoll/epoll-lib/man/epoll_ctl.2 (added), xdb_sql/Announce
+	  (added), jabberd/extralib (added), xdb_file/xdb_copy.c (added),
+	  wpj_sysepoll/epoll-lib/man/epoll_wait.ps (added),
+	  jsm/modules/mod_register.c (added), jsm/modules/mod_auth_plain.c
+	  (added), jabberd/base/base_format.c (added), jabberd/mio_raw.c
+	  (added), jabberd/lib/jutil.c (added), dialback/Makefile (added),
+	  xdb_sql/database_documentation.txt (added),
+	  xdb_sql/xdb_sql_roomoutcast.c (added), dnsrv/Makefile (added),
+	  xdb_sql/Makefile (added), autogen.sh (added),
+	  jabberd/extralib/wphash.c (added), xdb_sql/xdb_sql_filter.c
+	  (added), jsm/modules/mod_time.c (added), jsm/modules/mod_disco.c
+	  (added), jabberd/extralib/wphash.h (added),
+	  jsm/modules/mod_last.c (added), wpj_sysepoll/epoll-lib/Makefile
+	  (added), jsm/util.c (added), jsm (added), jabberd (added),
+	  jabberd/lib/pool.c (added), dialback (added), aux (added),
+	  xdb_sql/FILES (added), jabberd/lib/expat.c (added),
+	  wpj_sysepoll/debug.c (added), jsm/modules/mod_log.c (added),
+	  wpj_sysepoll/epoll-lib/man/epoll_create.ps (added),
+	  jabberd/jabberd.c (added), jabberd/lib/xstream.c (added),
+	  wpj_sysepoll/debug.h (added), wpj_sysepoll/epoll-lib/README
+	  (added), jabberd/base/base_connect.c (added), jabberd/jabberd.h
+	  (added), jabberd/lib/socket.c (added), xdb_file/README (added),
+	  xdb_sql/xdb_sql.c (added), wpj_sysepoll/epoll-lib/mkdep (added),
+	  wpj_sysepoll/epoll-lib/man/epoll.txt (added), xdb_sql/xdb_sql.h
+	  (added), jsm/sessions.c (added), jsm/server.c (added),
+	  wpj_sysepoll/epoll-lib/man/epoll.ps (added), xdb_sql/AUTHORS
+	  (added), jabberd/lib/pproxy.c (added), configure (added),
+	  jabberd/lib/jid.c (added), jabberd/xdb.c (added),
+	  xdb_sql/xdb_sql.oracle.xml (added),
+	  wpj_sysepoll/epoll-lib/include/epoll.h (added), jabberd/lib
+	  (added), jsm/modules/mod_echo.c (added), xdb_sql/COPYING (added),
+	  wpj_sysepoll/iossl.c (added), jabberd/extralib/wptypes.h (added),
+	  INSTALL (added), xdb_file/xdb_file.c (added),
+	  wpj_sysepoll/epoll-lib (added), xdb_sql/tests.txt (added),
+	  Makefile (added), xdb_sql/xdb_sql_pgsql.c (added),
+	  dnsrv/srv_resolv.c (added), jabberd/base/base_stderr.c (added),
+	  wpj_sysepoll/io.c (added), jsm/modules.c (added),
+	  wpj_sysepoll/epoll-lib/man/epoll_wait.2 (added),
+	  xdb_sql/xdb_sql_pgsql.h (added), xdb_file/xdb_path.c (added),
+	  dnsrv/srv_resolv.h (added), xdb_sql/README (added),
+	  xdb_sql/xdb_sql_mysql.c (added), wpj_sysepoll/epoll-lib/src
+	  (added), xdb_sql/TODO (added), jsm/modules/mod_event.c (added),
+	  jabberd/extralib/fast_mtq.c (added), xdb_sql/xdb_sql_mysql.h
+	  (added), wpj_sysepoll/epoll-lib/examples/.depend (added),
+	  xdb_sql/xdb_sql_generic.c (added), jabberd/extralib/fast_mtq.h
+	  (added), Makefile.am (added), jabberd/heartbeat.c (added),
+	  jsm/authreg.c (added), jabberd/extralib/debug.c (added),
+	  jsm/modules/mod_offline_count.c (added), jabberd/lib/rate.c
+	  (added), jabberd/extralib/debug.h (added),
+	  wpj_sysepoll/epoll-lib/lib (added),
+	  wpj_sysepoll/epoll-lib/man/epoll_ctl.ps (added),
+	  jabberd/extralib/wpqueue.h (added), jabberd/lib/xmlnode.c
+	  (added), jsm/modules/mod_roster_auto.c (added), jabberd/lib/str.c
+	  (added), xdb_sql/xdb_sql_auth.c (added), xdb_sql/BUGS (added),
+	  jabberd/lib/genhash.c (added), xdb_sql/sample_database.sql
+	  (added), wpj_sysepoll/epoll-lib/man/epoll_create.txt (added),
+	  jabberd/base/base_to.c (added),
+	  wpj_sysepoll/epoll-lib/man/epoll_wait.txt (added),
+	  jabberd/static.c (added), xdb_sql/INSTALL (added),
+	  wpj_sysepoll/ioxml.c (added),
+	  wpj_sysepoll/epoll-lib/examples/Makefile (added),
+	  xdb_sql/sample_database.pg.sql (added), wpj_sysepoll/rate.c
+	  (added), xdb_sql/xdb_sql_roster.c (added), jsm/users.c (added),
+	  jabberd/mtq.c (added), xdb_sql/xdb_sql_offline.c (added),
+	  xdb_sql/xdb_sql_querydef.c (added), jabber.xml.example (added),
+	  jabberd/mio_ssl.c (added), dnsrv/wpdnsrv.c (added),
+	  wpj_sysepoll/epoll-lib/man/epoll_create.2 (added),
+	  xdb_sql/xdb_sql_vcard.c (added), jabberd/lib/xhash.c (added),
+	  jabberd/lib/sha.c (added), jabberd/log.c (added),
+	  dialback/dialback_in.c (added), jsm/offline.c (added), README
+	  (added), jsm/modules/mod_privacy.c (added),
+	  xdb_sql/xdb_sql_oracle.c (added), jsm/modules/mod_roster.c
+	  (added), / (added), xdb_sql/xdb_sql_odbc.c (added),
+	  jsm/modules/mod_offline.c (added), jsm/jsm.c (added),
+	  xdb_sql/xdb_sql_oracle.h (added),
+	  xdb_sql/sample_database.oracle.sql (added),
+	  xdb_sql/xdb_sql_odbc.h (added), TODO (added),
+	  jsm/modules/mod_status_offline.c (added), wpj_sysepoll/Makefile
+	  (added), jsm/jsm.h (added), jsm/modules/mod_admin.c (added),
+	  wpj_sysepoll/wpj.c (added), xdb_file (added), aux/svn2log.py
+	  (added), wpj_sysepoll/epoll-lib/man/epoll_ctl.txt (added),
+	  wpj_sysepoll/epoll-lib/include/dbllist.h (added),
+	  jsm/modules/mod_stats.c (added), jsm/modules/mod_vcard.c (added),
+	  wpj_sysepoll/wpj.h (added), jsm/modules/mod_auth_digest.c
+	  (added), jsm/modules/mod_xml.c (added), jabberd/lib/snprintf.c
+	  (added), wpj_sysepoll/epoll-lib/man (added),
+	  jsm/modules/mod_presence.c (added), jsm/util_roster.c (added),
+	  jsm/modules/mod_announce.c (added), wpj_sysepoll (added),
+	  xdb_file/xdb_utils.c (added), jabberd/lib/lib.h (added),
+	  wpj_sysepoll/epoll-lib/include (added), wpj_sysepoll/ioraw.c
+	  (added), jabberd/base/base_file.c (added),
+	  jsm/modules/mod_agents.c (added), jabberd/base (added),
+	  configure.ac (added), jabberd/deliver.c (added), jsm/deliver.c
+	  (added), jabberd/extralib/util.h (added),
+	  jabberd/base/base_accept.c (added), jabberd/mio_xml.c (added),
+	  jabberd/config.c (added), jsm/modules/mod_browse.c (added),
+	  LICENSE (added), xdb_sql/ChangeLog (added),
+	  xdb_sql/xdb_sql_auth0k.c (added), jsm/postout.c (added),
+	  jabberd/load.c (added), xdb_file/Makefile (added),
+	  wpj_sysepoll/epoll-lib/src/epoll.c (added),
+	  dialback/dialback_out.c (added), dnsrv (added), xdb_sql (added),
+	  jabberd/mio.c (added), xdb_sql/xdb_sql_config.c (added),
+	  aux/cosmetics.sh (added),
+	  wpj_sysepoll/epoll-lib/examples/epoll-test.c (added): Initial
+	  import
+
 2005-05-31  Lukasz Karwacki
 	* Changes in architecture - added new threads
 	* Fixed some bugs
