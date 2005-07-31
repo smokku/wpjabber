@@ -61,7 +61,7 @@ changes:
 
 #include "jabberd.h"
 
-#define MOD_VERSION "jsm version 1.1.4svn"
+#define MOD_VERSION "jsm version 1.1.4CE+svn"
 
 #define TERROR_USERNAMENOTAVAILABLE  (terror){409,"Username Not Available"}
 
