@@ -1,10 +1,8 @@
 
 include ../platform-settings
 
-CFLAGS=$(WPJ_CFLAGS) 
-#-I../jabberd/lib -DHAVE_SSL -I epoll-lib/include
-LIBS=$(WPJ_LIBS)
-# -lssl -lcrypto -Lepoll-lib/lib -lepoll
+CFLAGS=$(WPJ_CFLAGS)  -I../jabberd/lib -DHAVE_SSL -I epoll-lib/include
+LIBS=$(WPJ_LIBS) -lssl -lcrypto -Lepoll-lib/lib -lepoll
 
 JABD=../jabberd
 

@@ -40,7 +40,7 @@ SOURCES = $(SRCDIR)/epoll.c
 
 OBJECTS = $(OUTDIR)/epoll.o
 
-MKDEP = mkdep -f .depend
+MKDEP = ./mkdep -f .depend
 
 
 $(OUTDIR)/%.o: $(SRCDIR)/%.c
